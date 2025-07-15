@@ -1,4 +1,13 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@using ONLINE_TICKET_BOOKING_SYSTEM.Models
+
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+@{
+    var currentPath = Context.Request.Path.Value?.ToLower();
+    bool hideLayout = currentPath.Contains("/account/login") || currentPath.Contains("/account/register");
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -7,41 +16,112 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/ONLINE_TICKET_BOOKING_SYSTEM.styles.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ONLINE_TICKET_BOOKING_SYSTEM</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
+    @if (!hideLayout)
+    {
+        <header>
+            <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2">
+                <div class="container">
+                    <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index" style="height: 100px;">
+                        <img src="~/Admin/Images/logo.jpg" alt="Shohoz" style="height: 100px; width: auto;" />
+                    </a>
+
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#shohozNavbar" aria-controls="shohozNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+
+                    <div class="collapse navbar-collapse" id="shohozNavbar">
+                        <ul class="navbar-nav mx-auto align-items-center">
+                            <li class="nav-item me-3">
+                                <a href="" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg ">
+                                    <i class="fa-solid fa-bus fs-5 me-1"></i>
+                                    <span>Bus</span>
+                                </a>
+                            </li>
+                            <li class="nav-item me-3">
+                                <a href="#" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
+                                    <i class="fa-solid fa-plane-up fs-5 me-1"></i>
+                                    <span>Air</span>
+                                </a>
+                            </li>
+                            <li class="nav-item me-3">
+                                <a href="#" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
+                                    <i class="bi bi-train-front-fill fs-5 me-1"></i>
+                                    <span>Train</span>
+                                </a>
+                            </li>
+                            <li class="nav-item me-3">
+                                <a href="#" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
+                                    <i class="fa-solid fa-ship fs-5 me-1"></i>
+                                    <span>Launch</span>
+                                </a>
+                            </li>
+                            <li class="nav-item me-3">
+                                <a href="#" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
+                                    <i class="fa-solid fa-calendar-days fs-5 me-1"></i>
+                                    <span>Event</span>
+                                </a>
+                            </li>
+                            <li class="nav-item me-3 position-relative">
+                                <a href="#" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
+                                    <i class="bi bi-tree-fill fs-5 me-1"></i>
+                                    <span>Park</span>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
+                                        BETA
+                                    </span>
+                                </a>
+                            </li>
+                        </ul>
+
+                        <ul class="navbar-nav align-items-center">
+                            <li class="nav-item me-3">
+                                <a href="tel:16374" class="btn btn-warning rounded-pill px-4 fw-semibold d-flex align-items-center">
+                                    <i class="bi bi-telephone-fill me-2"></i>16374
+                                </a>
+                            </li>
+                        </ul>
+                        <partial name="_LoginPartial" />
+                    </div>
                 </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
+            </nav>
+            <style>
+                body {
+                    font-family: "Libre Franklin", sans-serif;
+                }
+
+                .hover-green-bg {
+                    transition: all 0.3s ease;
+                }
+
+                    .hover-green-bg:hover {
+                        border: 2px solid #198754;
+                        color: #198754 !important;
+                        background-color: transparent !important;
+                    }
+            </style>
+        </header>
+    }
+
+    <div class="container-fluid p-0">
         <main role="main" class="pb-3">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - ONLINE_TICKET_BOOKING_SYSTEM - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
+    @if (!hideLayout)
+    {
+        <footer class="border-top footer text-muted text-center py-3">
+            <div class="container">
+                <small>© 2025 Shohoz Ticket System</small>
+            </div>
+        </footer>
+  
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
