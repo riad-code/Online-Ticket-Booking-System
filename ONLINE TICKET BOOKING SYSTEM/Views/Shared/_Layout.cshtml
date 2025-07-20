@@ -4,8 +4,13 @@
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 @{
-    var currentPath = Context.Request.Path.Value?.ToLower();
-    bool hideLayout = currentPath.Contains("/account/login") || currentPath.Contains("/account/register");
+   var currentPath = Context.Request.Path.Value?.ToLower();
+bool hideLayout = currentPath.Contains("/account/login") 
+               || currentPath.Contains("/account/register")
+               || currentPath.Contains("/account/forgotpassword")
+               || currentPath.Contains("/account/verifyotp")
+               || currentPath.Contains("/account/resetpassword");
+
 }
 <!DOCTYPE html>
 <html lang="en">

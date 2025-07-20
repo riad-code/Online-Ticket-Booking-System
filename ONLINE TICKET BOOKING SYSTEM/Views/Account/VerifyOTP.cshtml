@@ -1,0 +1,122 @@
+﻿@{
+    ViewData["Title"] = "Verify OTP";
+}
+
+<div class="container-fluid vh-100 p-0">
+    <div class="row g-0 h-100">
+        <!-- LEFT SIDE: IMAGE SLIDER -->
+        <div class="col-md-6 d-none d-md-block position-relative p-0">
+            <div id="verifyOtpCarousel" class="carousel slide h-100" data-bs-ride="carousel">
+                <div class="carousel-inner h-100">
+                    <div class="carousel-item active h-100">
+                        <img src="~/Admin/images/slider3.jpg" class="d-block w-100 h-100" style="object-fit: cover; border-radius: 0 30px 30px 0;" alt="Slider 3">
+                        <div class="carousel-caption d-none d-md-block text-start ps-5" style="bottom: 40px;">
+                            <h4 class="text-white fw-bold">Secure Your Account</h4>
+                        </div>
+                    </div>
+                    <div class="carousel-item h-100">
+                        <img src="~/Admin/images/slider1.jpg" class="d-block w-100 h-100" style="object-fit: cover; border-radius: 0 30px 30px 0;" alt="Slider 1">
+                        <div class="carousel-caption d-none d-md-block text-start ps-5" style="bottom: 40px;">
+                            <h4 class="text-white fw-bold">Easy Password Reset</h4>
+                        </div>
+                    </div>
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#verifyOtpCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#verifyOtpCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: FORM -->
+        <div class="col-md-6 d-flex align-items-center justify-content-center position-relative">
+            <a href="/" class="position-absolute" style="top: 20px; right: 30px;">
+                <img src="~/Admin/Images/logo.jpg" alt="Shohoz Logo" style="width: 120px;" />
+            </a>
+
+            <div class="p-4 w-100" style="max-width: 400px;">
+                <h3 class="fw-bold mb-2">Verify OTP</h3>
+                <p class="text-muted mb-4">Enter OTP to reset your password</p>
+
+                <!-- Step 1: Verify OTP -->
+                <div id="otpSection">
+                    <input type="hidden" id="email" value="@TempData["Email"]" />
+                    <input type="text" id="otp" class="form-control form-control-lg mb-3" placeholder="Enter OTP" required />
+                    <button type="button" id="verifyOtpBtn" class="btn btn-success w-100 py-2 fw-bold">Verify OTP</button>
+                </div>
+
+                <!-- Step 2: Reset Password (hidden initially) -->
+                <div id="resetSection" style="display:none; margin-top:20px;">
+                    <h5 class="fw-bold mb-2">Set New Password</h5>
+                    <input type="password" id="newPassword" class="form-control form-control-lg mb-3" placeholder="New Password" required />
+                    <button type="button" id="resetPasswordBtn" class="btn btn-primary w-100 py-2 fw-bold">Reset Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // ✅ Verify OTP
+        $("#verifyOtpBtn").click(function () {
+            $.ajax({
+                url: '@Url.Action("VerifyOTP", "Account")',
+                type: 'POST',
+                data: {
+                    email: $("#email").val(),
+                    otp: $("#otp").val()
+                },
+                success: function (res) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'OTP Verified!',
+                        text: 'Now set your new password.'
+                    });
+                    $("#otpSection").hide();
+                    $("#resetSection").show();
+                },
+                error: function (err) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid OTP',
+                        text: err.responseText
+                    });
+                }
+            });
+        });
+
+        // ✅ Reset Password
+        $("#resetPasswordBtn").click(function () {
+            $.ajax({
+                url: '@Url.Action("ResetPasswordViaOtp", "Account")',
+                type: 'POST',
+                data: {
+                    email: $("#email").val(),
+                    newPassword: $("#newPassword").val()
+                },
+                success: function (res) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Password Reset!',
+                        text: 'You can now log in with your new password.'
+                    }).then(() => {
+                        window.location.href = '@Url.Action("Login", "Account")';
+                    });
+                },
+                error: function (err) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: err.responseText
+                    });
+                }
+            });
+        });
+    </script>
+}
