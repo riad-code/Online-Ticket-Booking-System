@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
+using System.Threading.Tasks;
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
 {
@@ -26,6 +27,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
             public string Email { get; set; }
         }
 
+        public void OnGet() { }
+
         public async Task<IActionResult> OnPostAsync()
         {
             if (!ModelState.IsValid)
@@ -34,19 +37,21 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
             var user = await _userManager.FindByEmailAsync(Input.Email);
             if (user == null)
             {
-                ModelState.AddModelError("", "Email not found.");
-                return Page();
+                // Don't reveal that the user does not exist
+                return RedirectToPage("/Account/VerifyOtp");
             }
 
             // Generate OTP
             var otp = new Random().Next(100000, 999999).ToString();
 
-            // Save OTP in Session
+            // Save OTP and timestamp in Session
             HttpContext.Session.SetString("OTP", otp);
+            HttpContext.Session.SetString("OTPExpiry", DateTime.Now.AddMinutes(5).ToString()); // Expires in 5 min
             HttpContext.Session.SetString("Email", Input.Email);
 
-            // Send OTP Email
-            await _emailSender.SendEmailAsync(Input.Email, "Your OTP Code", $"Your OTP is: {otp}");
+            // Send email
+            var message = $"Your OTP is {otp}. It will expire in 5 minutes.";
+            await _emailSender.SendEmailAsync(Input.Email, "Password Reset OTP", message);
 
             return RedirectToPage("/Account/VerifyOtp");
         }
