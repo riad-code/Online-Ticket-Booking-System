@@ -2,65 +2,63 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Threading.Tasks;
 
-public class ResetPasswordModel : PageModel
+namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
 {
-    private readonly UserManager<IdentityUser> _userManager;
-
-    public ResetPasswordModel(UserManager<IdentityUser> userManager)
+    public class ResetPasswordModel : PageModel
     {
-        _userManager = userManager;
-    }
+        private readonly UserManager<IdentityUser> _userManager;
 
-    [BindProperty]
-    public InputModel Input { get; set; }
-
-    public class InputModel
-    {
-        [Required]
-        public string Email { get; set; }
-
-        [Required]
-        public string Code { get; set; }
-
-        [Required]
-        [StringLength(100, MinimumLength = 6)]
-        [DataType(DataType.Password)]
-        public string Password { get; set; }
-
-        [DataType(DataType.Password)]
-        [Compare("Password", ErrorMessage = "Passwords do not match.")]
-        public string ConfirmPassword { get; set; }
-    }
-
-    public void OnGet(string email, string code)
-    {
-        Input = new InputModel { Email = email, Code = code };
-    }
-
-    public async Task<IActionResult> OnPostAsync()
-    {
-        if (!ModelState.IsValid)
-            return Page();
-
-        var user = await _userManager.FindByEmailAsync(Input.Email);
-        if (user == null)
+        public ResetPasswordModel(UserManager<IdentityUser> userManager)
         {
-            return RedirectToPage("/Account/ResetPasswordConfirmation");
+            _userManager = userManager;
         }
 
-        var result = await _userManager.ResetPasswordAsync(user, Input.Code, Input.Password);
-        if (result.Succeeded)
+        [BindProperty]
+        public InputModel Input { get; set; } = new InputModel();
+
+        public class InputModel
         {
-            return RedirectToPage("/Account/ResetPasswordConfirmation");
+            [Required]
+            public string Email { get; set; } = string.Empty;
+
+            [Required]
+            [DataType(DataType.Password)]
+            public string NewPassword { get; set; } = string.Empty;
+
+            [Required]
+            [DataType(DataType.Password)]
+            [Compare("NewPassword", ErrorMessage = "Passwords do not match.")]
+            public string ConfirmPassword { get; set; } = string.Empty;
         }
 
-        foreach (var error in result.Errors)
+        public void OnGet()
         {
-            ModelState.AddModelError(string.Empty, error.Description);
+            Input.Email = HttpContext.Session.GetString("Email") ?? string.Empty;
         }
 
-        return Page();
+        public async Task<JsonResult> OnPostAsync()
+        {
+            if (!ModelState.IsValid)
+                return new JsonResult(new { success = false, message = "Invalid data." });
+
+            var user = await _userManager.FindByEmailAsync(Input.Email);
+            if (user == null)
+                return new JsonResult(new { success = false, message = "User not found." });
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, Input.NewPassword);
+
+            if (result.Succeeded)
+            {
+                HttpContext.Session.Clear();
+                return new JsonResult(new { success = true });
+            }
+
+            var errorMessages = string.Join(", ", result.Errors.Select(e => e.Description));
+            return new JsonResult(new { success = false, message = errorMessages });
+        }
     }
 }
