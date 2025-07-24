@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ Add Database
+// ✅ Add Database Connection
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -15,14 +15,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// ✅ Add Identity with Roles
-builder.Services.AddDefaultIdentity<IdentityUser>(options =>
+// ✅ Configure Identity with ApplicationUser and Roles
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false; // For now disable email confirmation
+    options.SignIn.RequireConfirmedAccount = false; // Disable email confirmation for now
 })
-.AddRoles<IdentityRole>()
+.AddRoles<IdentityRole>() // Add Role Support
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
+// ✅ Add MVC & Razor Pages
 builder.Services.AddControllersWithViews();
 
 // ✅ Add Session
@@ -35,16 +36,16 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// ✅ Add Email Settings & EmailSender Service
+// ✅ Email Settings & Email Sender Service
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 
-// ✅ Seed roles and admin user
+// ✅ Seed Roles and Admin User
 await SeedRolesAndAdminAsync(app);
 
-// Configure pipeline
+// ✅ Configure Middleware Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -59,31 +60,30 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-app.UseSession(); // ✅ Must be before Authentication
-app.UseAuthentication(); // Identity
+
+app.UseSession(); // ✅ Session must be before Authentication
+app.UseAuthentication(); // ✅ Identity Authentication
 app.UseAuthorization();
 
+// ✅ Default Route
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapRazorPages();
-//app.MapControllerRoute(
-   // name: "customForgotPassword",
-  //  pattern: "Account/ForgotPassword",
-  //  defaults: new { controller = "Account", action = "ForgotPasswordOTP" }
-//);
 
 app.Run();
 
-// ✅ Role/admin seeding logic
+
+// ✅ Seed Roles and Admin User Method
 async Task SeedRolesAndAdminAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
     var roles = new[] { "Admin", "User" };
 
+    // ✅ Create roles if not exist
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
@@ -92,23 +92,22 @@ async Task SeedRolesAndAdminAsync(WebApplication app)
         }
     }
 
+    // ✅ Create Admin User
     var adminEmail = "admin@lib.com";
     var adminPassword = "Admin@123";
 
-    var adminUser = await userManager.FindByEmailAsync(adminEmail);
-    if (adminUser == null)
+    if (await userManager.FindByEmailAsync(adminEmail) == null)
+{
+    var adminUser = new ApplicationUser
     {
-        var newAdmin = new IdentityUser
-        {
-            UserName = adminEmail,
-            Email = adminEmail,
-            EmailConfirmed = true
-        };
+        UserName = adminEmail,
+        Email = adminEmail,
+        FullName = "System Admin",
+        ProfileImagePath = "/images/default.png"
+    };
 
-        var result = await userManager.CreateAsync(newAdmin, adminPassword);
-        if (result.Succeeded)
-        {
-            await userManager.AddToRoleAsync(newAdmin, "Admin");
-        }
-    }
+    await userManager.CreateAsync(adminUser, adminPassword);
+    await userManager.AddToRoleAsync(adminUser, "Admin");
+}
+
 }

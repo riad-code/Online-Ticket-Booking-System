@@ -1,18 +1,22 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using ONLINE_TICKET_BOOKING_SYSTEM.Models;
+using Microsoft.AspNetCore.Hosting;
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserManager<IdentityUser> _userManager;
+        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IEmailSender _emailSender;
+        private readonly IWebHostEnvironment _env;
 
-        public AccountController(UserManager<IdentityUser> userManager, IEmailSender emailSender)
+        public AccountController(UserManager<ApplicationUser> userManager, IEmailSender emailSender, IWebHostEnvironment env)
         {
             _userManager = userManager;
             _emailSender = emailSender;
+            _env = env;
         }
 
         // ✅ 1. Show ForgotPasswordOTP Page
@@ -51,7 +55,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         // ✅ 3. Show Verify OTP Page
         [HttpGet]
-        public IActionResult VerifyOtp()
+        public IActionResult VerifyOTP()
         {
             if (TempData["Email"] == null)
             {
@@ -110,6 +114,50 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             ViewBag.Error = string.Join(", ", result.Errors.Select(e => e.Description));
             return View();
+        }
+
+        // ✅ 5. GET: My Profile Page
+        [HttpGet]
+        public async Task<IActionResult> Profile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            return View(user);
+        }
+
+        // ✅ 6. POST: Update Profile with Image Upload
+        [HttpPost]
+        public async Task<IActionResult> Profile(string FullName, IFormFile ProfileImage)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound();
+
+            // ✅ Update Full Name
+            user.FullName = FullName;
+
+            // ✅ Upload Profile Image if provided
+            if (ProfileImage != null)
+            {
+                string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads/profile");
+                if (!Directory.Exists(uploadsFolder))
+                    Directory.CreateDirectory(uploadsFolder);
+
+                string fileName = Guid.NewGuid() + Path.GetExtension(ProfileImage.FileName);
+                string filePath = Path.Combine(uploadsFolder, fileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await ProfileImage.CopyToAsync(stream);
+                }
+
+                user.ProfileImagePath = "/uploads/profile/" + fileName;
+            }
+
+            await _userManager.UpdateAsync(user);
+
+            ViewBag.Message = "Profile updated successfully!";
+            return View(user);
         }
     }
 }

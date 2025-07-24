@@ -1,25 +1,32 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@using ONLINE_TICKET_BOOKING_SYSTEM.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 
-<ul class="navbar-nav">
-    
 @if (SignInManager.IsSignedIn(User))
 {
-    <li class="nav-item">
-            <a class="nav-link fw-semibold text-dark hover-green-bg" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
-    </li>
-    <li class="nav-item">
-        <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                <button type="submit" class="nav-link btn btn-link text-dark rounded-3 hover-green-bg">Logout</button>
-        </form>
-    </li>
+    var user = await UserManager.GetUserAsync(User);
+    <div class="dropdown">
+        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="@(string.IsNullOrEmpty(user.ProfileImagePath) ? "/images/default.png" : user.ProfileImagePath)"
+                 class="rounded-circle"
+                 style="width:35px; height:35px; object-fit:cover;" />
+            <span class="ms-2">@user.FullName</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+            <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">My Profile</a></li>
+            <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Change Password</a></li>
+            <li>
+                <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                    <button class="dropdown-item" type="submit">Logout</button>
+                </form>
+            </li>
+          
+            
+        </ul>
+    </div>
 }
 else
 {
-   
-    <li class="nav-item">
-            <a class="nav-link fw-semibold text-dark rounded-3 hover-green-bg" asp-area="Identity" asp-page="/Account/Login">Login</a>
-    </li>
+    <a class="btn btn-success rounded-pill px-3" asp-area="Identity" asp-page="/Account/Login">Login</a>
 }
-</ul>

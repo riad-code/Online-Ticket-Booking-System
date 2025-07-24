@@ -1,8 +1,8 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using ONLINE_TICKET_BOOKING_SYSTEM.Models
 
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
 @{
    var currentPath = Context.Request.Path.Value?.ToLower();
 bool hideLayout = currentPath.Contains("/account/login") 

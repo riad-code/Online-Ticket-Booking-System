@@ -29,7 +29,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Carousel Controls -->
                 <button class="carousel-control-prev" type="button" data-bs-target="#registerCarousel" data-bs-slide="prev">
                     <span class="carousel-control-prev-icon"></span>
                 </button>
@@ -41,21 +40,23 @@
 
         <!-- RIGHT SIDE: REGISTER FORM -->
         <div class="col-md-6 d-flex align-items-center justify-content-center position-relative">
-            <!-- Logo at top-right corner -->
+            <!-- Logo -->
             <a href="/" class="position-absolute" style="top: 20px; right: 30px;">
                 <img src="~/Admin/Images/logo.jpg" alt="Shohoz Logo" style="width: 120px;" />
             </a>
 
             <div class="p-5 w-100" style="max-width: 450px;">
                 <h4 class="fw-bold mb-2">Create an Account</h4>
-                <p class="text-muted mb-4">Sign up to enjoy seamless travel across all services</p>
+                <p class="text-muted mb-4">Sign up to enjoy seamless travel</p>
 
-                <form asp-route-returnUrl="@Model.ReturnUrl" method="post">
+                <!-- ✅ Added enctype for file upload -->
+                <form asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data">
                     <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
                     <!-- Full Name -->
                     <div class="mb-3">
-                        <input type="text" name="FullName" class="form-control form-control-lg" placeholder="Full Name" required />
+                        <input asp-for="Input.FullName" class="form-control form-control-lg" placeholder="Full Name" />
+                        <span asp-validation-for="Input.FullName" class="text-danger"></span>
                     </div>
 
                     <!-- Email -->
@@ -64,24 +65,12 @@
                         <span asp-validation-for="Input.Email" class="text-danger"></span>
                     </div>
 
-                    <!-- Phone -->
+                    <!-- Profile Image Upload -->
                     <div class="mb-3">
-                        <input type="tel" name="PhoneNumber" class="form-control form-control-lg" placeholder="Phone Number" required />
-                    </div>
-
-                    <!-- Gender -->
-                    <div class="mb-3">
-                        <select name="Gender" class="form-control form-control-lg" required>
-                            <option value="" selected disabled>Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-
-                    <!-- Date of Birth -->
-                    <div class="mb-3">
-                        <input type="date" name="DateOfBirth" class="form-control form-control-lg" required />
+                        <label class="form-label">Upload Profile Picture</label>
+                        <input asp-for="Input.ProfileImage" type="file" class="form-control" accept="image/*" onchange="previewImage(event)" />
+                        <span asp-validation-for="Input.ProfileImage" class="text-danger"></span>
+                        <img id="preview" src="#" alt="Preview" style="max-width:100px; margin-top:10px; display:none;" />
                     </div>
 
                     <!-- Password -->
@@ -103,9 +92,8 @@
                     </div>
 
                     <!-- Register Button -->
-                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold" style="background-color:#198754; border:none;">Sign Up</button>
+                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Sign Up</button>
 
-                    <!-- Links -->
                     <div class="mt-3 text-center">
                         <span>Already have an account?</span>
                         <a asp-page="./Login" class="text-decoration-none text-success fw-semibold">Log In</a>
@@ -122,6 +110,12 @@
         function togglePassword(id) {
             var input = document.getElementById(id);
             input.type = (input.type === 'password') ? 'text' : 'password';
+        }
+
+        function previewImage(event) {
+            var preview = document.getElementById('preview');
+            preview.src = URL.createObjectURL(event.target.files[0]);
+            preview.style.display = 'block';
         }
     </script>
 }
