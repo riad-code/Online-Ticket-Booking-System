@@ -1,34 +1,323 @@
 ﻿@model ApplicationUser
-
-
 @{
     ViewData["Title"] = "My Profile";
 }
 
-<div class="container mt-5" style="max-width:600px;">
-    <h3 class="mb-4">My Profile</h3>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-    <div class="card shadow">
-        <div class="card-body text-center">
-            <img src="@(string.IsNullOrEmpty(Model.ProfileImagePath) ? "/images/default.png" : Model.ProfileImagePath)"
-                 class="rounded-circle mb-3" style="width:120px; height:120px; object-fit:cover;" />
+<style>
+    body {
+        background: #f6f9f8;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+    }
 
-            <form asp-action="Profile" asp-controller="Account" method="post" enctype="multipart/form-data">
-                <div class="mb-3">
-                    <label>Full Name</label>
-                    <input type="text" name="FullName" class="form-control" value="@Model.FullName" />
-                </div>
-                <div class="mb-3">
-                    <label>Upload New Picture</label>
-                    <input type="file" name="ProfileImage" class="form-control" accept="image/*" />
-                </div>
-                <button type="submit" class="btn btn-success w-100">Update Profile</button>
-            </form>
+    .profile-wrapper {
+        display: flex;
+        padding: 40px;
+        gap: 40px;
+    }
 
-            @if (ViewBag.Message != null)
-            {
-                <div class="alert alert-success mt-3">@ViewBag.Message</div>
-            }
+    /* Sidebar */
+    .sidebar {
+        width: 230px;
+        background: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    }
+
+        .sidebar a,
+        .sidebar button {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2f855a;
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 15px;
+            margin-bottom: 15px;
+        }
+
+        .sidebar button {
+            all: unset;
+            cursor: pointer;
+        }
+
+    /* Profile Content */
+    .profile-content {
+        flex: 1;
+        background: #fff;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    }
+
+    .profile-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+    }
+
+        .profile-header h2 {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+    .profile-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn-action {
+        background: #38a169;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 14px;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+        .btn-action.cancel {
+            background: #e53e3e;
+        }
+
+        .btn-action:hover {
+            opacity: 0.9;
+        }
+
+    /* Profile Image */
+    .profile-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 15px;
+    }
+
+    /* Fields */
+    .field-card {
+        background: #f9fafb;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-bottom: 16px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .field-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #e67e22;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+
+    .field-value {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a202c;
+    }
+
+    .editable-input {
+        display: none;
+        margin-top: 6px;
+        width: 100%;
+        padding: 8px;
+        border: 1.5px solid #cbd5e0;
+        border-radius: 6px;
+    }
+
+    #profileImageUploadField {
+        display: none;
+        margin-bottom: 15px;
+    }
+</style>
+<div class="profile-wrapper">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <a  asp-controller="Account" asp-action="Profile"><span class="material-icons">person</span>My Profile</a>
+
+        <a asp-area="Identity" asp-page="/Account/ResetPassword" class="d-flex align-items-center gap-2">
+            <span class="material-icons">lock</span> Change Password
+        </a>
+
+        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+            <button class="dropdown-item d-flex align-items-center" type="submit">
+                <span class="material-icons me-2" style="font-size:18px;">logout</span> Logout
+            </button>
+        </form>
+    </div>
+
+
+    <!-- Profile Content -->
+    <div class="profile-content">
+        <div class="profile-header">
+            <h2>Profile Details</h2>
+            <div class="profile-actions">
+                <button id="editBtn" class="btn-action">
+                    <span class="material-icons fw-bold">edit</span> Update Profile
+                </button>
+                <button id="cancelBtn" class="btn-action cancel" style="display:none;">
+                    <span class="material-icons">close</span> Cancel
+                </button>
+            </div>
         </div>
+
+        <!-- Profile Image -->
+        <img id="profilePreview" class="profile-img" src="@(string.IsNullOrEmpty(Model.ProfileImagePath) ? "/images/default.png" : Model.ProfileImagePath)" />
+
+        <!-- Upload Image -->
+        <div id="profileImageUploadField">
+            <label class="field-label">Upload New Picture</label>
+            <input type="file" name="ProfileImage" id="ProfileImage" class="form-control" accept="image/*" onchange="previewImage(event)" />
+        </div>
+
+        <form id="profileForm" enctype="multipart/form-data" style="max-width: 500px;">
+            <input type="hidden" name="Id" value="@Model.Id" />
+
+            <!-- Title -->
+            <div class="field-card">
+                <div class="field-label">Title</div>
+                <div class="field-value">@Model.Title</div>
+                <select class="editable-input" name="Title">
+                    <option value="">Select Title</option>
+                    <option value="Mr." selected="@(Model.Title == "Mr." ? "selected" : null)">Mr.</option>
+                    <option value="Ms." selected="@(Model.Title == "Ms." ? "selected" : null)">Ms.</option>
+                    <option value="Mrs." selected="@(Model.Title == "Mrs." ? "selected" : null)">Mrs.</option>
+                    <option value="Dr." selected="@(Model.Title == "Dr." ? "selected" : null)">Dr.</option>
+                    <option value="Prof." selected="@(Model.Title == "Prof." ? "selected" : null)">Prof.</option>
+                </select>
+            </div>
+
+
+            div class="field-card">
+            <div class="field-label">Name</div>
+            <div class="field-value">@($"{Model.Title} {Model.FirstName} {Model.LastName}")</div>
+    </div>
+
+    <div class="field-card">
+        <div class="field-label">Email</div>
+        <div class="field-value">@Model.Email</div>
+    </div>
+
+    <div class="field-card">
+        <div class="field-label">Phone</div>
+        <div class="field-value">@Model.MobileNumber</div>
+    </div>
+
+            <!-- Gender -->
+            <div class="field-card">
+                <div class="field-label">Gender</div>
+                <div class="field-value">@Model.Gender</div>
+                <select class="editable-input" name="Gender">
+                    <option value="">Select Gender</option>
+                    <option value="Male" selected="@(Model?.Gender == "Male")">Male</option>
+                    <option value="Female" selected="@(Model?.Gender == "Female")">Female</option>
+                    <option value="Other" selected="@(Model?.Gender == "Other")">Other</option>
+                </select>
+            </div>
+
+            <!-- Date of Birth -->
+            <div class="field-card">
+                <div class="field-label">Date of Birth</div>
+                <div class="field-value">@Model.DateOfBirth?.ToString("dd MMM yyyy")</div>
+                <input type="date" class="editable-input" name="DateOfBirth" value="@Model.DateOfBirth?.ToString("yyyy-MM-dd")" />
+            </div>
+
+            <!-- Address -->
+            <div class="field-card">
+                <div class="field-label">Address</div>
+                <div class="field-value">@Model.Address</div>
+                <textarea class="editable-input" name="Address">@Model.Address</textarea>
+            </div>
+
+            <!-- NID Number -->
+            <div class="field-card">
+                <div class="field-label">NID Number</div>
+                <div class="field-value">@Model.NidNo</div>
+                <input type="text" class="editable-input" name="NidNo" value="@Model.NidNo" placeholder="National ID Number" />
+            </div>
+            <!-- Passport Number -->
+            <div class="field-card">
+                <div class="field-label">Passport Number</div>
+                <div class="field-value">@Model.PassportNo</div>
+                <input type="text" class="editable-input" name="PassportNo" value="@Model.PassportNo" placeholder="Passport Number" />
+            </div>
+            <!-- Visa Number -->
+            <div class="field-card">
+                <div class="field-label">Visa Number</div>
+                <div class="field-value">@Model.VisaNo</div>
+                <input type="text" class="editable-input" name="VisaNo" value="@Model.VisaNo" placeholder="Visa Number" />
+            </div>
+
+          
+        </form>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        const editBtn = document.getElementById('editBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const profileForm = document.getElementById('profileForm');
+        let isEditing = false;
+
+        editBtn.addEventListener('click', () => {
+            if (!isEditing) {
+                toggleEdit(true);
+                editBtn.innerHTML = '<span class="material-icons">save</span> Update';
+                cancelBtn.style.display = 'inline-flex';
+                isEditing = true;
+            } else {
+                saveProfile();
+            }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            location.reload();
+        });
+
+        function toggleEdit(enable) {
+            document.querySelectorAll('.editable-input').forEach(el => el.style.display = enable ? 'block' : 'none');
+            document.querySelectorAll('.field-value').forEach(el => el.style.display = enable ? 'none' : 'block');
+            document.getElementById('profileImageUploadField').style.display = enable ? 'block' : 'none';
+        }
+
+        function previewImage(event) {
+            const output = document.getElementById('profilePreview');
+            output.src = URL.createObjectURL(event.target.files[0]);
+        }
+
+        function saveProfile() {
+            const formData = new FormData(profileForm);
+            $.ajax({
+                url: '@Url.Action("UpdateProfile", "Account")',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Profile Updated',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                },
+                error: function () {
+                    Swal.fire('Oops!', 'Something went wrong.', 'error');
+                }
+            });
+        }
+    </script>
+}

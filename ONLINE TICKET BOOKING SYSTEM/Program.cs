@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ Add Database Connection
+//  Add Database Connection
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
@@ -15,7 +15,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-// ✅ Configure Identity with ApplicationUser and Roles
+// Configure Identity with ApplicationUser and Roles
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false; // Disable email confirmation for now
@@ -23,10 +23,10 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 .AddRoles<IdentityRole>() // Add Role Support
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
-// ✅ Add MVC & Razor Pages
+//  Add MVC & Razor Pages
 builder.Services.AddControllersWithViews();
 
-// ✅ Add Session
+//  Add Session
 builder.Services.AddMemoryCache();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -36,16 +36,16 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 
-// ✅ Email Settings & Email Sender Service
+//  Email Settings & Email Sender Service
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
 var app = builder.Build();
 
-// ✅ Seed Roles and Admin User
+// Seed Roles and Admin User
 await SeedRolesAndAdminAsync(app);
 
-// ✅ Configure Middleware Pipeline
+//  Configure Middleware Pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseMigrationsEndPoint();
@@ -61,11 +61,11 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseSession(); // ✅ Session must be before Authentication
-app.UseAuthentication(); // ✅ Identity Authentication
+app.UseSession(); // Session must be before Authentication
+app.UseAuthentication(); // Identity Authentication
 app.UseAuthorization();
 
-// ✅ Default Route
+//  Default Route
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
@@ -74,7 +74,7 @@ app.MapRazorPages();
 app.Run();
 
 
-// ✅ Seed Roles and Admin User Method
+//  Seed Roles and Admin User Method
 async Task SeedRolesAndAdminAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
@@ -83,7 +83,7 @@ async Task SeedRolesAndAdminAsync(WebApplication app)
 
     var roles = new[] { "Admin", "User" };
 
-    // ✅ Create roles if not exist
+    //  Create roles if not exist
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))
@@ -92,21 +92,24 @@ async Task SeedRolesAndAdminAsync(WebApplication app)
         }
     }
 
-    // ✅ Create Admin User
+    //  Create Admin User
     var adminEmail = "admin@lib.com";
     var adminPassword = "Admin@123";
 
     if (await userManager.FindByEmailAsync(adminEmail) == null)
 {
-    var adminUser = new ApplicationUser
-    {
-        UserName = adminEmail,
-        Email = adminEmail,
-        FullName = "System Admin",
-        ProfileImagePath = "/images/default.png"
-    };
+        var adminUser = new ApplicationUser
+        {
+            UserName = adminEmail,
+            Email = adminEmail,
+            FirstName = "System",     
+            LastName = "Admin",       
+            ProfileImagePath = "/images/default.png",
+            EmailConfirmed = true
+        };
 
-    await userManager.CreateAsync(adminUser, adminPassword);
+
+        await userManager.CreateAsync(adminUser, adminPassword);
     await userManager.AddToRoleAsync(adminUser, "Admin");
 }
 

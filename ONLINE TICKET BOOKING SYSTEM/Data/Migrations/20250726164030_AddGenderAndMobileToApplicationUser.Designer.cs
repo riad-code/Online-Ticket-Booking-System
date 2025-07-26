@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 
@@ -11,9 +12,11 @@ using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250726164030_AddGenderAndMobileToApplicationUser")]
+    partial class AddGenderAndMobileToApplicationUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -30,16 +33,9 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
@@ -70,10 +66,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("NidNo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -81,10 +73,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("PassportNo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
@@ -102,20 +90,12 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("VisaNo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

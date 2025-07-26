@@ -19,14 +19,22 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             _env = env;
         }
 
-        // ✅ 1. Show ForgotPasswordOTP Page
         [HttpGet]
-        public IActionResult ForgotPasswordOTP()
+        public async Task<IActionResult> ForgotPasswordOTP()
         {
-            return View();
+            if (User.Identity.IsAuthenticated)
+            {
+                var user = await _userManager.GetUserAsync(User);
+                if (user != null)
+                {
+                    ViewBag.Email = user.Email; 
+                }
+            }
+            return View(); 
         }
 
-        // ✅ 2. Send OTP to Email
+
+
         [HttpPost]
         public async Task<IActionResult> ForgotPassword(string email)
         {
@@ -37,23 +45,18 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 return View();
             }
 
-            // Generate OTP
             var otp = new Random().Next(100000, 999999).ToString();
 
-            // Store OTP in session (expires in 5 mins)
             HttpContext.Session.SetString("OTP", otp);
             HttpContext.Session.SetString("Email", email);
             HttpContext.Session.SetString("OtpExpiry", DateTime.Now.AddMinutes(5).ToString());
 
-            // Send OTP email
             await _emailSender.SendEmailAsync(email, "Password Reset OTP", $"<h3>Your OTP is: <b>{otp}</b></h3><p>This OTP will expire in 5 minutes.</p>");
 
             ViewBag.Message = "OTP sent to your email!";
-            TempData["Email"] = email; // Pass to next page
+            TempData["Email"] = email; 
             return RedirectToAction("VerifyOTP");
         }
-
-        // ✅ 3. Show Verify OTP Page
         [HttpGet]
         public IActionResult VerifyOTP()
         {
@@ -64,7 +67,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return View();
         }
 
-        // ✅ 4. Verify OTP and Reset Password
         [HttpPost]
         public async Task<IActionResult> VerifyOTP(string email, string otp, string newPassword)
         {
@@ -90,7 +92,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 return View();
             }
 
-            // Reset password
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
             {
@@ -103,7 +104,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             if (result.Succeeded)
             {
-                // Clear OTP session
                 HttpContext.Session.Remove("OTP");
                 HttpContext.Session.Remove("Email");
                 HttpContext.Session.Remove("OtpExpiry");
@@ -116,28 +116,51 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return View();
         }
 
-        // ✅ 5. GET: My Profile Page
+        // ✅ Show Profile Page
         [HttpGet]
         public async Task<IActionResult> Profile()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user == null) return NotFound();
+            if (user == null) return RedirectToAction("Login", "Account");
 
             return View(user);
         }
 
-        // ✅ 6. POST: Update Profile with Image Upload
         [HttpPost]
-        public async Task<IActionResult> Profile(string FullName, IFormFile ProfileImage)
+        public async Task<IActionResult> UpdateProfile(
+            string Id,
+            string Title,
+            string FirstName,
+            string LastName,
+            string MobileNumber,
+            string Gender,
+            DateTime? DateOfBirth,
+            string Address,
+            string NidNo,
+             string PassportNo,
+            string VisaNo,
+           
+            IFormFile ProfileImage)
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null) return NotFound();
+            var user = await _userManager.FindByIdAsync(Id);
+            if (user == null)
+                return Json(new { success = false, message = "User not found!" });
 
-            // ✅ Update Full Name
-            user.FullName = FullName;
+            // ✅ Update user fields
+            if (!string.IsNullOrWhiteSpace(Title)) user.Title = Title;
+            if (!string.IsNullOrWhiteSpace(FirstName)) user.FirstName = FirstName;
+            if (!string.IsNullOrWhiteSpace(LastName)) user.LastName = LastName;
+            if (!string.IsNullOrWhiteSpace(MobileNumber)) user.MobileNumber = MobileNumber;
+            if (!string.IsNullOrWhiteSpace(Gender)) user.Gender = Gender;
+            if (DateOfBirth.HasValue) user.DateOfBirth = DateOfBirth.Value;
+            if (!string.IsNullOrWhiteSpace(Address)) user.Address = Address;
+            if (!string.IsNullOrWhiteSpace(NidNo)) user.NidNo = NidNo;
+            if (!string.IsNullOrWhiteSpace(PassportNo)) user.PassportNo = PassportNo;
+            if (!string.IsNullOrWhiteSpace(VisaNo)) user.VisaNo = VisaNo;
+           
 
-            // ✅ Upload Profile Image if provided
-            if (ProfileImage != null)
+            // ✅ Profile Image Upload
+            if (ProfileImage != null && ProfileImage.Length > 0)
             {
                 string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads/profile");
                 if (!Directory.Exists(uploadsFolder))
@@ -154,10 +177,15 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 user.ProfileImagePath = "/uploads/profile/" + fileName;
             }
 
-            await _userManager.UpdateAsync(user);
+            // ✅ Save changes
+            var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+                return Json(new { success = true, message = "Profile updated successfully!" });
 
-            ViewBag.Message = "Profile updated successfully!";
-            return View(user);
+            return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
         }
+
+
+
     }
 }

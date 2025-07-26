@@ -49,14 +49,38 @@
                 <h4 class="fw-bold mb-2">Create an Account</h4>
                 <p class="text-muted mb-4">Sign up to enjoy seamless travel</p>
 
-                <!-- ✅ Added enctype for file upload -->
                 <form asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data">
                     <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-                    <!-- Full Name -->
+                    <!-- Title -->
                     <div class="mb-3">
-                        <input asp-for="Input.FullName" class="form-control form-control-lg" placeholder="Full Name" />
-                        <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                        <select asp-for="Input.Title" class="form-select form-select-lg">
+                            <option value="">-- Select Title --</option>
+                            <option>Mr.</option>
+                            <option>Mrs.</option>
+                            <option>Miss</option>
+                            <option>Dr.</option>
+                            <option>Prof.</option>
+                        </select>
+                        <span asp-validation-for="Input.Title" class="text-danger"></span>
+                    </div>
+
+                    <!-- First Name -->
+                    <div class="mb-3">
+                        <input asp-for="Input.FirstName" class="form-control form-control-lg" placeholder="First Name" />
+                        <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+                    </div>
+
+                    <!-- Last Name -->
+                    <div class="mb-3">
+                        <input asp-for="Input.LastName" class="form-control form-control-lg" placeholder="Last Name" />
+                        <span asp-validation-for="Input.LastName" class="text-danger"></span>
+                    </div>
+
+                    <!-- Mobile Number -->
+                    <div class="mb-3">
+                        <input asp-for="Input.MobileNumber" class="form-control form-control-lg" placeholder="Mobile Number" />
+                        <span asp-validation-for="Input.MobileNumber" class="text-danger"></span>
                     </div>
 
                     <!-- Email -->
@@ -64,6 +88,49 @@
                         <input asp-for="Input.Email" class="form-control form-control-lg" placeholder="Email Address" />
                         <span asp-validation-for="Input.Email" class="text-danger"></span>
                     </div>
+
+                    <!-- Gender -->
+                    <div class="mb-3">
+                        <label class="form-label">Gender</label>
+                        <select asp-for="Input.Gender" class="form-select form-select-lg">
+                            <option value="">-- Select Gender --</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                            <option>Custom</option>
+                        </select>
+                        <span asp-validation-for="Input.Gender" class="text-danger"></span>
+                    </div>
+
+                    <!-- Date Of Birth -->
+                    <div class="mb-3">
+                        <label asp-for="Input.DateOfBirth" class="form-label">Date of Birth</label>
+                        <input asp-for="Input.DateOfBirth" type="date" class="form-control form-control-lg" />
+                        <span asp-validation-for="Input.DateOfBirth" class="text-danger"></span>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="mb-3">
+                        <textarea asp-for="Input.Address" class="form-control form-control-lg" placeholder="Address" rows="3"></textarea>
+                        <span asp-validation-for="Input.Address" class="text-danger"></span>
+                    </div>
+
+                    <!-- NID Number -->
+                    <div class="mb-3">
+                        <input asp-for="Input.NidNo" class="form-control form-control-lg" placeholder="NID Number" />
+                        <span asp-validation-for="Input.NidNo" class="text-danger"></span>
+                    </div>
+                    <!-- Passport Number -->
+                    <div class="mb-3">
+                        <input asp-for="Input.PassportNo" class="form-control form-control-lg" placeholder="Passport Number" />
+                        <span asp-validation-for="Input.PassportNo" class="text-danger"></span>
+                    </div>
+                    <!-- Visa Number -->
+                    <div class="mb-3">
+                        <input asp-for="Input.VisaNo" class="form-control form-control-lg" placeholder="Visa Number" />
+                        <span asp-validation-for="Input.VisaNo" class="text-danger"></span>
+                    </div>
+
+                   
 
                     <!-- Profile Image Upload -->
                     <div class="mb-3">

@@ -11,18 +11,18 @@
             <img src="@(string.IsNullOrEmpty(user.ProfileImagePath) ? "/images/default.png" : user.ProfileImagePath)"
                  class="rounded-circle"
                  style="width:35px; height:35px; object-fit:cover;" />
-            <span class="ms-2">@user.FullName</span>
+            <span class="ms-2">@($"{user.FirstName} {user.LastName}")</span>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
             <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">My Profile</a></li>
-            <li><a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword">Change Password</a></li>
+
+            <li><a class="dropdown-item" asp-controller="Account" asp-action="ResetPassword">Change Password</a></li>
+
             <li>
                 <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
                     <button class="dropdown-item" type="submit">Logout</button>
                 </form>
             </li>
-          
-            
         </ul>
     </div>
 }
