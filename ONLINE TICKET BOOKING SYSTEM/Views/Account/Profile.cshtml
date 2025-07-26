@@ -4,6 +4,7 @@
 }
 
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
 <style>
     body {
@@ -11,62 +12,21 @@
         font-family: 'Segoe UI', Tahoma, sans-serif;
     }
 
-    .profile-wrapper {
+    .sidebar a,
+    .sidebar button {
         display: flex;
-        padding: 40px;
-        gap: 40px;
-    }
-
-    /* Sidebar */
-    .sidebar {
-        width: 230px;
-        background: #fff;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-    }
-
-        .sidebar a,
-        .sidebar button {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #2f855a;
-            font-weight: 600;
-            text-decoration: none;
-            font-size: 15px;
-            margin-bottom: 15px;
-        }
-
-        .sidebar button {
-            all: unset;
-            cursor: pointer;
-        }
-
-    /* Profile Content */
-    .profile-content {
-        flex: 1;
-        background: #fff;
-        border-radius: 12px;
-        padding: 30px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    }
-
-    .profile-header {
-        display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 25px;
+        gap: 10px;
+        color: #2f855a;
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 15px;
+        margin-bottom: 15px;
     }
 
-        .profile-header h2 {
-            font-size: 22px;
-            font-weight: 700;
-        }
-
-    .profile-actions {
-        display: flex;
-        gap: 10px;
+    .sidebar button {
+        all: unset;
+        cursor: pointer;
     }
 
     .btn-action {
@@ -91,7 +51,6 @@
             opacity: 0.9;
         }
 
-    /* Profile Image */
     .profile-img {
         width: 120px;
         height: 120px;
@@ -100,7 +59,6 @@
         margin-bottom: 15px;
     }
 
-    /* Fields */
     .field-card {
         background: #f9fafb;
         border-radius: 10px;
@@ -137,187 +95,186 @@
         margin-bottom: 15px;
     }
 </style>
-<div class="profile-wrapper">
-    <!-- Sidebar -->
-    <div class="sidebar">
-        <a  asp-controller="Account" asp-action="Profile"><span class="material-icons">person</span>My Profile</a>
 
-        <a asp-area="Identity" asp-page="/Account/ResetPassword" class="d-flex align-items-center gap-2">
-            <span class="material-icons">lock</span> Change Password
-        </a>
-
-        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button class="dropdown-item d-flex align-items-center" type="submit">
-                <span class="material-icons me-2" style="font-size:18px;">logout</span> Logout
-            </button>
-        </form>
-    </div>
-
-
-    <!-- Profile Content -->
-    <div class="profile-content">
-        <div class="profile-header">
-            <h2>Profile Details</h2>
-            <div class="profile-actions">
-                <button id="editBtn" class="btn-action">
-                    <span class="material-icons fw-bold">edit</span> Update Profile
-                </button>
-                <button id="cancelBtn" class="btn-action cancel" style="display:none;">
-                    <span class="material-icons">close</span> Cancel
-                </button>
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Sidebar -->
+        <div class="col-12 col-md-4 col-lg-3">
+            <div class="sidebar bg-white p-3 rounded shadow-sm">
+                <a asp-controller="Account" asp-action="Profile"><span class="material-icons">person</span> My Profile</a>
+                <a asp-area="Identity" asp-page="/Account/ResetPassword"><span class="material-icons">lock</span> Change Password</a>
+                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+                    <button type="submit"><span class="material-icons">logout</span> Logout</button>
+                </form>
             </div>
         </div>
 
-        <!-- Profile Image -->
-        <img id="profilePreview" class="profile-img" src="@(string.IsNullOrEmpty(Model.ProfileImagePath) ? "/images/default.png" : Model.ProfileImagePath)" />
+        <!-- Profile Content -->
+        <div class="col-12 col-md-8 col-lg-9">
+            <div class="bg-white p-4 rounded shadow-sm">
+                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4">
+                    <h2 class="fw-bold mb-3 mb-sm-0">Profile Details</h2>
+                    <div class="d-flex gap-2">
+                        <button id="editBtn" class="btn-action">
+                            <span class="material-icons fw-bold">edit</span> Update Profile
+                        </button>
+                        <button id="cancelBtn" class="btn-action cancel d-none">
+                            <span class="material-icons">close</span> Cancel
+                        </button>
+                    </div>
+                </div>
 
-        <!-- Upload Image -->
-        <div id="profileImageUploadField">
-            <label class="field-label">Upload New Picture</label>
-            <input type="file" name="ProfileImage" id="ProfileImage" class="form-control" accept="image/*" onchange="previewImage(event)" />
+                <div class="text-center mb-3">
+                    <img id="profilePreview" class="profile-img" src="@(string.IsNullOrEmpty(Model.ProfileImagePath) ? "/images/default.png" : Model.ProfileImagePath)" />
+                </div>
+
+                <div id="profileImageUploadField" class="mb-3">
+                    <label class="field-label d-block mb-2">Upload New Picture</label>
+                    <input type="file" name="ProfileImage" id="ProfileImage" class="form-control" accept="image/*" onchange="previewImage(event)" />
+                </div>
+
+                <form id="profileForm" enctype="multipart/form-data">
+                    <input type="hidden" name="Id" value="@Model.Id" />
+
+                    <!-- Title -->
+                    <div class="field-card">
+                        <div class="field-label">Title</div>
+                        <div class="field-value">@Model.Title</div>
+                        <select class="editable-input form-select" name="Title">
+                            <option value="">Select Title</option>
+                            <option value="Mr." selected="@(Model.Title == "Mr.")">Mr.</option>
+                            <option value="Ms." selected="@(Model.Title == "Ms.")">Ms.</option>
+                            <option value="Mrs." selected="@(Model.Title == "Mrs.")">Mrs.</option>
+                            <option value="Dr." selected="@(Model.Title == "Dr.")">Dr.</option>
+                            <option value="Prof." selected="@(Model.Title == "Prof.")">Prof.</option>
+                        </select>
+                    </div>
+
+                    <!-- Full Name -->
+                    <div class="field-card">
+                        <div class="field-label">Full Name</div>
+                        <div class="field-value">@($"{Model.FirstName} {Model.LastName}")</div>
+                        <input type="text" class="editable-input" name="FirstName" value="@Model.FirstName" placeholder="First Name" />
+                        <input type="text" class="editable-input mt-2" name="LastName" value="@Model.LastName" placeholder="Last Name" />
+                    </div>
+
+                    <!-- Email -->
+                    <div class="field-card">
+                        <div class="field-label">Email</div>
+                        <div class="field-value">@Model.Email</div>
+                        <input type="email" class="editable-input" name="Email" value="@Model.Email" />
+                    </div>
+
+                    <!-- Phone -->
+                    <div class="field-card">
+                        <div class="field-label">Phone Number</div>
+                        <div class="field-value">@Model.MobileNumber</div>
+                        <input type="text" class="editable-input" name="MobileNumber" maxlength="11" value="@Model.MobileNumber" />
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="field-card">
+                        <div class="field-label">Gender</div>
+                        <div class="field-value">@Model.Gender</div>
+                        <select class="editable-input form-select" name="Gender">
+                            <option value="">Select Gender</option>
+                            <option value="Male" selected="@(Model?.Gender == "Male")">Male</option>
+                            <option value="Female" selected="@(Model?.Gender == "Female")">Female</option>
+                            <option value="Other" selected="@(Model?.Gender == "Other")">Other</option>
+                        </select>
+                    </div>
+
+                    <!-- Date of Birth -->
+                    <div class="field-card">
+                        <div class="field-label">Date of Birth</div>
+                        <div class="field-value">@Model.DateOfBirth?.ToString("dd MMM yyyy")</div>
+                        <input type="date" class="editable-input" name="DateOfBirth" value="@Model.DateOfBirth?.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <!-- Address -->
+                    <div class="field-card">
+                        <div class="field-label">Address</div>
+                        <div class="field-value">@Model.Address</div>
+                        <textarea class="editable-input form-control">@Model.Address</textarea>
+                    </div>
+
+                    <!-- NID -->
+                    <div class="field-card">
+                        <div class="field-label">NID Number</div>
+                        <div class="field-value">@Model.NidNo</div>
+                        <input type="text" class="editable-input" name="NidNo" value="@Model.NidNo" />
+                    </div>
+
+                    <!-- Passport -->
+                    <div class="field-card">
+                        <div class="field-label">Passport Number</div>
+                        <div class="field-value">@Model.PassportNo</div>
+                        <input type="text" class="editable-input" name="PassportNo" value="@Model.PassportNo" />
+                    </div>
+
+                    <!-- Visa -->
+                    <div class="field-card">
+                        <div class="field-label">Visa Number</div>
+                        <div class="field-value">@Model.VisaNo</div>
+                        <input type="text" class="editable-input" name="VisaNo" value="@Model.VisaNo" />
+                    </div>
+                </form>
+            </div>
         </div>
-
-        <form id="profileForm" enctype="multipart/form-data" style="max-width: 500px;">
-            <input type="hidden" name="Id" value="@Model.Id" />
-
-            <!-- Title -->
-            <div class="field-card">
-                <div class="field-label">Title</div>
-                <div class="field-value">@Model.Title</div>
-                <select class="editable-input" name="Title">
-                    <option value="">Select Title</option>
-                    <option value="Mr." selected="@(Model.Title == "Mr." ? "selected" : null)">Mr.</option>
-                    <option value="Ms." selected="@(Model.Title == "Ms." ? "selected" : null)">Ms.</option>
-                    <option value="Mrs." selected="@(Model.Title == "Mrs." ? "selected" : null)">Mrs.</option>
-                    <option value="Dr." selected="@(Model.Title == "Dr." ? "selected" : null)">Dr.</option>
-                    <option value="Prof." selected="@(Model.Title == "Prof." ? "selected" : null)">Prof.</option>
-                </select>
-            </div>
-
-
-            div class="field-card">
-            <div class="field-label">Name</div>
-            <div class="field-value">@($"{Model.Title} {Model.FirstName} {Model.LastName}")</div>
-    </div>
-
-    <div class="field-card">
-        <div class="field-label">Email</div>
-        <div class="field-value">@Model.Email</div>
-    </div>
-
-    <div class="field-card">
-        <div class="field-label">Phone</div>
-        <div class="field-value">@Model.MobileNumber</div>
-    </div>
-
-            <!-- Gender -->
-            <div class="field-card">
-                <div class="field-label">Gender</div>
-                <div class="field-value">@Model.Gender</div>
-                <select class="editable-input" name="Gender">
-                    <option value="">Select Gender</option>
-                    <option value="Male" selected="@(Model?.Gender == "Male")">Male</option>
-                    <option value="Female" selected="@(Model?.Gender == "Female")">Female</option>
-                    <option value="Other" selected="@(Model?.Gender == "Other")">Other</option>
-                </select>
-            </div>
-
-            <!-- Date of Birth -->
-            <div class="field-card">
-                <div class="field-label">Date of Birth</div>
-                <div class="field-value">@Model.DateOfBirth?.ToString("dd MMM yyyy")</div>
-                <input type="date" class="editable-input" name="DateOfBirth" value="@Model.DateOfBirth?.ToString("yyyy-MM-dd")" />
-            </div>
-
-            <!-- Address -->
-            <div class="field-card">
-                <div class="field-label">Address</div>
-                <div class="field-value">@Model.Address</div>
-                <textarea class="editable-input" name="Address">@Model.Address</textarea>
-            </div>
-
-            <!-- NID Number -->
-            <div class="field-card">
-                <div class="field-label">NID Number</div>
-                <div class="field-value">@Model.NidNo</div>
-                <input type="text" class="editable-input" name="NidNo" value="@Model.NidNo" placeholder="National ID Number" />
-            </div>
-            <!-- Passport Number -->
-            <div class="field-card">
-                <div class="field-label">Passport Number</div>
-                <div class="field-value">@Model.PassportNo</div>
-                <input type="text" class="editable-input" name="PassportNo" value="@Model.PassportNo" placeholder="Passport Number" />
-            </div>
-            <!-- Visa Number -->
-            <div class="field-card">
-                <div class="field-label">Visa Number</div>
-                <div class="field-value">@Model.VisaNo</div>
-                <input type="text" class="editable-input" name="VisaNo" value="@Model.VisaNo" placeholder="Visa Number" />
-            </div>
-
-          
-        </form>
     </div>
 </div>
 
-@section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        const editBtn = document.getElementById('editBtn');
-        const cancelBtn = document.getElementById('cancelBtn');
-        const profileForm = document.getElementById('profileForm');
-        let isEditing = false;
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    const editBtn = document.getElementById('editBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const profileForm = document.getElementById('profileForm');
+    let isEditing = false;
 
-        editBtn.addEventListener('click', () => {
-            if (!isEditing) {
-                toggleEdit(true);
-                editBtn.innerHTML = '<span class="material-icons">save</span> Update';
-                cancelBtn.style.display = 'inline-flex';
-                isEditing = true;
-            } else {
-                saveProfile();
+    editBtn.addEventListener('click', () => {
+        if (!isEditing) {
+            toggleEdit(true);
+            editBtn.innerHTML = '<span class="material-icons">save</span> Update';
+            cancelBtn.classList.remove('d-none');
+            isEditing = true;
+        } else {
+            saveProfile();
+        }
+    });
+
+    cancelBtn.addEventListener('click', () => location.reload());
+
+    function toggleEdit(enable) {
+        document.querySelectorAll('.editable-input').forEach(el => el.style.display = enable ? 'block' : 'none');
+        document.querySelectorAll('.field-value').forEach(el => el.style.display = enable ? 'none' : 'block');
+        document.getElementById('profileImageUploadField').style.display = enable ? 'block' : 'none';
+    }
+
+    function previewImage(event) {
+        const output = document.getElementById('profilePreview');
+        output.src = URL.createObjectURL(event.target.files[0]);
+    }
+
+    function saveProfile() {
+        const formData = new FormData(profileForm);
+        $.ajax({
+            url: '@Url.Action("UpdateProfile", "Account")',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                if (response.success) {
+                    Swal.fire({ icon: 'success', title: 'Profile Updated', timer: 1500, showConfirmButton: false })
+                        .then(() => location.reload());
+                } else {
+                    Swal.fire('Error', response.message, 'error');
+                }
+            },
+            error: function () {
+                Swal.fire('Oops!', 'Something went wrong.', 'error');
             }
         });
-
-        cancelBtn.addEventListener('click', () => {
-            location.reload();
-        });
-
-        function toggleEdit(enable) {
-            document.querySelectorAll('.editable-input').forEach(el => el.style.display = enable ? 'block' : 'none');
-            document.querySelectorAll('.field-value').forEach(el => el.style.display = enable ? 'none' : 'block');
-            document.getElementById('profileImageUploadField').style.display = enable ? 'block' : 'none';
-        }
-
-        function previewImage(event) {
-            const output = document.getElementById('profilePreview');
-            output.src = URL.createObjectURL(event.target.files[0]);
-        }
-
-        function saveProfile() {
-            const formData = new FormData(profileForm);
-            $.ajax({
-                url: '@Url.Action("UpdateProfile", "Account")',
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-                success: function (response) {
-                    if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Profile Updated',
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => location.reload());
-                    } else {
-                        Swal.fire('Error', response.message, 'error');
-                    }
-                },
-                error: function () {
-                    Swal.fire('Oops!', 'Something went wrong.', 'error');
-                }
-            });
-        }
-    </script>
-}
+    }
+</script>
