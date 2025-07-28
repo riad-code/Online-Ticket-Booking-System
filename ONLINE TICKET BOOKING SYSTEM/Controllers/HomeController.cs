@@ -15,10 +15,11 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            // Automatically redirect to /Bus/Index
+            return RedirectToAction("Index", "Bus");
         }
 
-       
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()

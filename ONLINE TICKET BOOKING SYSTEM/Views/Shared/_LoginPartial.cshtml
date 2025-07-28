@@ -28,5 +28,11 @@
 }
 else
 {
-    <a class="btn btn-success rounded-pill px-3" asp-area="Identity" asp-page="/Account/Login">Login</a>
+    <a class="btn btn-success rounded-pill px-3"
+       asp-area="Identity"
+       asp-page="/Account/Login"
+       asp-route-returnUrl="/Bus/Index">
+        Login
+    </a>
+
 }

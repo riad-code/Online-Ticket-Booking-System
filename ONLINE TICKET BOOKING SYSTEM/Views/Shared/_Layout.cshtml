@@ -24,6 +24,8 @@ bool hideLayout = currentPath.Contains("/account/login")
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+   
+
 </head>
 <body>
     @if (!hideLayout)
@@ -31,7 +33,7 @@ bool hideLayout = currentPath.Contains("/account/login")
         <header>
             <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2">
                 <div class="container">
-                    <a class="navbar-brand d-flex align-items-center" asp-controller="Home" asp-action="Index" style="height: 100px;">
+                    <a class="navbar-brand d-flex align-items-center" asp-controller="Bus" asp-action="Index" style="height: 100px;">
                         <img src="~/Admin/Images/logo.jpg" alt="Shohoz" style="height: 100px; width: auto;" />
                     </a>
 
@@ -42,11 +44,12 @@ bool hideLayout = currentPath.Contains("/account/login")
                     <div class="collapse navbar-collapse" id="shohozNavbar">
                         <ul class="navbar-nav mx-auto align-items-center">
                             <li class="nav-item me-3">
-                                <a href="" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg ">
+                                <a asp-controller="Bus" asp-action="Index" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
                                     <i class="fa-solid fa-bus fs-5 me-1"></i>
                                     <span>Bus</span>
                                 </a>
                             </li>
+
                             <li class="nav-item me-3">
                                 <a href="#" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
                                     <i class="fa-solid fa-plane-up fs-5 me-1"></i>
@@ -130,6 +133,7 @@ bool hideLayout = currentPath.Contains("/account/login")
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

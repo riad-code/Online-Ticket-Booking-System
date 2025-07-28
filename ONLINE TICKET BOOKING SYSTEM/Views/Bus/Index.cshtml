@@ -1,63 +1,131 @@
-﻿@{
+﻿You said:
+@{
     ViewData["Title"] = "Bus Ticket Booking";
 }
 
-<div class="container-fluid px-0" style="font-family: 'Libre Franklin', sans-serif;">
-    <!-- Background Banner -->
-    <div class="position-relative" style="background: url('/Admin/images/busbackgraound.jpg') no-repeat center center/cover; height: 400px;">
-        <div class="overlay" style="background: rgba(0,0,0,0.5); position:absolute; top:0; left:0; width:100%; height:100%;"></div>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://kit.fontawesome.com/62e879b5ad.js" crossorigin="anonymous"></script>
 
-        <!-- Search Card -->
+<div class="container-fluid px-0" style="font-family: 'Libre Franklin', sans-serif;">
+
+    <!-- Banner Section -->
+    <div class="position-relative" style="background: url('/Admin/images/busbackgraound.jpg') no-repeat center center / cover; height: 480px;">
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: rgba(0,0,0,0.4);"></div>
+
+        <!-- Search Box -->
         <div class="position-absolute top-50 start-50 translate-middle w-75" style="z-index: 2;">
-            <div class="bg-white shadow rounded-4 p-4">
-                <!-- One Way / Round Way -->
-                <div class="d-flex mb-3 justify-content-center gap-4">
-                    <div>
-                        <input type="radio" id="oneWay" name="tripType" value="One Way" class="form-check-input" />
-                        <label for="oneWay" class="form-check-label fw-semibold">One Way</label>
+            <div class="bg-white rounded-4 shadow-lg p-4">
+
+                <!-- Toggle Buttons -->
+                <div class="d-flex justify-content-center gap-4 mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tripType" id="oneWay" value="One Way">
+                        <label class="form-check-label fw-semibold" for="oneWay">One Way</label>
                     </div>
-                    <div>
-                        <input type="radio" id="roundWay" name="tripType" value="Round Way" class="form-check-input" checked />
-                        <label for="roundWay" class="form-check-label fw-semibold">Round Way</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tripType" id="roundWay" value="Round Way" checked>
+                        <label class="form-check-label fw-semibold" for="roundWay">Round Way</label>
                     </div>
                 </div>
 
-                <!-- Search Form -->
-                <form id="busSearchForm" class="row g-2">
+                <!-- Form -->
+                <form id="busSearchForm" class="row g-3 align-items-end">
+
+                    <!-- From -->
                     <div class="col-md-3">
                         <label class="form-label text-muted">From</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt-fill text-success"></i></span>
-                            <input type="text" class="form-control border-start-0" placeholder="From" required />
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-geo-alt-fill text-success"></i>
+                            </span>
+                            <input type="text" name="from" class="form-control border-start-0" placeholder="Enter departure city" required>
                         </div>
                     </div>
+
+                    <!-- To -->
                     <div class="col-md-3">
                         <label class="form-label text-muted">To</label>
                         <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt text-success"></i></span>
-                            <input type="text" class="form-control border-start-0" placeholder="To" required />
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-geo-alt text-success"></i>
+                            </span>
+                            <input type="text" name="to" class="form-control border-start-0" placeholder="Enter destination city" required>
                         </div>
                     </div>
+
+                    <!-- Journey Date -->
                     <div class="col-md-2">
                         <label class="form-label text-muted">Journey Date</label>
-                        <input type="date" class="form-control" required />
+                        <input type="date" name="journeyDate" class="form-control" required>
                     </div>
+
+                    <!-- Return Date -->
                     <div class="col-md-2" id="returnDateDiv">
                         <label class="form-label text-muted">Return Date</label>
-                        <input type="date" class="form-control" />
+                        <input type="date" name="returnDate" class="form-control">
                     </div>
-                    <div class="col-md-2 d-flex align-items-end">
-                        <button type="submit" class="btn btn-success btn-lg w-100 fw-bold rounded-3">SEARCH</button>
+
+                    <!-- Search Button -->
+                    <div class="col-md-2 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-success btn-lg fw-semibold w-100">
+                            <i class="bi bi-search me-1"></i> Search
+                        </button>
                     </div>
                 </form>
+
             </div>
         </div>
     </div>
 </div>
+<!-- ✅ GREEN LOGIN NOTICE -->
+<div class="bg-success text-white py-4 px-4 d-flex justify-content-between align-items-center flex-wrap">
+    <div class="col-md-2 ">
+       
+    </div>
+    <div class="col-md-8 fs-5 fw-semibold">
+        🎉 <span class="fw-bold">Welcome to a Smarter Shohoz Login!</span><br />
+        <small>
+            If you're an existing user, just reset your password once to continue.<br />
+            Now access <strong>Bus</strong>, <strong>Air</strong>, and <strong>Park</strong> with a single Shohoz account. Easy and secure!
+        </small>
+        <a asp-area="Identity" asp-page="/Account/ResetPassword" class="material-icons reset-btn"> Reset Password</a>
+    </div>
+    <div class="col-md-2 ">
+    </div>
+</div>
 
+<!-- ✅ 3 EASY STEPS SECTION -->
+<div class="text-center my-5">
+    <h2 class="fw-bold text-success">Buy tickets <span class="text-dark">in 3 easy steps</span></h2>
+
+    <div class="row justify-content-center mt-5">
+        <div class="col-md-3 col-10 text-center three-step-card">
+            <div class="step-icon mb-3">
+                <i class="fas fa-search"></i>
+            </div>
+            <h4 class="fw-bold">Search</h4>
+            <p>Choose your origin, destination, journey dates and search for buses</p>
+        </div>
+        <div class="col-md-3 col-10 text-center three-step-card">
+            <div class="step-icon mb-3">
+                <i class="fas fa-hand-pointer"></i>
+            </div>
+            <h4 class="fw-bold">Select</h4>
+            <p>Select your desired trip and choose your seats</p>
+        </div>
+        <div class="col-md-3 col-10 text-center three-step-card">
+            <div class="step-icon mb-3">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <h4 class="fw-bold">Pay</h4>
+            <p>Pay by bank cards or mobile banking</p>
+        </div>
+    </div>
+</div>
 <style>
     body {
-        font-family: 'Libre Franklin', sans-serif;
+        background-color: #f8f9fa;
     }
 
     .form-control:focus {
@@ -69,18 +137,65 @@
         background-color: #198754;
         border: none;
     }
+
+        .btn-success:hover {
+            background-color: #157347;
+        }
+
+    .reset-btn {
+        background-color: #fff;
+        color: #00b34b;
+        border: 2px solid #00b34b;
+        font-weight: 600;
+        border-radius: 8px;
+        padding: 6px 20px;
+        text-decoration: none;
+    }
+
+    .step-icon {
+        font-size: 64px;
+        color: #00b34b;
+    }
+
+    .three-step-card {
+        transition: transform 0.3s ease;
+    }
+
+        .three-step-card:hover {
+            transform: translateY(-5px);
+        }
+
 </style>
 
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Show/Hide Return Date based on trip type
-            $('input[name="tripType"]').change(function () {
+            function toggleReturnDate() {
                 if ($('#oneWay').is(':checked')) {
                     $('#returnDateDiv').hide();
                 } else {
                     $('#returnDateDiv').show();
                 }
+            }
+
+            toggleReturnDate();
+
+            $('input[name="tripType"]').change(function () {
+                toggleReturnDate();
+            });
+
+            $('#busSearchForm').submit(function (e) {
+                e.preventDefault();
+
+                Swal.fire({
+                    title: 'Searching...',
+                    text: 'Please wait while we fetch available routes.',
+                    icon: 'info',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+
+                // TODO: Add AJAX call to load results
             });
         });
     </script>
