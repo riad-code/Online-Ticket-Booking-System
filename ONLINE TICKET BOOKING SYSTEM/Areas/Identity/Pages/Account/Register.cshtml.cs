@@ -9,6 +9,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.WebUtilities;
 using System.Text;
 using System.Text.Encodings.Web;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Hosting;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
 {
@@ -36,6 +40,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
         }
 
         [BindProperty]
+        [FromForm]  // <--- Add this attribute to fix file upload binding
         public InputModel Input { get; set; } = new();
 
         public string ReturnUrl { get; set; } = string.Empty;
@@ -50,10 +55,10 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
             [Required]
             [Display(Name = "First Name")]
             public string FirstName { get; set; } = string.Empty;
-
             [Required]
             [Display(Name = "Last Name")]
             public string LastName { get; set; } = string.Empty;
+
 
             [Required]
             [RegularExpression(@"^\d{11}$", ErrorMessage = "Mobile Number must be exactly 11 digits.")]
@@ -84,7 +89,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
 
             [Display(Name = "Visa Number")]
             public string VisaNo { get; set; } = string.Empty;
-
 
             [Display(Name = "Profile Image")]
             public IFormFile? ProfileImage { get; set; } // For image upload
@@ -146,7 +150,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
                     NidNo = Input.NidNo,
                     PassportNo = Input.PassportNo,
                     VisaNo = Input.VisaNo,
-                   
                     MobileNumber = Input.MobileNumber,
                     ProfileImagePath = profileImagePath
                 };
@@ -167,8 +170,14 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
                         values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
                         protocol: Request.Scheme);
 
-                    await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                        $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    await _emailSender.SendEmailAsync(
+                    Input.Email,
+                          "🎉 Congratulations!",
+                                  $@"
+                                    <h2>Congratulations, {Input.Email}!</h2>
+                                        <p>Your account has been successfully created. Welcome ! 🎉</p>
+                                  ");
+
 
                     if (_userManager.Options.SignIn.RequireConfirmedAccount)
                     {
@@ -184,6 +193,18 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
                 foreach (var error in result.Errors)
                 {
                     ModelState.AddModelError(string.Empty, error.Description);
+                }
+            }
+
+            // Log model errors for debugging
+            if (!ModelState.IsValid)
+            {
+                foreach (var entry in ModelState)
+                {
+                    foreach (var error in entry.Value.Errors)
+                    {
+                        _logger.LogError($"Model error on {entry.Key}: {error.ErrorMessage}");
+                    }
                 }
             }
 

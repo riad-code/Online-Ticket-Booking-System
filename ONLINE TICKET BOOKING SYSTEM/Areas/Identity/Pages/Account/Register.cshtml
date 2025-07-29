@@ -11,19 +11,19 @@
             <div id="registerCarousel" class="carousel slide h-100" data-bs-ride="carousel">
                 <div class="carousel-inner h-100">
                     <div class="carousel-item active h-100">
-                        <img src="~/Admin/images/slider1.jpg" class="d-block w-100 h-100" style="object-fit: cover; border-radius: 0 30px 30px 0;" alt="Slider 1">
+                        <img src="~/Admin/images/slider1.jpg" class="d-block w-100 h-100" style="object-fit: cover; border-radius: 0 30px 30px 0;" alt="Slider 1" />
                         <div class="carousel-caption d-none d-md-block text-start ps-5" style="bottom: 40px;">
                             <h4 class="text-white fw-bold">Join Us, Explore More</h4>
                         </div>
                     </div>
                     <div class="carousel-item h-100">
-                        <img src="~/Admin/images/slider2.jpg" class="d-block w-100 h-100" style="object-fit: cover; border-radius: 0 30px 30px 0;" alt="Slider 2">
+                        <img src="~/Admin/images/slider2.jpg" class="d-block w-100 h-100" style="object-fit: cover; border-radius: 0 30px 30px 0;" alt="Slider 2" />
                         <div class="carousel-caption d-none d-md-block text-start ps-5" style="bottom: 40px;">
                             <h4 class="text-white fw-bold">Travel Made Easy with Shohoz</h4>
                         </div>
                     </div>
                     <div class="carousel-item h-100">
-                        <img src="~/Admin/images/slider3.jpg" class="d-block w-100 h-100" style="object-fit: cover; border-radius: 0 30px 30px 0;" alt="Slider 3">
+                        <img src="~/Admin/images/slider3.jpg" class="d-block w-100 h-100" style="object-fit: cover; border-radius: 0 30px 30px 0;" alt="Slider 3" />
                         <div class="carousel-caption d-none d-md-block text-start ps-5" style="bottom: 40px;">
                             <h4 class="text-white fw-bold">Think Tickets, Think Shohoz</h4>
                         </div>
@@ -45,121 +45,105 @@
                 <img src="~/Admin/Images/logo.jpg" alt="Shohoz Logo" style="width: 120px;" />
             </a>
 
-            <div class="p-5 w-100" style="max-width: 450px;">
+            <div class="p-5 w-100" style="max-width: 700px;">
                 <h4 class="fw-bold mb-2">Create an Account</h4>
                 <p class="text-muted mb-4">Sign up to enjoy seamless travel</p>
 
                 <form asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data">
                     <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
-                    <!-- Title -->
-                    <div class="mb-3">
-                        <select asp-for="Input.Title" class="form-select form-select-lg">
-                            <option value="">-- Select Title --</option>
-                            <option>Mr.</option>
-                            <option>Mrs.</option>
-                            <option>Miss</option>
-                            <option>Dr.</option>
-                            <option>Prof.</option>
-                        </select>
-                        <span asp-validation-for="Input.Title" class="text-danger"></span>
-                    </div>
+                    <div class="row g-3">
+                        <!-- Left column -->
+                        <div class="col-md-6">
+                            <!-- Title -->
+                            <select asp-for="Input.Title" class="form-select form-select-lg mb-3">
+                                <option value="">-- Select Title --</option>
+                                <option>Mr.</option>
+                                <option>Mrs.</option>
+                                <option>Miss</option>
+                                <option>Dr.</option>
+                                <option>Prof.</option>
+                            </select>
+                            <span asp-validation-for="Input.Title" class="text-danger"></span>
 
-                    <!-- First Name -->
-                    <div class="mb-3">
-                        <input asp-for="Input.FirstName" class="form-control form-control-lg" placeholder="First Name" />
-                        <span asp-validation-for="Input.FirstName" class="text-danger"></span>
-                    </div>
+                            <!-- First Name -->
+                            <input asp-for="Input.FirstName" class="form-control form-control-lg mb-3" placeholder="First Name" />
+                            <span asp-validation-for="Input.FirstName" class="text-danger"></span>
 
-                    <!-- Last Name -->
-                    <div class="mb-3">
-                        <input asp-for="Input.LastName" class="form-control form-control-lg" placeholder="Last Name" />
-                        <span asp-validation-for="Input.LastName" class="text-danger"></span>
-                    </div>
+                            <!-- Mobile Number -->
+                            <input asp-for="Input.MobileNumber" class="form-control form-control-lg mb-3" placeholder="Mobile Number" />
+                            <span asp-validation-for="Input.MobileNumber" class="text-danger"></span>
 
-                    <!-- Mobile Number -->
-                    <div class="mb-3">
-                        <input asp-for="Input.MobileNumber" class="form-control form-control-lg" placeholder="Mobile Number" />
-                        <span asp-validation-for="Input.MobileNumber" class="text-danger"></span>
-                    </div>
+                            <!-- Gender -->
+                            <label class="form-label">Gender</label>
+                            <select asp-for="Input.Gender" class="form-select form-select-lg mb-3">
+                                <option value="">-- Select Gender --</option>
+                                <option>Male</option>
+                                <option>Female</option>
+                                <option>Custom</option>
+                            </select>
+                            <span asp-validation-for="Input.Gender" class="text-danger"></span>
 
-                    <!-- Email -->
-                    <div class="mb-3">
-                        <input asp-for="Input.Email" class="form-control form-control-lg" placeholder="Email Address" />
-                        <span asp-validation-for="Input.Email" class="text-danger"></span>
-                    </div>
+                            <!-- Address -->
+                            <textarea asp-for="Input.Address" class="form-control form-control-lg mb-3" placeholder="Address" rows="3"></textarea>
+                            <span asp-validation-for="Input.Address" class="text-danger"></span>
 
-                    <!-- Gender -->
-                    <div class="mb-3">
-                        <label class="form-label">Gender</label>
-                        <select asp-for="Input.Gender" class="form-select form-select-lg">
-                            <option value="">-- Select Gender --</option>
-                            <option>Male</option>
-                            <option>Female</option>
-                            <option>Custom</option>
-                        </select>
-                        <span asp-validation-for="Input.Gender" class="text-danger"></span>
-                    </div>
+                            <!-- Passport Number -->
+                            <input asp-for="Input.PassportNo" class="form-control form-control-lg mb-3" placeholder="Passport Number" />
+                            <span asp-validation-for="Input.PassportNo" class="text-danger"></span>
+                        </div>
 
-                    <!-- Date Of Birth -->
-                    <div class="mb-3">
-                        <label asp-for="Input.DateOfBirth" class="form-label">Date of Birth</label>
-                        <input asp-for="Input.DateOfBirth" type="date" class="form-control form-control-lg" />
-                        <span asp-validation-for="Input.DateOfBirth" class="text-danger"></span>
-                    </div>
+                        <!-- Right column -->
+                        <div class="col-md-6">
+                            <!-- Last Name -->
+                            <input asp-for="Input.LastName" class="form-control form-control-lg mb-3" placeholder="Last Name" />
+                            <span asp-validation-for="Input.LastName" class="text-danger"></span>
 
-                    <!-- Address -->
-                    <div class="mb-3">
-                        <textarea asp-for="Input.Address" class="form-control form-control-lg" placeholder="Address" rows="3"></textarea>
-                        <span asp-validation-for="Input.Address" class="text-danger"></span>
-                    </div>
+                            <!-- Email -->
+                            <input asp-for="Input.Email" class="form-control form-control-lg mb-3" placeholder="Email Address" />
+                            <span asp-validation-for="Input.Email" class="text-danger"></span>
 
-                    <!-- NID Number -->
-                    <div class="mb-3">
-                        <input asp-for="Input.NidNo" class="form-control form-control-lg" placeholder="NID Number" />
-                        <span asp-validation-for="Input.NidNo" class="text-danger"></span>
-                    </div>
-                    <!-- Passport Number -->
-                    <div class="mb-3">
-                        <input asp-for="Input.PassportNo" class="form-control form-control-lg" placeholder="Passport Number" />
-                        <span asp-validation-for="Input.PassportNo" class="text-danger"></span>
-                    </div>
-                    <!-- Visa Number -->
-                    <div class="mb-3">
-                        <input asp-for="Input.VisaNo" class="form-control form-control-lg" placeholder="Visa Number" />
-                        <span asp-validation-for="Input.VisaNo" class="text-danger"></span>
-                    </div>
+                            <!-- Date Of Birth -->
+                            <label asp-for="Input.DateOfBirth" class="form-label">Date of Birth</label>
+                            <input asp-for="Input.DateOfBirth" type="date" class="form-control form-control-lg mb-3" />
+                            <span asp-validation-for="Input.DateOfBirth" class="text-danger"></span>
 
-                   
+                            <!-- NID Number -->
+                            <input asp-for="Input.NidNo" class="form-control form-control-lg mb-3" placeholder="NID Number" />
+                            <span asp-validation-for="Input.NidNo" class="text-danger"></span>
 
-                    <!-- Profile Image Upload -->
-                    <div class="mb-3">
-                        <label class="form-label">Upload Profile Picture</label>
-                        <input asp-for="Input.ProfileImage" type="file" class="form-control" accept="image/*" onchange="previewImage(event)" />
-                        <span asp-validation-for="Input.ProfileImage" class="text-danger"></span>
-                        <img id="preview" src="#" alt="Preview" style="max-width:100px; margin-top:10px; display:none;" />
-                    </div>
+                            <!-- Visa Number -->
+                            <input asp-for="Input.VisaNo" class="form-control form-control-lg mb-3" placeholder="Visa Number" />
+                            <span asp-validation-for="Input.VisaNo" class="text-danger"></span>
 
-                    <!-- Password -->
-                    <div class="mb-3 position-relative">
-                        <input asp-for="Input.Password" class="form-control form-control-lg" placeholder="Password" type="password" id="passwordInput" />
-                        <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2" onclick="togglePassword('passwordInput')" style="background:none; border:none;">
-                            <i class="bi bi-eye-fill"></i>
-                        </button>
-                        <span asp-validation-for="Input.Password" class="text-danger"></span>
-                    </div>
+                            <!-- Profile Image Upload -->
+                            <label class="form-label">Upload Profile Picture</label>
+                            <input asp-for="Input.ProfileImage" type="file" class="form-control mb-3" accept="image/*" onchange="previewImage(event)" />
+                            <span asp-validation-for="Input.ProfileImage" class="text-danger"></span>
+                            <img id="preview" src="#" alt="Preview" style="max-width:100px; margin-top:10px; display:none;" />
 
-                    <!-- Confirm Password -->
-                    <div class="mb-3 position-relative">
-                        <input asp-for="Input.ConfirmPassword" class="form-control form-control-lg" placeholder="Confirm Password" type="password" id="confirmPasswordInput" />
-                        <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2" onclick="togglePassword('confirmPasswordInput')" style="background:none; border:none;">
-                            <i class="bi bi-eye-fill"></i>
-                        </button>
-                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                            <!-- Password -->
+                            <div class="position-relative mb-3">
+                                <input asp-for="Input.Password" class="form-control form-control-lg" placeholder="Password" type="password" id="passwordInput" />
+                                <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2" onclick="togglePassword('passwordInput')" style="background:none; border:none;">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                                <span asp-validation-for="Input.Password" class="text-danger"></span>
+                            </div>
+
+                            <!-- Confirm Password -->
+                            <div class="position-relative mb-3">
+                                <input asp-for="Input.ConfirmPassword" class="form-control form-control-lg" placeholder="Confirm Password" type="password" id="confirmPasswordInput" />
+                                <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2" onclick="togglePassword('confirmPasswordInput')" style="background:none; border:none;">
+                                    <i class="bi bi-eye-fill"></i>
+                                </button>
+                                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Register Button -->
-                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Sign Up</button>
+                    <button type="submit" class="btn btn-success w-100 py-2 fw-bold mt-3">Sign Up</button>
 
                     <div class="mt-3 text-center">
                         <span>Already have an account?</span>
