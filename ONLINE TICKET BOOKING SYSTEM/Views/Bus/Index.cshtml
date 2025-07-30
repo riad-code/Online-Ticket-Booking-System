@@ -2,12 +2,15 @@
     ViewData["Title"] = "Bus Ticket Booking";
 }
 
+<!-- Styles & Icons -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
-<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;600&display=swap" rel="stylesheet" />
 <script src="https://kit.fontawesome.com/62e879b5ad.js" crossorigin="anonymous"></script>
 
-<div class="container-fluid px-0" style="font-family: 'Libre Franklin', sans-serif;">
+<!-- jQuery & jQuery UI CSS -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
 
+<div class="container-fluid px-0" style="font-family: 'Libre Franklin', sans-serif;">
     <!-- Banner Section -->
     <div class="position-relative" style="background: url('/Admin/images/busbackgraound.jpg') no-repeat center center / cover; height: 480px;">
         <div class="position-absolute top-0 start-0 w-100 h-100" style="background: rgba(0,0,0,0.4);"></div>
@@ -15,22 +18,20 @@
         <!-- Search Box -->
         <div class="position-absolute top-50 start-50 translate-middle w-75" style="z-index: 2;">
             <div class="bg-white rounded-4 shadow-lg p-4">
-
                 <!-- Toggle Buttons -->
                 <div class="d-flex justify-content-center gap-4 mb-4">
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="tripType" id="oneWay" value="One Way">
+                        <input class="form-check-input" type="radio" name="tripType" id="oneWay" value="One Way" />
                         <label class="form-check-label fw-semibold" for="oneWay">One Way</label>
                     </div>
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="tripType" id="roundWay" value="Round Way" checked>
+                        <input class="form-check-input" type="radio" name="tripType" id="roundWay" value="Round Way" checked />
                         <label class="form-check-label fw-semibold" for="roundWay">Round Way</label>
                     </div>
                 </div>
 
                 <!-- Form -->
-                <form id="busSearchForm" class="row g-3 align-items-end">
-
+                <form id="busSearchForm" class="row g-3 align-items-end" method="get" action="/Bus/Results">
                     <!-- From -->
                     <div class="col-md-3">
                         <label class="form-label text-muted">From</label>
@@ -38,7 +39,9 @@
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="bi bi-geo-alt-fill text-success"></i>
                             </span>
-                            <input type="text" name="from" class="form-control border-start-0" placeholder="Enter departure city" required>
+                            
+
+                            <input type="text" id="fromInput" name="from" class="form-control border-start-0" placeholder="Enter departure city" required />
                         </div>
                     </div>
 
@@ -49,20 +52,20 @@
                             <span class="input-group-text bg-white border-end-0">
                                 <i class="bi bi-geo-alt text-success"></i>
                             </span>
-                            <input type="text" name="to" class="form-control border-start-0" placeholder="Enter destination city" required>
+                            <input type="text" id="toInput" name="to" class="form-control border-start-0" placeholder="Enter destination city" required />
                         </div>
                     </div>
 
                     <!-- Journey Date -->
                     <div class="col-md-2">
                         <label class="form-label text-muted">Journey Date</label>
-                        <input type="date" name="journeyDate" class="form-control" required>
+                        <input type="date" name="journeyDate" class="form-control" required />
                     </div>
 
                     <!-- Return Date -->
                     <div class="col-md-2" id="returnDateDiv">
                         <label class="form-label text-muted">Return Date</label>
-                        <input type="date" name="returnDate" class="form-control">
+                        <input type="date" name="returnDate" class="form-control" />
                     </div>
 
                     <!-- Search Button -->
@@ -72,16 +75,14 @@
                         </button>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>
 </div>
+
 <!-- ✅ GREEN LOGIN NOTICE -->
 <div class="bg-success text-white py-4 px-4 d-flex justify-content-between align-items-center flex-wrap">
-    <div class="col-md-2 ">
-       
-    </div>
+    <div class="col-md-2"></div>
     <div class="col-md-8 fs-5 fw-semibold">
         🎉 <span class="fw-bold">Welcome to a Smarter Shohoz Login!</span><br />
         <small>
@@ -90,8 +91,7 @@
         </small>
         <a asp-area="Identity" asp-page="/Account/ResetPassword" class="material-icons reset-btn"> Reset Password</a>
     </div>
-    <div class="col-md-2 ">
-    </div>
+    <div class="col-md-2"></div>
 </div>
 
 <!-- ✅ 3 EASY STEPS SECTION -->
@@ -122,6 +122,8 @@
         </div>
     </div>
 </div>
+
+<!-- Styles -->
 <style>
     body {
         background-color: #f8f9fa;
@@ -163,12 +165,20 @@
         .three-step-card:hover {
             transform: translateY(-5px);
         }
-
 </style>
 
+
+<!-- Scripts: jQuery, jQuery UI, SweetAlert2 and your custom script -->
+
+
 @section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function () {
+            // Toggle Return Date visibility
             function toggleReturnDate() {
                 if ($('#oneWay').is(':checked')) {
                     $('#returnDateDiv').hide();
@@ -176,26 +186,60 @@
                     $('#returnDateDiv').show();
                 }
             }
-
             toggleReturnDate();
-
             $('input[name="tripType"]').change(function () {
                 toggleReturnDate();
             });
 
+            // Autocomplete for both From and To inputs
+            $("#fromInput, #toInput").autocomplete({
+                source: function (request, response) {
+                    $.ajax({
+                        url: '/Bus/GetLocationSuggestions',
+                        data: { term: request.term },
+                        success: function (data) {
+                            response(data);
+                        }
+                    });
+                },
+                minLength: 1
+            });
+
+            // Form submit with SweetAlert loader + redirect to Results page
             $('#busSearchForm').submit(function (e) {
                 e.preventDefault();
+
+                const from = $('#fromInput').val().trim();
+                const to = $('#toInput').val().trim();
+                const journeyDate = $('input[name="journeyDate"]').val();
+
+                if (!from || !to || !journeyDate) {
+                    Swal.fire('Error', 'Please fill out all required fields.', 'error');
+                    return;
+                }
 
                 Swal.fire({
                     title: 'Searching...',
                     text: 'Please wait while we fetch available routes.',
                     icon: 'info',
-                    showConfirmButton: false,
-                    timer: 1500
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
                 });
 
-                // TODO: Add AJAX call to load results
+                // Redirect with query string params after 1.5s delay
+                setTimeout(() => {
+                    const returnDate = $('input[name="returnDate"]').val();
+                    let url = `/Bus/Results?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&journeyDate=${journeyDate}`;
+                    if (returnDate && $('#roundWay').is(':checked')) {
+                        url += `&returnDate=${encodeURIComponent(returnDate)}`;
+                    }
+                    url += `&tripType=${$('input[name="tripType"]:checked').val()}`;
+                    window.location.href = url;
+                }, 1500);
             });
         });
     </script>
 }
+

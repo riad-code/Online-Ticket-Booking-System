@@ -1,0 +1,16 @@
+﻿using ONLINE_TICKET_BOOKING_SYSTEM.Models;
+
+namespace ONLINE_TICKET_BOOKING_SYSTEM.ViewModels
+{
+    public class BusSearchResultViewModel
+    {
+        public string From { get; set; }
+        public string To { get; set; }
+        public string TripType { get; set; }
+        public DateTime JourneyDate { get; set; }
+        public DateTime? ReturnDate { get; set; }
+
+        public List<BusSchedule> AvailableBuses { get; set; }
+    }
+
+}

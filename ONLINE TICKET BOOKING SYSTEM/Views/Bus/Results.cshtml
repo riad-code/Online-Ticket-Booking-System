@@ -1,0 +1,284 @@
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.BusSearchResultViewModel
+
+@{
+    ViewData["Title"] = "Bus Search Results";
+    Layout = "_Layout";
+
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Bus Tickets - Search Results</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Bootstrap, FontAwesome, SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .bus-card {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .filter-box {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .price-old {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .badge-discount {
+            background-color: #ffe0b2;
+            color: #ff6f00;
+            font-weight: bold;
+        }
+
+        .btn-book {
+            background-color: #00b34b;
+            color: white;
+            font-weight: 600;
+        }
+
+            .btn-book:hover {
+                background-color: #00903a;
+            }
+
+        .step-line {
+            font-size: 13px;
+            color: #777;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row mt-4">
+          
+            <!-- Filters Section -->
+            <div class="col-md-3">
+                <div class="filter-box">
+                    <h6><strong>Filters</strong></h6>
+                    <hr />
+                    <div class="d-grid mt-2">
+                        <button type="button" class="btn btn-outline-success btn-sm" onclick="resetFilters()">Reset </button>
+                    </div>
+                    <div class="mb-2">
+                        <strong class="text-warning">BUS TYPE</strong>
+                        <div class="form-check ">
+                            <input class="form-check-input" type="checkbox" id="ac" />
+                            <label class="form-check-label" for="ac">AC</label>
+                        </div>
+                        <div class="form-check ">
+                            <input class="form-check-input" type="checkbox" id="nonac" />
+                            <label class="form-check-label" for="nonac">Non AC</label>
+                        </div>
+                    </div>
+
+
+                    <style>
+                        .form-control {
+                            border:  solid green !important;
+                           
+                            border-radius: 2px; 
+                        }
+
+                            
+                            .form-control:focus {
+                                border-color: darkgreen !important;
+                                box-shadow: 0 0 2px green;
+                                outline: none;
+                            }
+                    </style>
+
+                    <div class="mb-2">
+                        <strong class="text-warning">OPERATOR</strong>
+                        <select class="form-control">
+                            <option value="" disabled selected>Search Operator</option>
+                            <option value="shohog">Shohog</option>
+                            <option value="green_line">Green Line</option>
+                            <option value="executive">Executive</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <strong class="text-warning">Boarding Point</strong>
+                        <select class="form-control">
+                            <option value="" disabled selected>Search Boarding</option>
+                            <option value="uttara">Uttara</option>
+                            <option value="gabtoli">Gabtoli</option>
+                            <option value="motijheel">Motijheel</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-2">
+                        <strong class="text-warning">Dropping Point</strong>
+                        <select class="form-control">
+                            <option value="" disabled selected>Search Dropping</option>
+                            <option value="pallabi">Pallabi</option>
+                            <option value="mirpur">Mirpur</option>
+                            <option value="dhanmondi">Dhanmondi</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+
+
+
+                    <!-- DEPARTURE TIME -->
+                    <p class="mb-2 mt-4 fw-bold text-warning">DEPARTURE TIME</p>
+                    <div class="form-check mb-2 border p-3 rounded bg-light">
+                        <input class="form-check-input" type="checkbox" id="departureMorning" />
+                        <label class="form-check-label" for="departureMorning">
+                            ☀️ Morning<br /><small class="text-muted">06:00 AM - 12:00 PM</small>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2 border p-3 rounded bg-light">
+                        <input class="form-check-input" type="checkbox" id="departureAfternoon" />
+                        <label class="form-check-label" for="departureAfternoon">
+                            🌤️ Afternoon<br /><small class="text-muted">12:00 PM - 06:00 PM</small>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2 border p-3 rounded bg-light">
+                        <input class="form-check-input" type="checkbox" id="departureEvening" />
+                        <label class="form-check-label" for="departureEvening">
+                            🌙 Evening<br /><small class="text-muted">06:00 PM - 12:00 AM</small>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2 border p-3 rounded bg-light">
+                        <input class="form-check-input" type="checkbox" id="departureEarlyMorning" />
+                        <label class="form-check-label" for="departureEarlyMorning">
+                            🌄 Early Morning<br /><small class="text-muted">Before 06:00 AM</small>
+                        </label>
+                    </div>
+
+                    <!-- ARRIVAL TIME -->
+                    <p class="mb-2 mt-4 fw-bold text-warning">ARRIVAL TIME</p>
+                    <div class="form-check mb-2 border p-3 rounded bg-light">
+                        <input class="form-check-input" type="checkbox" id="arrivalMorning" />
+                        <label class="form-check-label" for="arrivalMorning">
+                            ☀️ Morning<br /><small class="text-muted">06:00 AM - 12:00 PM</small>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2 border p-3 rounded bg-light">
+                        <input class="form-check-input" type="checkbox" id="arrivalAfternoon" />
+                        <label class="form-check-label" for="arrivalAfternoon">
+                            🌤️ Afternoon<br /><small class="text-muted">12:00 PM - 06:00 PM</small>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2 border p-3 rounded bg-light">
+                        <input class="form-check-input" type="checkbox" id="arrivalEvening" />
+                        <label class="form-check-label" for="arrivalEvening">
+                            🌙 Evening<br /><small class="text-muted">06:00 PM - 12:00 AM</small>
+                        </label>
+                    </div>
+                    <div class="form-check mb-2 border p-3 rounded bg-light">
+                        <input class="form-check-input" type="checkbox" id="arrivalEarlyMorning" />
+                        <label class="form-check-label" for="arrivalEarlyMorning">
+                            🌄 Early Morning<br /><small class="text-muted">Before 06:00 AM</small>
+                        </label>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="col-md-9">
+                <div class="mb-3">
+                    <h5>
+                        Buses from <strong class="text-success">@Model.From</strong> to <strong class="text-success">@Model.To</strong> on
+                        <strong>@Model.JourneyDate.ToString("ddd, dd MMM yyyy")</strong>
+                    </h5>
+                    <div class="step-line">
+                        Choose Departing Ticket <i class="fa fa-chevron-right mx-1"></i>
+                        Passenger Details <i class="fa fa-chevron-right mx-1"></i>
+                        Review & Pay
+                    </div>
+                </div>
+
+                @if (Model.AvailableBuses != null && Model.AvailableBuses.Any())
+                {
+                    @foreach (var bus in Model.AvailableBuses)
+                    {
+                        <div class="bus-card d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="text-success mb-1">@bus.OperatorName</h5>
+                                <div class="text-muted mb-1">@bus.BusType</div>
+                                <div class="text-muted">Route: @bus.From - @bus.To</div>
+                                <span class="badge badge-discount mt-2">🎉 Get 30 TK Discount</span>
+                                <div class="mt-2">
+                                    <span class="badge bg-light border">Cancellation Policy</span>
+                                    <span class="badge bg-light border">Boarding Point</span>
+                                    <span class="badge bg-light border">Dropping Point</span>
+                                    <span class="badge bg-light border">Amenities</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="d-flex align-items-center justify-content-end">
+                                    <div class="me-3 text-center">
+                                        <div><strong>@bus.DepartureTime.ToString(@"hh\:mm")</strong></div>
+                                        <small class="text-muted">@Model.JourneyDate.ToString("ddd, dd MMM")</small>
+                                        <div class="text-muted">@bus.From</div>
+                                    </div>
+                                    <div>
+                                        <i class="fa fa-arrow-right text-success"></i>
+                                        <div class="text-center text-muted small">
+                                            @{
+                                                var duration = bus.ArrivalTime - bus.DepartureTime;
+                                                @duration.ToString(@"h\h\ mm\m")
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="ms-3 text-center">
+                                        <div><strong>@bus.ArrivalTime.ToString(@"hh\:mm")</strong></div>
+                                        <small class="text-muted">@Model.JourneyDate.ToString("ddd, dd MMM")</small>
+                                        <div class="text-muted">@bus.To</div>
+                                    </div>
+                                </div>
+                                <div class="mt-2">
+                                    <span class="price-old me-2">৳@((bus.Fare + 30))</span>
+                                    <span class="text-success fw-bold fs-5">৳@bus.Fare</span>
+                                </div>
+                                <div class="text-muted small">@bus.SeatsAvailable Seat(s) Available</div>
+                                <button class="btn btn-book btn-sm mt-2">BOOK TICKET</button>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        No buses found for the selected route and date.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- JS dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function resetFilters() {
+            document.querySelectorAll('.filter-box input[type="checkbox"]').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.filter-box input[type="text"], .filter-box select').forEach(input => input.value = '');
+        }
+    </script>
+
+</body>
+</html>

@@ -44,38 +44,48 @@ bool hideLayout = currentPath.Contains("/account/login")
                     <div class="collapse navbar-collapse" id="shohozNavbar">
                         <ul class="navbar-nav mx-auto align-items-center">
                             <li class="nav-item me-3">
-                                <a asp-controller="Bus" asp-action="Index" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
+                                <a asp-controller="Bus" asp-action="Index"
+                                   class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg @(currentPath.Contains("/bus") ? "active-page" : "")">
                                     <i class="fa-solid fa-bus fs-5 me-1"></i>
                                     <span>Bus</span>
                                 </a>
                             </li>
 
                             <li class="nav-item me-3">
-                                <a href="#" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
+                                <a href="#"
+                                   class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg @(currentPath.Contains("/air") ? "active-page" : "")">
                                     <i class="fa-solid fa-plane-up fs-5 me-1"></i>
                                     <span>Air</span>
                                 </a>
                             </li>
+
                             <li class="nav-item me-3">
-                                <a href="#" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
+                                <a href="#"
+                                   class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg @(currentPath.Contains("/train") ? "active-page" : "")">
                                     <i class="bi bi-train-front-fill fs-5 me-1"></i>
                                     <span>Train</span>
                                 </a>
                             </li>
+
                             <li class="nav-item me-3">
-                                <a href="#" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
+                                <a href="#"
+                                   class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg @(currentPath.Contains("/launch") ? "active-page" : "")">
                                     <i class="fa-solid fa-ship fs-5 me-1"></i>
                                     <span>Launch</span>
                                 </a>
                             </li>
+
                             <li class="nav-item me-3">
-                                <a href="#" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
+                                <a href="#"
+                                   class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg @(currentPath.Contains("/event") ? "active-page" : "")">
                                     <i class="fa-solid fa-calendar-days fs-5 me-1"></i>
                                     <span>Event</span>
                                 </a>
                             </li>
+
                             <li class="nav-item me-3 position-relative">
-                                <a href="#" class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg">
+                                <a href="#"
+                                   class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg @(currentPath.Contains("/park") ? "active-page" : "")">
                                     <i class="bi bi-tree-fill fs-5 me-1"></i>
                                     <span>Park</span>
                                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.6rem;">
@@ -83,14 +93,7 @@ bool hideLayout = currentPath.Contains("/account/login")
                                     </span>
                                 </a>
                             </li>
-                        </ul>
 
-                        <ul class="navbar-nav align-items-center">
-                            <li class="nav-item me-3">
-                                <a href="tel:16374" class="btn btn-warning rounded-pill px-4 fw-semibold d-flex align-items-center">
-                                    <i class="bi bi-telephone-fill me-2"></i>16374
-                                </a>
-                            </li>
                         </ul>
                         <partial name="_LoginPartial" />
                     </div>
@@ -110,6 +113,13 @@ bool hideLayout = currentPath.Contains("/account/login")
                         color: #198754 !important;
                         background-color: transparent !important;
                     }
+
+                .active-page {
+                    border: 2px solid #198754 !important;
+                    color: #198754 !important;
+                    background-color: transparent !important;
+                }
+
             </style>
         </header>
     }
