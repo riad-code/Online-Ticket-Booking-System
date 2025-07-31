@@ -105,7 +105,11 @@
                 <a asp-controller="Account" asp-action="Profile"><span class="material-icons">person</span> My Profile</a>
                 <a asp-area="Identity" asp-page="/Account/ResetPassword"><span class="material-icons">lock</span> Change Password</a>
                 <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-                    <button type="submit"><span class="material-icons">logout</span> Logout</button>
+                    <button type="submit" style="display:flex; align-items:center; gap:5px;">
+                        <span class="material-icons">logout</span>
+                        Logout
+                    </button>
+
                 </form>
             </div>
         </div>

@@ -83,6 +83,24 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             return Ok(suggestions);
         }
+        [HttpGet]
+        public JsonResult GetLocationSuggestions(string term)
+        {
+            var locations = _context.BusSchedules
+                .Where(b => b.From.StartsWith(term) || b.To.StartsWith(term))
+                .Select(b => b.From)
+                .Union(
+                    _context.BusSchedules
+                        .Where(b => b.To.StartsWith(term))
+                        .Select(b => b.To)
+                )
+                .Distinct()
+                .Take(10)
+                .ToList();
+
+            return Json(locations);
+        }
+
 
     }
 }
