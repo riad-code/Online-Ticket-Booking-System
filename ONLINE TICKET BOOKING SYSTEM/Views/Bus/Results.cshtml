@@ -1,4 +1,6 @@
-﻿@model ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.BusSearchResultViewModel
+﻿
+@model ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.BusSearchResultViewModel
+@using Newtonsoft.Json
 
 @{
     ViewData["Title"] = "Bus Search Results";
@@ -29,9 +31,9 @@
         font-weight: 600;
     }
 
-        .btn-green:hover {
-            background-color: #00903a;
-        }
+    .btn-green:hover {
+        background-color: #00903a;
+    }
 
     .filter-box, .bus-card {
         background: #fff;
@@ -62,68 +64,63 @@
 <div class="container-fluid mt-4">
     <!-- 🔍 Top Search Form -->
     <div class="search-header">
-       
-            <div class="bg-white rounded-4 shadow-lg p-4">
-                <!-- Toggle Buttons -->
-                <div class="d-flex justify-content-center gap-4 mb-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="tripType" id="oneWay" value="One Way" />
-                        <label class="form-check-label fw-semibold" for="oneWay">One Way</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="tripType" id="roundWay" value="Round Way" checked />
-                        <label class="form-check-label fw-semibold" for="roundWay">Round Way</label>
+        <div class="bg-white rounded-4 shadow-lg p-4">
+            <!-- Toggle Buttons -->
+            <div class="d-flex justify-content-center gap-4 mb-4">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tripType" id="oneWay" value="One Way" />
+                    <label class="form-check-label fw-semibold" for="oneWay">One Way</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="tripType" id="roundWay" value="Round Way" checked />
+                    <label class="form-check-label fw-semibold" for="roundWay">Round Way</label>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="busSearchForm" class="row g-3 align-items-end" method="get" action="/Bus/Results">
+                <!-- From -->
+                <div class="col-md-3">
+                    <label class="form-label text-muted">From</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-geo-alt-fill text-success"></i>
+                        </span>
+                        <input type="text" id="fromInput" name="from" class="form-control border-start-0" placeholder="Enter departure city" required />
                     </div>
                 </div>
 
-                <!-- Form -->
-                <form id="busSearchForm" class="row g-3 align-items-end" method="get" action="/Bus/Results">
-                    <!-- From -->
-                    <div class="col-md-3">
-                        <label class="form-label text-muted">From</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="bi bi-geo-alt-fill text-success"></i>
-                            </span>
-
-
-                            <input type="text" id="fromInput" name="from" class="form-control border-start-0" placeholder="Enter departure city" required />
-                        </div>
+                <!-- To -->
+                <div class="col-md-3">
+                    <label class="form-label text-muted">To</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-geo-alt text-success"></i>
+                        </span>
+                        <input type="text" id="toInput" name="to" class="form-control border-start-0" placeholder="Enter destination city" required />
                     </div>
+                </div>
 
-                    <!-- To -->
-                    <div class="col-md-3">
-                        <label class="form-label text-muted">To</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="bi bi-geo-alt text-success"></i>
-                            </span>
-                            <input type="text" id="toInput" name="to" class="form-control border-start-0" placeholder="Enter destination city" required />
-                        </div>
-                    </div>
+                <!-- Journey Date -->
+                <div class="col-md-2">
+                    <label class="form-label text-muted">Journey Date</label>
+                    <input type="date" name="journeyDate" class="form-control" required />
+                </div>
 
-                    <!-- Journey Date -->
-                    <div class="col-md-2">
-                        <label class="form-label text-muted">Journey Date</label>
-                        <input type="date" name="journeyDate" class="form-control" required />
-                    </div>
+                <!-- Return Date -->
+                <div class="col-md-2" id="returnDateDiv">
+                    <label class="form-label text-muted">Return Date</label>
+                    <input type="date" name="returnDate" class="form-control" />
+                </div>
 
-                    <!-- Return Date -->
-                    <div class="col-md-2" id="returnDateDiv">
-                        <label class="form-label text-muted">Return Date</label>
-                        <input type="date" name="returnDate" class="form-control" />
-                    </div>
-
-                    <!-- Search Button -->
-                    <div class="col-md-2 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-success btn-lg fw-semibold w-100">
-                            <i class="bi bi-search me-1"></i> Search
-                        </button>
-                    </div>
-                </form>
-            </div>
-      
-       
+                <!-- Search Button -->
+                <div class="col-md-2 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-success btn-lg fw-semibold w-100">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <div class="row">
@@ -253,7 +250,6 @@
                         Buses from <strong class="text-success">@Model.From</strong> to <strong class="text-success">@Model.To</strong> on
                         <strong>@Model.JourneyDate.ToString("ddd, dd MMM yyyy")</strong>
                     </h5>
-                   
                 </div>
                 <div>
                     <button class="btn btn-outline-success btn-sm me-2">LOW TO HIGH</button>
@@ -261,128 +257,17 @@
                 </div>
             </div>
 
-            @if (Model.AvailableBuses != null && Model.AvailableBuses.Any())
-            {
-                foreach (var bus in Model.AvailableBuses)
-                {
-                    <div class="bus-card d-flex justify-content-between align-items-start flex-wrap">
-                        <div class="me-4">
-                            <h5 class="text-success">@bus.OperatorName</h5>
-                            <div class="text-muted mb-1">@bus.BusType</div>
-                            <div class="text-muted small">Route: @bus.FullRoute</div>
-                            <span class="badge badge-discount mt-2">🎉 Get 30 TK Discount</span>
-                            <div class="mt-2 text-white">
-                                <span class="badge  bg-success border">Cancellation Policy</span>
-                                <span class="badge  bg-success border">Boarding Point</span>
-                                <span class="badge bg-success border">Dropping Point</span>
-                                <span class="badge  bg-success border">Amenities</span>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <div class="d-flex align-items-center justify-content-end mb-2">
-                                <div class="me-3 text-center">
-                                    <strong>@bus.DepartureTime.ToString(@"hh\:mm")</strong><br />
-                                    <small class="text-muted">@Model.JourneyDate.ToString("ddd, dd MMM")</small><br />
-                                    <span class="text-muted">@bus.From</span>
-                                </div>
-                                <div class="text-center mx-2">
-                                    <i class="fa fa-arrow-right text-success"></i><br />
-                                    <small class="text-muted">
-                                        @{
-                                            var duration = bus.ArrivalTime - bus.DepartureTime;
-                                            @duration.ToString(@"h\h\ mm\m")
-                                        }
-                                    </small>
-                                </div>
-                                <div class="ms-3 text-center">
-                                    <strong>@bus.ArrivalTime.ToString(@"hh\:mm")</strong><br />
-                                    <small class="text-muted">@Model.JourneyDate.ToString("ddd, dd MMM")</small><br />
-                                    <span class="text-muted">@bus.To</span>
-                                </div>
-                            </div>
-                            <div class="mb-1">
-                                <span class="price-old">৳@((bus.Fare + 30))</span>
-                                <span class="text-success fw-bold fs-5 ms-2">৳@bus.Fare</span>
-                            </div>
-                            <div class="text-muted small mb-2">@bus.SeatsAvailable Seat(s) Available</div>
-                            <button class="btn btn-outline-success  btn-green btn-sm">BOOK TICKET</button>
-                        </div>
-                    </div>
-                }
-            }
-            else
-            {
-                <div class="alert alert-warning">
-                    No buses found for the selected route and date.
-                </div>
-            }
+            <!-- Container for main buses (rendered by JS) -->
+            <div id="mainBusesContainer"></div>
             <!-- ======================== Return Trip Section ========================= -->
-            @if (Model.TripType?.ToLower() == "roundtrip" && Model.ReturnDate != null)
-            {
-                <hr />
-                <h5>
-                    Return Buses from <strong class="text-success">@Model.To</strong> to <strong class="text-success">@Model.From</strong> on
-                    <strong>@Model.ReturnDate?.ToString("ddd, dd MMM yyyy")</strong>
-                </h5>
+            <h5>
+                Return Buses from <strong class="text-success">@Model.To</strong> to <strong class="text-success">@Model.From</strong> on
+                <strong>@Model.ReturnDate?.ToString("ddd, dd MMM yyyy")</strong>
+            </h5>
 
+            <div id="returnBusesContainer"></div>
 
-                @if (Model.ReturnBuses != null && Model.ReturnBuses.Any())
-                {
-                    foreach (var bus in Model.ReturnBuses)
-                    {
-                        <div class="bus-card d-flex justify-content-between align-items-start flex-wrap">
-                            <div class="me-4">
-                                <h5 class="text-success">@bus.OperatorName</h5>
-                                <div class="text-muted mb-1">@bus.BusType</div>
-                                <div class="text-muted small">Route: @bus.FullRoute</div>
-                                <span class="badge badge-discount mt-2">🎉 Get 30 TK Discount</span>
-                                <div class="mt-2">
-                                    <span class="badge bg-success border">Cancellation Policy</span>
-                                    <span class="badge bg-success border">Boarding Point</span>
-                                    <span class="badge bg-success border">Dropping Point</span>
-                                    <span class="badge bg-success border">Amenities</span>
-                                </div>
-                            </div>
-                            <div class="text-end">
-                                <div class="d-flex align-items-center justify-content-end mb-2">
-                                    <div class="me-3 text-center">
-                                        <strong>@bus.DepartureTime.ToString(@"hh\:mm")</strong><br />
-                                        <small class="text-muted">@Model.ReturnDate?.ToString("ddd, dd MMM")</small><br />
-                                        <span class="text-muted">@bus.From</span>
-                                    </div>
-                                    <div class="text-center mx-2">
-                                        <i class="fa fa-arrow-right text-success"></i><br />
-                                        <small class="text-muted">
-                                            @{
-                                                var duration = bus.ArrivalTime - bus.DepartureTime;
-                                                @duration.ToString(@"h\h\ mm\m")
-                                            }
-                                        </small>
-                                    </div>
-                                    <div class="ms-3 text-center">
-                                        <strong>@bus.ArrivalTime.ToString(@"hh\:mm")</strong><br />
-                                        <small class="text-muted">@Model.ReturnDate?.ToString("ddd, dd MMM")</small><br />
-                                        <span class="text-muted">@bus.To</span>
-                                    </div>
-                                </div>
-                                <div class="mb-1">
-                                    <span class="price-old">৳@((bus.Fare + 30))</span>
-                                    <span class="text-success fw-bold fs-5 ms-2">৳@bus.Fare</span>
-                                </div>
-                                <div class="text-muted small mb-2">@bus.SeatsAvailable Seat(s) Available</div>
-                                <button class="btn btn-outline-success  btn-green btn-sm">BOOK TICKET</button>
-                            </div>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <p class="text-danger">No return buses found.</p>
-                }
-            }
-
-
-
+           
         </div>
     </div>
 </div>
@@ -401,14 +286,39 @@
         });
     }
 </script>
+<script type="application/json" id="busesJson">
+    @Html.Raw(JsonConvert.SerializeObject(Model.AvailableBuses ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.Models.BusSchedule>()))
+</script>
 
+<script type="application/json" id="returnBusesJson">
+    @Html.Raw(JsonConvert.SerializeObject(Model.ReturnBuses ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.Models.BusSchedule>()))
+</script>
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         $(document).ready(function () {
+            let allBuses = [];
+            let allReturnBuses = [];
+
+            try {
+                allBuses = JSON.parse(document.getElementById('busesJson').textContent);
+            } catch (e) {
+                console.error("Error parsing allBuses:", e);
+            }
+
+            try {
+                allReturnBuses = JSON.parse(document.getElementById('returnBusesJson').textContent);
+            } catch (e) {
+                console.error("Error parsing allReturnBuses:", e);
+            }
+
+            console.log("Available Buses:", allBuses);
+            console.log("Return Buses:", allReturnBuses);
+
             // Toggle Return Date visibility
             function toggleReturnDate() {
                 if ($('#oneWay').is(':checked')) {
@@ -421,7 +331,8 @@
             $('input[name="tripType"]').change(function () {
                 toggleReturnDate();
             });
-            // Autocomplete for both From and To inputs
+
+            // Autocomplete for From and To inputs
             $("#fromInput, #toInput").autocomplete({
                 source: function (request, response) {
                     $.ajax({
@@ -435,7 +346,182 @@
                 minLength: 1
             });
 
-            // Form submit with SweetAlert loader + redirect to Results page
+            // Render buses function
+            function renderBuses(buses, containerSelector) {
+                const container = $(containerSelector);
+                container.empty();
+
+                if (!buses || buses.length === 0) {
+                    container.append('<div class="alert alert-warning">No buses found for the selected filters.</div>');
+                    return;
+                }
+
+                buses.forEach(bus => {
+                    const busHtml = `
+                        <div class="bus-card d-flex justify-content-between align-items-start flex-wrap">
+                            <div class="me-4">
+                                <h5 class="text-success">${bus.OperatorName}</h5>
+                                <div class="text-muted mb-1">${bus.BusType}</div>
+                                <div class="text-muted small">Route: ${bus.FullRoute}</div>
+                                <span class="badge badge-discount mt-2">🎉 Get 30 TK Discount</span>
+                                <div class="mt-2 text-white">
+                                    <span class="badge bg-success border">Cancellation Policy</span>
+                                    <span class="badge bg-success border">Boarding Point</span>
+                                    <span class="badge bg-success border">Dropping Point</span>
+                                    <span class="badge bg-success border">Amenities</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="d-flex align-items-center justify-content-end mb-2">
+                                    <div class="me-3 text-center">
+                                        <strong>${bus.DepartureTime.substring(0,5)}</strong><br />
+                                        <small class="text-muted">${new Date(bus.JourneyDate).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' })}</small><br />
+                                        <span class="text-muted">${bus.From}</span>
+                                    </div>
+                                    <div class="text-center mx-2">
+                                        <i class="fa fa-arrow-right text-success"></i><br />
+                                        <small class="text-muted">${calculateDuration(bus.DepartureTime, bus.ArrivalTime)}</small>
+                                    </div>
+                                    <div class="ms-3 text-center">
+                                        <strong>${bus.ArrivalTime.substring(0,5)}</strong><br />
+                                        <small class="text-muted">${new Date(bus.JourneyDate).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' })}</small><br />
+                                        <span class="text-muted">${bus.To}</span>
+                                    </div>
+                                </div>
+                                <div class="mb-1">
+                                    <span class="price-old">৳${bus.Fare + 30}</span>
+                                    <span class="text-success fw-bold fs-5 ms-2">৳${bus.Fare}</span>
+                                </div>
+                                <div class="text-muted small mb-2">${bus.SeatsAvailable} Seat(s) Available</div>
+                                <button class="btn btn-outline-success btn-green btn-sm">BOOK TICKET</button>
+                            </div>
+                        </div>`;
+                    container.append(busHtml);
+                });
+            }
+
+            // Duration helper
+            function calculateDuration(departure, arrival) {
+                const [dh, dm] = departure.split(':').map(Number);
+                const [ah, am] = arrival.split(':').map(Number);
+                let diffH = ah - dh;
+                let diffM = am - dm;
+                if (diffM < 0) {
+                    diffM += 60;
+                    diffH--;
+                }
+                if(diffH < 0) diffH += 24;
+                return `${diffH}h ${diffM}m`;
+            }
+
+            // Time range check helper
+            function timeInRanges(timeStr, ranges) {
+                const [h, m] = timeStr.split(':').map(Number);
+                const totalMins = h * 60 + m;
+                for (const range of ranges) {
+                    switch (range) {
+                        case 'Early Morning':
+                            if (totalMins < 360) return true;
+                            break;
+                        case 'Morning':
+                            if (totalMins >= 360 && totalMins < 720) return true;
+                            break;
+                        case 'Afternoon':
+                            if (totalMins >= 720 && totalMins < 1080) return true;
+                            break;
+                        case 'Evening':
+                            if (totalMins >= 1080 && totalMins < 1440) return true;
+                            break;
+                    }
+                }
+                return false;
+            }
+
+            // Filter function
+            function applyFilters() {
+                const acChecked = $('#ac').is(':checked');
+                const nonAcChecked = $('#nonac').is(':checked');
+                const operator = $('.filter-box select:eq(0)').val();
+                const boarding = $('.filter-box select:eq(1)').val();
+                const dropping = $('.filter-box select:eq(2)').val();
+
+                const departureTimes = [];
+                if ($('#departureEarlyMorning').is(':checked')) departureTimes.push('Early Morning');
+                if ($('#departureMorning').is(':checked')) departureTimes.push('Morning');
+                if ($('#departureAfternoon').is(':checked')) departureTimes.push('Afternoon');
+                if ($('#departureEvening').is(':checked')) departureTimes.push('Evening');
+
+                const arrivalTimes = [];
+                if ($('#arrivalEarlyMorning').is(':checked')) arrivalTimes.push('Early Morning');
+                if ($('#arrivalMorning').is(':checked')) arrivalTimes.push('Morning');
+                if ($('#arrivalAfternoon').is(':checked')) arrivalTimes.push('Afternoon');
+                if ($('#arrivalEvening').is(':checked')) arrivalTimes.push('Evening');
+
+                // Main Buses
+                let filteredBuses = allBuses.filter(bus => {
+                    if (!acChecked && !nonAcChecked) {
+                    } else if (acChecked && !nonAcChecked) {
+                        if (!bus.BusType.toLowerCase().includes("ac")) return false;
+                    } else if (!acChecked && nonAcChecked) {
+                        if (bus.BusType.toLowerCase().includes("ac")) return false;
+                    }
+
+                    if (operator && operator !== "Search Operator" && operator !== "Other" && bus.OperatorName !== operator)
+                        return false;
+
+                    if (boarding && boarding !== "Search Boarding" && boarding !== "Other") {
+                        if (!bus.BoardingPoints || !bus.BoardingPoints.includes(boarding)) return false;
+                    }
+
+                    if (dropping && dropping !== "Search Dropping" && dropping !== "Other") {
+                        if (!bus.DroppingPoints || !bus.DroppingPoints.includes(dropping)) return false;
+                    }
+
+                    if (departureTimes.length > 0 && !timeInRanges(bus.DepartureTime, departureTimes)) return false;
+                    if (arrivalTimes.length > 0 && !timeInRanges(bus.ArrivalTime, arrivalTimes)) return false;
+
+                    return true;
+                });
+
+                // Return Buses
+                let filteredReturnBuses = allReturnBuses.filter(bus => {
+                    if (!acChecked && !nonAcChecked) {
+                    } else if (acChecked && !nonAcChecked) {
+                        if (!bus.BusType.toLowerCase().includes("ac")) return false;
+                    } else if (!acChecked && nonAcChecked) {
+                        if (bus.BusType.toLowerCase().includes("ac")) return false;
+                    }
+
+                    if (operator && operator !== "Search Operator" && operator !== "Other" && bus.OperatorName !== operator)
+                        return false;
+
+                    if (boarding && boarding !== "Search Boarding" && boarding !== "Other") {
+                        if (!bus.BoardingPoints || !bus.BoardingPoints.includes(boarding)) return false;
+                    }
+
+                    if (dropping && dropping !== "Search Dropping" && dropping !== "Other") {
+                        if (!bus.DroppingPoints || !bus.DroppingPoints.includes(dropping)) return false;
+                    }
+
+                    if (departureTimes.length > 0 && !timeInRanges(bus.DepartureTime, departureTimes)) return false;
+                    if (arrivalTimes.length > 0 && !timeInRanges(bus.ArrivalTime, arrivalTimes)) return false;
+
+                    return true;
+                });
+
+                // Render filtered buses
+                renderBuses(filteredBuses, '#mainBusesContainer');
+                renderBuses(filteredReturnBuses, '#returnBusesContainer');
+            }
+
+            // Bind filters change event
+            $('.filter-box input[type=checkbox], .filter-box select').on('change', applyFilters);
+
+            // Initial render
+            renderBuses(allBuses, '#mainBusesContainer');
+            renderBuses(allReturnBuses, '#returnBusesContainer');
+
+            // ** SweetAlert form submit loader + redirect **
             $('#busSearchForm').submit(function (e) {
                 e.preventDefault();
 
