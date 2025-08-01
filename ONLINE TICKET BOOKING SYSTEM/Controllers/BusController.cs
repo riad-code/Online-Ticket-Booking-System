@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
+using ONLINE_TICKET_BOOKING_SYSTEM.Models;
 using ONLINE_TICKET_BOOKING_SYSTEM.ViewModels;
 using System;
 using System.Linq;
@@ -26,14 +27,29 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         [HttpGet]
         public IActionResult Results(string from, string to, DateTime journeyDate, string? returnDate, string tripType)
         {
-            // Use Contains + trim + ToLower() for flexible search
             var buses = _context.BusSchedules
                 .Where(b =>
-                    b.From.ToLower().Contains(from.ToLower().Trim())
-                    && b.To.ToLower().Contains(to.ToLower().Trim())
-                    && b.JourneyDate.Date == journeyDate.Date)
-                .OrderBy(b => b.DepartureTime)
+                    b.From.ToLower().Contains(from.ToLower().Trim()) &&
+                    b.To.ToLower().Contains(to.ToLower().Trim()) &&
+                    b.JourneyDate.Date == journeyDate.Date)
+                .OrderBy(b => b.JourneyDate)
+                .ThenBy(b => b.DepartureTime)
                 .ToList();
+
+            List<BusSchedule>? returnBuses = null;
+
+            if (tripType?.ToLower() == "roundtrip" && !string.IsNullOrEmpty(returnDate))
+            {
+                DateTime retDate = DateTime.Parse(returnDate);
+                returnBuses = _context.BusSchedules
+                    .Where(b =>
+                        b.From.ToLower().Contains(to.ToLower().Trim()) &&
+                        b.To.ToLower().Contains(from.ToLower().Trim()) &&
+                        b.JourneyDate.Date == retDate.Date)
+                    .OrderBy(b => b.JourneyDate)
+                    .ThenBy(b => b.DepartureTime)
+                    .ToList();
+            }
 
             var vm = new BusSearchResultViewModel
             {
@@ -42,11 +58,16 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 JourneyDate = journeyDate,
                 ReturnDate = string.IsNullOrEmpty(returnDate) ? null : DateTime.Parse(returnDate),
                 TripType = tripType,
-                AvailableBuses = buses
+                AvailableBuses = buses,
+                ReturnBuses = returnBuses
             };
 
             return View(vm);
         }
+
+
+
+
 
         // Autocomplete for "From"
         [HttpGet]
@@ -86,20 +107,28 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         [HttpGet]
         public JsonResult GetLocationSuggestions(string term)
         {
-            var locations = _context.BusSchedules
-                .Where(b => b.From.StartsWith(term) || b.To.StartsWith(term))
-                .Select(b => b.From)
-                .Union(
-                    _context.BusSchedules
-                        .Where(b => b.To.StartsWith(term))
-                        .Select(b => b.To)
-                )
+            if (string.IsNullOrWhiteSpace(term))
+                return Json(new List<string>());
+
+            term = term.ToLower();
+
+            var fromLocations = _context.BusSchedules
+                .Where(b => b.From.ToLower().StartsWith(term))
+                .Select(b => b.From);
+
+            var toLocations = _context.BusSchedules
+                .Where(b => b.To.ToLower().StartsWith(term))
+                .Select(b => b.To);
+
+            var locations = fromLocations
+                .Union(toLocations)
                 .Distinct()
                 .Take(10)
                 .ToList();
 
             return Json(locations);
         }
+
 
 
     }

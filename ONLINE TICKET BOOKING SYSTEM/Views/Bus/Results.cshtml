@@ -62,29 +62,74 @@
 <div class="container-fluid mt-4">
     <!-- 🔍 Top Search Form -->
     <div class="search-header">
-        <form id="busSearchForm" method="get" asp-controller="Bus" asp-action="Results" class="row gx-2 align-items-center">
-            <div class="col-md-3">
-                <input type="text" id="fromInput" name="from" value="@Model.From" class="form-control" placeholder="From" />
+       
+            <div class="bg-white rounded-4 shadow-lg p-4">
+                <!-- Toggle Buttons -->
+                <div class="d-flex justify-content-center gap-4 mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tripType" id="oneWay" value="One Way" />
+                        <label class="form-check-label fw-semibold" for="oneWay">One Way</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="tripType" id="roundWay" value="Round Way" checked />
+                        <label class="form-check-label fw-semibold" for="roundWay">Round Way</label>
+                    </div>
+                </div>
+
+                <!-- Form -->
+                <form id="busSearchForm" class="row g-3 align-items-end" method="get" action="/Bus/Results">
+                    <!-- From -->
+                    <div class="col-md-3">
+                        <label class="form-label text-muted">From</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-geo-alt-fill text-success"></i>
+                            </span>
+
+
+                            <input type="text" id="fromInput" name="from" class="form-control border-start-0" placeholder="Enter departure city" required />
+                        </div>
+                    </div>
+
+                    <!-- To -->
+                    <div class="col-md-3">
+                        <label class="form-label text-muted">To</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-geo-alt text-success"></i>
+                            </span>
+                            <input type="text" id="toInput" name="to" class="form-control border-start-0" placeholder="Enter destination city" required />
+                        </div>
+                    </div>
+
+                    <!-- Journey Date -->
+                    <div class="col-md-2">
+                        <label class="form-label text-muted">Journey Date</label>
+                        <input type="date" name="journeyDate" class="form-control" required />
+                    </div>
+
+                    <!-- Return Date -->
+                    <div class="col-md-2" id="returnDateDiv">
+                        <label class="form-label text-muted">Return Date</label>
+                        <input type="date" name="returnDate" class="form-control" />
+                    </div>
+
+                    <!-- Search Button -->
+                    <div class="col-md-2 d-flex justify-content-end">
+                        <button type="submit" class="btn btn-success btn-lg fw-semibold w-100">
+                            <i class="bi bi-search me-1"></i> Search
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div class="col-md-3">
-                <input type="text" id="toInput" name="to" value="@Model.To" class="form-control" placeholder="To" />
-            </div>
-            <div class="col-md-2">
-                <input type="date" name="journeyDate" value="@Model.JourneyDate.ToString("yyyy-MM-dd")" class="form-control" />
-            </div>
-            <div class="col-md-2">
-                <input type="date" name="returnDate" class="form-control" placeholder="Return Date" />
-            </div>
-            <div class="col-md-2">
-                <button type="submit" class="btn btn-success w-100">Search</button>
-            </div>
-        </form>
+      
+       
     </div>
 
     <div class="row">
         <!-- Filters -->
         <div class="col-md-3">
-            <div class="filter-box">
+            <div class="filter-box ">
                 <h6><strong>Filters</strong></h6>
                 <hr />
                 <button class="btn btn-outline-success btn-sm w-100 mb-3" onclick="resetFilters()">RESET</button>
@@ -197,17 +242,18 @@
 
         <!-- Results Section -->
         <div class="col-md-9">
+            <div class="step-line alert bg-success text-white fw-bold ">
+                Choose Departing Ticket <i class="fa fa-chevron-right mx-1"></i>
+                Passenger Details <i class="fa fa-chevron-right mx-1"></i>
+                Review & Pay
+            </div>
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
                     <h5>
                         Buses from <strong class="text-success">@Model.From</strong> to <strong class="text-success">@Model.To</strong> on
                         <strong>@Model.JourneyDate.ToString("ddd, dd MMM yyyy")</strong>
                     </h5>
-                    <div class="step-line">
-                        Choose Departing Ticket <i class="fa fa-chevron-right mx-1"></i>
-                        Passenger Details <i class="fa fa-chevron-right mx-1"></i>
-                        Review & Pay
-                    </div>
+                   
                 </div>
                 <div>
                     <button class="btn btn-outline-success btn-sm me-2">LOW TO HIGH</button>
@@ -225,11 +271,11 @@
                             <div class="text-muted mb-1">@bus.BusType</div>
                             <div class="text-muted small">Route: @bus.FullRoute</div>
                             <span class="badge badge-discount mt-2">🎉 Get 30 TK Discount</span>
-                            <div class="mt-2">
-                                <span class="badge bg-light border">Cancellation Policy</span>
-                                <span class="badge bg-light border">Boarding Point</span>
-                                <span class="badge bg-light border">Dropping Point</span>
-                                <span class="badge bg-light border">Amenities</span>
+                            <div class="mt-2 text-white">
+                                <span class="badge  bg-success border">Cancellation Policy</span>
+                                <span class="badge  bg-success border">Boarding Point</span>
+                                <span class="badge bg-success border">Dropping Point</span>
+                                <span class="badge  bg-success border">Amenities</span>
                             </div>
                         </div>
                         <div class="text-end">
@@ -259,7 +305,7 @@
                                 <span class="text-success fw-bold fs-5 ms-2">৳@bus.Fare</span>
                             </div>
                             <div class="text-muted small mb-2">@bus.SeatsAvailable Seat(s) Available</div>
-                            <button class="btn btn-green btn-sm">BOOK TICKET</button>
+                            <button class="btn btn-outline-success  btn-green btn-sm">BOOK TICKET</button>
                         </div>
                     </div>
                 }
@@ -270,6 +316,73 @@
                     No buses found for the selected route and date.
                 </div>
             }
+            <!-- ======================== Return Trip Section ========================= -->
+            @if (Model.TripType?.ToLower() == "roundtrip" && Model.ReturnDate != null)
+            {
+                <hr />
+                <h5>
+                    Return Buses from <strong class="text-success">@Model.To</strong> to <strong class="text-success">@Model.From</strong> on
+                    <strong>@Model.ReturnDate?.ToString("ddd, dd MMM yyyy")</strong>
+                </h5>
+
+
+                @if (Model.ReturnBuses != null && Model.ReturnBuses.Any())
+                {
+                    foreach (var bus in Model.ReturnBuses)
+                    {
+                        <div class="bus-card d-flex justify-content-between align-items-start flex-wrap">
+                            <div class="me-4">
+                                <h5 class="text-success">@bus.OperatorName</h5>
+                                <div class="text-muted mb-1">@bus.BusType</div>
+                                <div class="text-muted small">Route: @bus.FullRoute</div>
+                                <span class="badge badge-discount mt-2">🎉 Get 30 TK Discount</span>
+                                <div class="mt-2">
+                                    <span class="badge bg-success border">Cancellation Policy</span>
+                                    <span class="badge bg-success border">Boarding Point</span>
+                                    <span class="badge bg-success border">Dropping Point</span>
+                                    <span class="badge bg-success border">Amenities</span>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="d-flex align-items-center justify-content-end mb-2">
+                                    <div class="me-3 text-center">
+                                        <strong>@bus.DepartureTime.ToString(@"hh\:mm")</strong><br />
+                                        <small class="text-muted">@Model.ReturnDate?.ToString("ddd, dd MMM")</small><br />
+                                        <span class="text-muted">@bus.From</span>
+                                    </div>
+                                    <div class="text-center mx-2">
+                                        <i class="fa fa-arrow-right text-success"></i><br />
+                                        <small class="text-muted">
+                                            @{
+                                                var duration = bus.ArrivalTime - bus.DepartureTime;
+                                                @duration.ToString(@"h\h\ mm\m")
+                                            }
+                                        </small>
+                                    </div>
+                                    <div class="ms-3 text-center">
+                                        <strong>@bus.ArrivalTime.ToString(@"hh\:mm")</strong><br />
+                                        <small class="text-muted">@Model.ReturnDate?.ToString("ddd, dd MMM")</small><br />
+                                        <span class="text-muted">@bus.To</span>
+                                    </div>
+                                </div>
+                                <div class="mb-1">
+                                    <span class="price-old">৳@((bus.Fare + 30))</span>
+                                    <span class="text-success fw-bold fs-5 ms-2">৳@bus.Fare</span>
+                                </div>
+                                <div class="text-muted small mb-2">@bus.SeatsAvailable Seat(s) Available</div>
+                                <button class="btn btn-outline-success  btn-green btn-sm">BOOK TICKET</button>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-danger">No return buses found.</p>
+                }
+            }
+
+
+
         </div>
     </div>
 </div>
@@ -296,6 +409,18 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function () {
+            // Toggle Return Date visibility
+            function toggleReturnDate() {
+                if ($('#oneWay').is(':checked')) {
+                    $('#returnDateDiv').hide();
+                } else {
+                    $('#returnDateDiv').show();
+                }
+            }
+            toggleReturnDate();
+            $('input[name="tripType"]').change(function () {
+                toggleReturnDate();
+            });
             // Autocomplete for both From and To inputs
             $("#fromInput, #toInput").autocomplete({
                 source: function (request, response) {

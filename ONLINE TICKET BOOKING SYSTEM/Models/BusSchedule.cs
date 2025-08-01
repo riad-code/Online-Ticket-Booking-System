@@ -2,6 +2,10 @@
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Models
 {
+    using ONLINE_TICKET_BOOKING_SYSTEM.Models;
+
+    using System.ComponentModel.DataAnnotations.Schema;
+
     public class BusSchedule
     {
         public int Id { get; set; }
@@ -16,5 +20,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Models
         public decimal Fare { get; set; }
         public int SeatsAvailable { get; set; }
         public string? FullRoute { get; set; }
+
+        [NotMapped]
+        public List<Bus> AvailableBuses { get; set; }
+
+        [NotMapped]
+        public List<Bus> ReturnBuses { get; set; }
     }
+
+
 }
