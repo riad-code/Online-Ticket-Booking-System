@@ -293,6 +293,7 @@
 <script type="application/json" id="returnBusesJson">
     @Html.Raw(JsonConvert.SerializeObject(Model.ReturnBuses ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.Models.BusSchedule>()))
 </script>
+
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
@@ -557,3 +558,4 @@
         });
     </script>
 }
+
