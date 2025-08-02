@@ -31,10 +31,11 @@ bool hideLayout = currentPath.Contains("/account/login")
     @if (!hideLayout)
     {
         <header>
-            <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2">
+            <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2 fixed-top">
+
                 <div class="container">
                     <a class="navbar-brand d-flex align-items-center" asp-controller="Bus" asp-action="Index" style="height: 100px;">
-                        <img src="~/Admin/Images/logo.jpg" alt="Shohoz" style="height: 100px; width: auto;" />
+                        <img src="~/Admin/Images/logo.jpg.png" alt="RiadTrip" style="height: 115px; width: auto;" />
                     </a>
 
                     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#shohozNavbar" aria-controls="shohozNavbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,14 +59,15 @@ bool hideLayout = currentPath.Contains("/account/login")
                                     <span>Air</span>
                                 </a>
                             </li>
-
                             <li class="nav-item me-3">
-                                <a href="#"
+                                <a asp-controller="Train" asp-action="Index"
                                    class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg @(currentPath.Contains("/train") ? "active-page" : "")">
                                     <i class="bi bi-train-front-fill fs-5 me-1"></i>
                                     <span>Train</span>
                                 </a>
                             </li>
+
+
 
                             <li class="nav-item me-3">
                                 <a href="#"
@@ -92,8 +94,14 @@ bool hideLayout = currentPath.Contains("/account/login")
                                         BETA
                                     </span>
                                 </a>
+                            </li>                      
+                        </ul>
+                        <ul class="navbar-nav align-items-center">
+                            <li class="nav-item me-3 ">
+                                <a href="tel:16374" class="btn btn-warning rounded-pill px-4 fw-semibold d-flex align-items-center">
+                                    <i class="bi bi-telephone-fill me-2"></i>16374
+                                </a>
                             </li>
-
                         </ul>
                         <partial name="_LoginPartial" />
                     </div>
@@ -102,6 +110,7 @@ bool hideLayout = currentPath.Contains("/account/login")
             <style>
                 body {
                     font-family: "Libre Franklin", sans-serif;
+                    padding-top: 120px; /* adjust based on your navbar height */
                 }
 
                 .hover-green-bg {
@@ -119,8 +128,8 @@ bool hideLayout = currentPath.Contains("/account/login")
                     color: #198754 !important;
                     background-color: transparent !important;
                 }
-
             </style>
+
         </header>
     }
 
@@ -138,10 +147,11 @@ bool hideLayout = currentPath.Contains("/account/login")
                         <div class="row">
                             <!-- Left Branding Column -->
                             <div class="col-md-4 mb-4">
-                        <img src="~/Admin/Images/white-logo.jpg" alt="Shohoz Logo" style=" width:140px;" />
-                                <p class="mt-3" style="line-height: 1.7;">
-                                    Shohoz, owned and operated by Shohoz Limited, is Bangladesh's largest online ticket destination, which is committed to making your life convenient, easier and smarter.
-                                </p>
+                        <img src="~/Admin/Images/white-logo.png" alt="RiadTrip Logo" style="height: auto; width:150px;" />
+                        <p class="mt-1" style="line-height: 1.7;">
+                            <strong>RiadTrip</strong>, proudly owned and operated by RiadTech Limited, is Bangladesh’s smartest and most trusted online ticket booking platform.
+                        </p>
+
                             </div>
 
                             <!-- Quick Links -->
@@ -185,12 +195,12 @@ bool hideLayout = currentPath.Contains("/account/login")
                         <!-- Bottom -->
                         <div class="row  pt-3 mt-3">
                             <div class="col-md-6">
-                                <p class="mb-0">&copy; 2015 - 2025 Shohoj Ltd. All Rights Reserved.</p>
+                        <p class="mb-0">&copy; 2015 - 2025 RiadTech Ltd. All Rights Reserved.</p>
                             </div>
                             <div class="col-md-6 text-md-end">
-                                <a href="#" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
-                                <a href="#" class="text-white me-3"><i class="fab fa-instagram"></i></a>
-                                <a href="#" class="text-white"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="https://www.facebook.com/ahriadahmmed" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.instagram.com/riiddsss21" class="text-white me-3"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.linkedin.com/in/abrar-hanif-riad" class="text-white"><i class="fab fa-linkedin-in"></i></a>
                             </div>
                         </div>
                     </div>

@@ -78,48 +78,42 @@
     </div>
 </div>
 
-<!-- ✅ GREEN LOGIN NOTICE -->
-<div class="bg-success text-white py-4 px-4 d-flex justify-content-between align-items-center flex-wrap">
-    <div class="col-md-2"></div>
-    <div class="col-md-8 fs-5 fw-semibold">
-        🎉 <span class="fw-bold">Welcome to a Smarter Shohoz Login!</span><br />
-        <small>
-            If you're an existing user, just reset your password once to continue.<br />
-            Now access <strong>Bus</strong>, <strong>Air</strong>, and <strong>Park</strong> with a single Shohoz account. Easy and secure!
-        </small>
-        <a asp-area="Identity" asp-page="/Account/ResetPassword" class="material-icons reset-btn"> Reset Password</a>
-    </div>
-    <div class="col-md-2"></div>
-</div>
+
 
 <!-- ✅ 3 EASY STEPS SECTION -->
 <div class="text-center my-5">
     <h2 class="fw-bold text-success">Buy tickets <span class="text-dark">in 3 easy steps</span></h2>
 
     <div class="row justify-content-center mt-5">
+        <!-- Step 1 -->
         <div class="col-md-3 col-10 text-center three-step-card">
             <div class="step-icon mb-3">
-                <i class="fas fa-search"></i>
+                <img src="/Admin/images/Booking a Bus Trip.png" alt="Search" class="img-fluid" style="height: 120px;" />
             </div>
             <h4 class="fw-bold">Search</h4>
             <p>Choose your origin, destination, journey dates and search for buses</p>
         </div>
+
+        <!-- Step 2 -->
         <div class="col-md-3 col-10 text-center three-step-card">
             <div class="step-icon mb-3">
-                <i class="fas fa-hand-pointer"></i>
+                <img src="/Admin/images/select.svg" alt="Select" class="img-fluid" style="height: 120px;" />
             </div>
             <h4 class="fw-bold">Select</h4>
             <p>Select your desired trip and choose your seats</p>
         </div>
+
+        <!-- Step 3 -->
         <div class="col-md-3 col-10 text-center three-step-card">
             <div class="step-icon mb-3">
-                <i class="fas fa-money-bill-wave"></i>
+                <img src="/Admin/images/pay.svg" alt="Pay" class="img-fluid" style="height: 120px;" />
             </div>
             <h4 class="fw-bold">Pay</h4>
             <p>Pay by bank cards or mobile banking</p>
         </div>
     </div>
 </div>
+
 
 <!-- Styles -->
 <style>

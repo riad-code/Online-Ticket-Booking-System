@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore; // Make sure this is added for AnyAsync
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
 {
@@ -118,6 +119,40 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                // *** UNIQUE VALIDATION CHECKS ADDED HERE ***
+
+                if (!string.IsNullOrEmpty(Input.NidNo))
+                {
+                    var nidExists = await _userManager.Users.AnyAsync(u => u.NidNo == Input.NidNo);
+                    if (nidExists)
+                    {
+                        ModelState.AddModelError("Input.NidNo", "NID Number is already registered.");
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(Input.PassportNo))
+                {
+                    var passportExists = await _userManager.Users.AnyAsync(u => u.PassportNo == Input.PassportNo);
+                    if (passportExists)
+                    {
+                        ModelState.AddModelError("Input.PassportNo", "Passport Number is already registered.");
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(Input.VisaNo))
+                {
+                    var visaExists = await _userManager.Users.AnyAsync(u => u.VisaNo == Input.VisaNo);
+                    if (visaExists)
+                    {
+                        ModelState.AddModelError("Input.VisaNo", "Visa Number is already registered.");
+                    }
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return Page();
+                }
+
                 string profileImagePath = "/images/default-avatar.png"; // Default image if none uploaded
 
                 // Save uploaded image if provided
