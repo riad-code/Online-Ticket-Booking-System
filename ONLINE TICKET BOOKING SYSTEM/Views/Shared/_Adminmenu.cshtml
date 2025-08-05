@@ -1,0 +1,131 @@
+﻿<style>
+    /* Active menu link */
+    .nav-sidebar .nav-link.active {
+        background-color: #28a745 !important; /* Normal green */
+        color: #ffffff !important;
+        font-weight: 500;
+    }
+
+        /* Active icon and text */
+        .nav-sidebar .nav-link.active i,
+        .nav-sidebar .nav-link.active p {
+            color: #ffffff !important;
+        }
+
+        /* Active but being clicked or focused */
+        .nav-sidebar .nav-link.active:focus,
+        .nav-sidebar .nav-link.active:active {
+            background-color: #e6f7f0 !important; /* Cream */
+            color: #1DBF73 !important;
+        }
+
+        /* Hovering over the active link */
+        .nav-sidebar .nav-link.active:hover {
+            background-color: #e6f7f0 !important; /* Cream */
+            color: #1DBF73 !important;
+        }
+
+            /* Also update the child icon/text color when hovering active link */
+            .nav-sidebar .nav-link.active:hover i,
+            .nav-sidebar .nav-link.active:hover p {
+                color: #1DBF73 !important;
+            }
+</style>
+
+
+<nav class="mt-2">
+    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+
+        <!-- Admin Dashboard -->
+        <li class="nav-item">
+            <a asp-controller="Admin" asp-action="Dashboard"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
+                <i class="nav-icon fas fa-tachometer-alt"></i>
+                <p>Dashboard</p>
+            </a>
+        </li>
+
+        <!-- Manage Routes -->
+        <li class="nav-item">
+            <a asp-controller="Route" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Route" ? "active" : "")">
+                <i class="nav-icon fas fa-route"></i>
+                <p>Manage Routes</p>
+            </a>
+        </li>
+
+        <!-- Manage Schedules -->
+        <li class="nav-item">
+            <a asp-controller="Schedule" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Schedule" ? "active" : "")">
+                <i class="nav-icon fas fa-calendar-alt"></i>
+                <p>Manage Schedules</p>
+            </a>
+        </li>
+
+        <!-- Manage Vehicles -->
+        <li class="nav-item">
+            <a asp-controller="Vehicle" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Vehicle" ? "active" : "")">
+                <i class="nav-icon fas fa-bus"></i>
+                <p>Manage Vehicles</p>
+            </a>
+        </li>
+
+        <!-- Manage Operators -->
+        <li class="nav-item">
+            <a asp-controller="Operator" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Operator" ? "active" : "")">
+                <i class="nav-icon fas fa-user-tie"></i>
+                <p>Manage Operators</p>
+            </a>
+        </li>
+
+        <!-- Booked Tickets -->
+        <li class="nav-item">
+            <a asp-controller="Ticket" asp-action="AllBookings"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Ticket" ? "active" : "")">
+                <i class="nav-icon fas fa-ticket-alt"></i>
+                <p>Booked Tickets</p>
+            </a>
+        </li>
+
+        <!-- Customer List -->
+        <li class="nav-item">
+            <a asp-controller="UserManagement" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" ? "active" : "")">
+                <i class="nav-icon fas fa-users"></i>
+                <p>Customers</p>
+            </a>
+        </li>
+
+        <!-- Reports -->
+        <li class="nav-item">
+            <a asp-controller="Report" asp-action="Index"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Report" ? "active" : "")">
+                <i class="nav-icon fas fa-chart-bar"></i>
+                <p>Reports</p>
+            </a>
+        </li>
+
+        <!-- Send Notifications -->
+        <li class="nav-item">
+            <a asp-controller="Admin" asp-action="SendEmail"
+               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "SendEmail" ? "active" : "")">
+                <i class="nav-icon fas fa-envelope"></i>
+                <p>Send Notifications</p>
+            </a>
+        </li>
+
+        <!-- Logout -->
+        <li class="nav-item mt-3">
+            <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home")" method="post">
+                <button type="submit" class="nav-link btn btn-link text-left text-success w-100">
+                    <i class="nav-icon fas fa-sign-out-alt"></i>
+                    <p>Logout</p>
+                </button>
+            </form>
+        </li>
+
+    </ul>
+</nav>

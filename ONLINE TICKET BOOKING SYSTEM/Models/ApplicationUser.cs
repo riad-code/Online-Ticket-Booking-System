@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations.Schema;
 
 public class ApplicationUser : IdentityUser
 {
@@ -10,8 +11,9 @@ public class ApplicationUser : IdentityUser
     public string ProfileImagePath { get; set; } = string.Empty;
     public string MobileNumber { get; set; } = string.Empty;
 
-    public string Address { get; set; } = string.Empty;       
-
+    public string Address { get; set; } = string.Empty;
+    [NotMapped]
+    public string FullName => $"{FirstName} {LastName}".Trim();
     public string NidNo { get; set; } = string.Empty;          
     public string VisaNo { get; set; } = string.Empty;         
     public string PassportNo { get; set; } = string.Empty;     
