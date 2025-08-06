@@ -21,7 +21,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            return View(); // Your main search page
+            return View(); 
         }
 
         [HttpGet]
@@ -38,7 +38,9 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             List<BusSchedule>? returnBuses = null;
 
-            if (tripType?.ToLower() == "roundtrip" && !string.IsNullOrEmpty(returnDate))
+            var tripTypeNormalized = tripType?.ToLower().Replace(" ", "");
+            if (tripTypeNormalized == "roundway" && !string.IsNullOrEmpty(returnDate))
+
             {
                 DateTime retDate = DateTime.Parse(returnDate);
                 returnBuses = _context.BusSchedules

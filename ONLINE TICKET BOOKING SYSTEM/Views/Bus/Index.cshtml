@@ -20,14 +20,13 @@
             <div class="bg-white rounded-4 shadow-lg p-4">
                 <!-- Toggle Buttons -->
                 <div class="d-flex justify-content-center gap-4 mb-4">
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="tripType" id="oneWay" value="oneway" />
-                        <label class="form-check-label fw-semibold" for="oneWay">One Way</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="tripType" id="roundWay" value="roundtrip" checked />
-                        <label class="form-check-label fw-semibold" for="roundWay">Round Way</label>
-                    </div>
+                    <input class="form-check-input" type="radio" name="tripType" id="oneWay" value="One Way" @( (Model?.TripType ?? "").Equals("One Way", StringComparison.OrdinalIgnoreCase) ? "checked" : "" ) />
+                    <label class="form-check-label fw-semibold" for="oneWay">One Way</label>
+
+                    <input class="form-check-input" type="radio" name="tripType" id="roundWay" value="Round Way" @( (Model?.TripType ?? "").Equals("Round Way", StringComparison.OrdinalIgnoreCase) ? "checked" : "" ) />
+                    <label class="form-check-label fw-semibold" for="roundWay">Round Way</label>
+
+
                 </div>
 
                 <!-- Form -->
@@ -57,13 +56,13 @@
                     <!-- Journey Date -->
                     <div class="col-md-2">
                         <label class="form-label text-muted">Journey Date</label>
-                        <input type="date" name="journeyDate" class="form-control" required />
+                        <input type="text" id="journeyDate" name="journeyDate" class="form-control" required readonly />
                     </div>
 
                     <!-- Return Date -->
                     <div class="col-md-2" id="returnDateDiv">
                         <label class="form-label text-muted">Return Date</label>
-                        <input type="date" name="returnDate" class="form-control" />
+                        <input type="text" id="returnDate" name="returnDate" class="form-control" readonly />
                     </div>
 
                     <!-- Search Button -->
@@ -159,14 +158,31 @@
     }
 </style>
 
-<!-- ✅ Script Section -->
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
     <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         $(document).ready(function () {
-            // Show/hide return date
+                   var today = new Date();
+
+        $("#journeyDate").datepicker({
+            dateFormat: "yy-mm-dd",
+            minDate: 0, // ✅ disables all past dates
+            onSelect: function (selectedDate) {
+                var selected = new Date(selectedDate);
+                $("#returnDate").datepicker("option", "minDate", selected);
+            }
+        });
+
+        $("#returnDate").datepicker({
+            dateFormat: "yy-mm-dd",
+            minDate: 0 // ✅ disables all past dates
+        });
+
+            // ✅ Show/hide return date
             function toggleReturnDate() {
                 if ($('#oneWay').is(':checked')) {
                     $('#returnDateDiv').hide();
@@ -178,7 +194,7 @@
             toggleReturnDate();
             $('input[name="tripType"]').change(toggleReturnDate);
 
-            // Autocomplete
+            // ✅ Autocomplete
             $("#fromInput, #toInput").autocomplete({
                 source: function (request, response) {
                     $.ajax({
@@ -192,7 +208,7 @@
                 minLength: 1
             });
 
-            // Form submit
+            // ✅ Form submit
             $('#busSearchForm').submit(function (e) {
                 e.preventDefault();
 
@@ -217,9 +233,10 @@
 
                 setTimeout(() => {
                     let url = `/Bus/Results?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&journeyDate=${journeyDate}`;
-                    if (tripType === "roundtrip" && returnDate) {
-                        url += `&returnDate=${encodeURIComponent(returnDate)}`;
-                    }
+                           if (tripType && tripType.toLowerCase().includes("round") && returnDate) {
+                            url += `&returnDate=${encodeURIComponent(returnDate)}`;
+                             }
+
                     url += `&tripType=${tripType}`;
                     window.location.href = url;
                 }, 1500);
