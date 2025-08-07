@@ -28,7 +28,7 @@
             <img src="@(string.IsNullOrEmpty(user.ProfileImagePath) ? "/images/default.png" : user.ProfileImagePath)"
                  class="rounded-circle"
                  style="width:35px; height:35px; object-fit:cover;" />
-            <span class="ms-2">@($"{user.FirstName} {user.LastName}")</span>
+            <span class="ms-2 text-success">@($"{user.FirstName} {user.LastName}")</span>
         </a>
         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
               <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">My Profile</a></li>

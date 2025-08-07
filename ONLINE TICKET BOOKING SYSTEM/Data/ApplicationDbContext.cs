@@ -12,6 +12,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
 
         }
         public DbSet<BusSchedule> BusSchedules { get; set; }
+        public DbSet<Bus> Buses { get; set; }
+
     }
 }
 

@@ -1,0 +1,194 @@
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.Models.Bus
+
+@{
+    ViewData["Title"] = "Create Bus";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+
+<style>
+    .dropdown-menu .dropdown-item:hover,
+    .dropdown-menu .dropdown-item:focus {
+        background-color: #28a745 !important;
+        color: white !important;
+    }
+
+    .dropdown-menu .dropdown-item.active {
+        background-color: #218838 !important;
+        color: white !important;
+    }
+
+    .dropdown-toggle {
+        background-color: #198754 !important;
+        color: white !important;
+        border-color: #198754 !important;
+    }
+
+        .dropdown-toggle:focus,
+        .dropdown-toggle:active {
+            box-shadow: none !important;
+        }
+</style>
+
+<div class="container mt-4">
+    <h2 class="text-success fw-bold mb-4">➕ Add New Bus</h2>
+
+    <form id="createBusForm" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-3">
+
+            <div class="col-md-6">
+                <label class="form-label">Bus Type</label>
+                <div class="dropdown">
+                    <button class="btn dropdown-toggle w-100" type="button" id="busTypeDropdown"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                        -- Select Bus Type --
+                    </button>
+                    <ul class="dropdown-menu w-100" aria-labelledby="busTypeDropdown">
+                        <li><a class="dropdown-item" href="#" data-value="AC">AC</a></li>
+                        <li><a class="dropdown-item" href="#" data-value="Non-AC">Non-AC</a></li>
+                    </ul>
+                </div>
+                <input asp-for="BusType" type="hidden" id="BusType" />
+                <span asp-validation-for="BusType" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="OperatorName" class="form-label"></label>
+                <input asp-for="OperatorName" class="form-control" required />
+                <span asp-validation-for="OperatorName" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="From" class="form-label"></label>
+                <input asp-for="From" class="form-control" required />
+                <span asp-validation-for="From" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="To" class="form-label"></label>
+                <input asp-for="To" class="form-control" required />
+                <span asp-validation-for="To" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label for="DepartureTimeInput" class="form-label">Departure Time</label>
+                <input id="DepartureTimeInput" name="DepartureTimeInput" type="time" class="form-control" required />
+                <span class="text-danger" data-valmsg-for="DepartureTimeInput" data-valmsg-replace="true"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label for="ArrivalTimeInput" class="form-label">Arrival Time</label>
+                <input id="ArrivalTimeInput" name="ArrivalTimeInput" type="time" class="form-control" required />
+                <span class="text-danger" data-valmsg-for="ArrivalTimeInput" data-valmsg-replace="true"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="Fare" class="form-label">Fare (৳)</label>
+                <input asp-for="Fare" type="number" step="0.01" class="form-control" required />
+                <span asp-validation-for="Fare" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label asp-for="SeatsAvailable" class="form-label"></label>
+                <input asp-for="SeatsAvailable" type="number" class="form-control" required />
+                <span asp-validation-for="SeatsAvailable" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-12">
+                <label asp-for="FullRoute" class="form-label"></label>
+                <input asp-for="FullRoute" class="form-control" required />
+                <span asp-validation-for="FullRoute" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-12 mt-4">
+                <button type="submit" class="btn btn-success px-4">
+                    <i class="fas fa-save"></i> Save
+                </button>
+                <a href="@Url.Action("ManageBuses", "Admin")" class="btn btn-secondary px-4">
+                    <i class="fas fa-arrow-left"></i> Back
+                </a>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/4.0.0/jquery.validate.unobtrusive.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('.dropdown-item').on('click', function (e) {
+                e.preventDefault();
+                var value = $(this).data('value');
+                var text = $(this).text();
+                $('#BusType').val(value).trigger('change');
+                $('#busTypeDropdown').text(text);
+            });
+
+            $('#createBusForm').on('submit', function (e) {
+                e.preventDefault();
+
+                $('.text-danger').text('');
+
+                if (!$('#BusType').val()) {
+                    Swal.fire('Invalid input', 'Please select a Bus Type.', 'error');
+                    return;
+                }
+
+                if (!$(this).valid()) {
+                    Swal.fire('Invalid input', 'Please fill all fields correctly.', 'error');
+                    return;
+                }
+
+                var formData = $(this).serialize();
+
+                   $.ajax({
+        url: '/Admin/CreateBus',
+        method: 'POST',
+        data: formData,
+        headers: {
+            'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+        },
+        success: function () {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Bus created successfully!',
+                showConfirmButton: false,
+                timer: 1800,
+                timerProgressBar: true,
+                didClose: () => {
+                    window.location.href = '/Admin/ManageBuses';
+                }
+            });
+        },
+                    error: function (xhr) {
+                        if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            var errors = xhr.responseJSON.errors;
+
+                            $.each(errors, function (key, messages) {
+                                var errorSpan = $('[data-valmsg-for="' + key + '"]');
+                                if (errorSpan.length) {
+                                    errorSpan.text(messages.join(', '));
+                                } else {
+                                    Swal.fire('Error!', messages.join(', '), 'error');
+                                }
+                            });
+                        } else {
+                            Swal.fire('Error!', xhr.responseJSON?.message || "Something went wrong.", 'error');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+}

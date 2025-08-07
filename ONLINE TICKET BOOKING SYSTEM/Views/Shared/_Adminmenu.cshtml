@@ -1,35 +1,79 @@
 ﻿<style>
-    /* Active menu link */
+   
     .nav-sidebar .nav-link.active {
-        background-color: #28a745 !important; /* Normal green */
+        background-color: #28a745 !important; 
         color: #ffffff !important;
         font-weight: 500;
     }
 
-        /* Active icon and text */
+       
         .nav-sidebar .nav-link.active i,
         .nav-sidebar .nav-link.active p {
             color: #ffffff !important;
         }
 
-        /* Active but being clicked or focused */
+       
         .nav-sidebar .nav-link.active:focus,
         .nav-sidebar .nav-link.active:active {
-            background-color: #e6f7f0 !important; /* Cream */
+            background-color: #e6f7f0 !important; 
             color: #1DBF73 !important;
         }
 
-        /* Hovering over the active link */
+     
         .nav-sidebar .nav-link.active:hover {
-            background-color: #e6f7f0 !important; /* Cream */
+            background-color: #e6f7f0 !important; 
             color: #1DBF73 !important;
         }
 
-            /* Also update the child icon/text color when hovering active link */
+           
             .nav-sidebar .nav-link.active:hover i,
             .nav-sidebar .nav-link.active:hover p {
                 color: #1DBF73 !important;
             }
+
+  
+    .nav-sidebar .nav-treeview .nav-link {
+        color: #ffffff; 
+        background-color: transparent; 
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+       
+        .nav-sidebar .nav-treeview .nav-link:hover {
+            background-color: #28a745 !important; 
+            color: #ffffff !important; 
+        }
+
+       
+        .nav-sidebar .nav-treeview .nav-link.active {
+            background-color: #198754 !important; 
+            color: #ffffff !important;
+        }
+
+       
+        .nav-sidebar .nav-treeview .nav-link .nav-icon {
+            color: #ffffff !important;
+        }
+
+      
+        .nav-sidebar .nav-treeview .nav-link:focus,
+        .nav-sidebar .nav-treeview .nav-link:active {
+            background-color: #28a745 !important;
+            color: #ffffff !important;
+        }
+
+    .nav-sidebar .nav-treeview .nav-link {
+        color: black !important;
+        background-color: #ffffff !important;
+    }
+
+        .nav-sidebar .nav-treeview .nav-link .nav-icon {
+            color: #000000 !important; 
+        }
+
+        .nav-sidebar .nav-treeview .nav-link:hover .nav-icon {
+            color: #ffffff !important; 
+        }
 </style>
 
 
@@ -63,14 +107,43 @@
             </a>
         </li>
 
-        <!-- Manage Vehicles -->
-        <li class="nav-item">
-            <a asp-controller="Vehicle" asp-action="Index"
-               class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Vehicle" ? "active" : "")">
+        <!-- Manage Vehicles Dropdown -->
+        <li class="nav-item text-success has-treeview @(ViewContext.RouteData.Values["controller"]?.ToString() == "Bus" || ViewContext.RouteData.Values["controller"]?.ToString() == "Air" || ViewContext.RouteData.Values["controller"]?.ToString() == "Train" || ViewContext.RouteData.Values["controller"]?.ToString() == "Launch" ? "menu-open" : "")">
+            <a href="#" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Bus" || ViewContext.RouteData.Values["controller"]?.ToString() == "Air" || ViewContext.RouteData.Values["controller"]?.ToString() == "Train" || ViewContext.RouteData.Values["controller"]?.ToString() == "Launch" ? "active" : "")">
                 <i class="nav-icon fas fa-bus"></i>
-                <p>Manage Vehicles</p>
+                <p>
+                    Manage Vehicles
+                    <i class="right fas fa-angle-left"></i>
+                </p>
             </a>
+            <ul class="nav nav-treeview ">
+                <li class="nav-item">
+                    <a asp-controller="Admin" asp-action="ManageBuses" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Bus" ? "active" : "")">
+                        <i class="fas fa-bus nav-icon text-black"></i>
+                        <p>Manage Bus</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a asp-controller="Air" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Air" ? "active" : "")">
+                        <i class="fas fa-plane nav-icon text-black"></i>
+                        <p>Manage Air</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a asp-controller="Train" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Train" ? "active" : "")">
+                        <i class="fas fa-train nav-icon text-black"></i>
+                        <p>Manage Train</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a asp-controller="Launch" asp-action="Index" class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Launch" ? "active" : "")">
+                        <i class="fas fa-ship nav-icon text-black"></i>
+                        <p>Manage Launch</p>
+                    </a>
+                </li>
+            </ul>
         </li>
+
 
         <!-- Manage Operators -->
         <li class="nav-item">

@@ -1,0 +1,82 @@
+﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Bus>
+@{
+    ViewData["Title"] = "Manage Buses";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+
+<h2 class="text-success fw-bold mt-4 mb-4">🚌 Manage Buses</h2>
+
+<a href="@Url.Action("CreateBus", "Admin")" class="btn btn-success mb-3">➕ Add New Bus</a>
+
+<table class="table table-bordered table-striped table-hover">
+    <thead class="table-success">
+        <tr>
+            <th>ID</th>
+            <th>Bus Type</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Departure</th>
+            <th>Arrival</th>
+            <th>Operator</th>
+            <th>Fare</th>
+            <th>Seats</th>
+            <th>Full Route</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var bus in Model)
+        {
+            <tr>
+                <td>@bus.Id</td>
+                <td>@bus.BusType</td>
+                <td>@bus.From</td>
+                <td>@bus.To</td>
+                <td>@bus.DepartureTime</td>
+                <td>@bus.ArrivalTime</td>
+                <td>@bus.OperatorName</td>
+                <td>@bus.Fare</td>
+                <td>@bus.SeatsAvailable</td>
+                <td>@bus.FullRoute</td>
+                <td>
+                    <a href="@Url.Action("EditBus", "Admin", new { id = bus.Id })" class="btn btn-warning btn-sm">✏️ Edit</a>
+                    <button class="btn btn-danger btn-sm" onclick="deleteBus(@bus.Id)">🗑️ Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+       function deleteBus(id) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'This action cannot be undone!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/Admin/DeleteBus/' + id,
+                    type: 'POST',
+                    success: function () {
+                        location.reload();
+                    },
+                    error: function () {
+                        Swal.fire('Error', 'Something went wrong.', 'error');
+                    }
+                });
+            }
+        });
+    }
+
+</script>

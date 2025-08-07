@@ -58,8 +58,8 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-danger text-white shadow">
-                <div class="card-body">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body text-white ">
                     🎟️ Tickets Sold Today
                     <h4 class="mt-2">@ViewData["TicketsSoldToday"]</h4>
                 </div>
@@ -80,8 +80,8 @@
             </a>
         </div>
         <div class="col-md-3">
-            <a asp-controller="Bus" asp-action="Index" class="text-decoration-none">
-                <div class="card text-white bg-secondary shadow">
+            <a asp-controller="Admin" asp-action="ManageBuses" class="text-decoration-none">
+                <div class="card text-white bg-purple shadow">
                     <div class="card-body text-center">
                         <i class="fas fa-bus fa-2x"></i><br />
                         Manage Buses
