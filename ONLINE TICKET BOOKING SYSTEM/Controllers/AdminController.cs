@@ -17,8 +17,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         public IActionResult Dashboard()
         {
+            int totalBuses = _context.Buses.Count(); // Count all buses
+            ViewData["TotalBuses"] = totalBuses;
+            ViewData["TotalUsers"] = _context.Users.Count();// Pass to view
+
             return View();
         }
+
 
         // ====== Bus Management ======
 
