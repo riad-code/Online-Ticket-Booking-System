@@ -1,0 +1,108 @@
+﻿@using ONLINE_TICKET_BOOKING_SYSTEM.Models
+@model List<ApplicationUser>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Manage Users";
+}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<h2 class="mb-4 text-success fw-bold">Manage Users</h2>
+
+<table class="table table-bordered table-striped align-middle">
+    <thead class="table-success text-success">
+        <tr>
+            <th>UserName</th>
+            <th>Email</th>
+            <th style="width: 150px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var user in Model)
+        {
+            <tr>
+                <td>@user.UserName</td>
+                <td>@user.Email</td>
+                <td>
+                    <button class="btn btn-outline-danger btn-sm delete-user" data-id="@user.Id">
+                        <i class="fas fa-trash-alt"></i> Delete
+                    </button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<style>
+    .table-success {
+        background-color: #d1e7dd !important;
+        color: #0f5132 !important;
+    }
+
+    tbody tr:hover {
+        background-color: #e6f4ea;
+        cursor: pointer;
+    }
+
+    .btn-outline-danger {
+        border-color: #198754;
+        color: #198754;
+        font-weight: 600;
+        transition: background-color 0.3s, color 0.3s;
+    }
+
+        .btn-outline-danger:hover {
+            background-color: #198754;
+            color: #fff;
+            border-color: #198754;
+        }
+</style>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('.delete-user').click(function () {
+                var userId = $(this).data('id');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "User will be deleted permanently!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#198754',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, delete!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '/Admin/DeleteUser',
+                            type: 'POST',
+                            data: { id: userId },
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Deleted!',
+                                        text: response.message,
+                                        showConfirmButton: false,
+                                        timer: 1500
+                                    });
+
+                                    setTimeout(() => location.reload(), 1600);
+                                } else {
+                                    Swal.fire('Error!', response.message, 'error');
+                                }
+                            },
+                            error: function () {
+                                Swal.fire('Error!', 'Something went wrong.', 'error');
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+}

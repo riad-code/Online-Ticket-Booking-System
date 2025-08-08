@@ -406,8 +406,9 @@
                                     </div>
                                 </div>
                                 <div class="mb-1">
-                                    <span class="price-old">৳${bus.Fare + 30}</span>
-                                    <span class="text-success fw-bold fs-5 ms-2">৳${bus.Fare}</span>
+                                          <span class="price-old">৳${bus.Fare}</span> <!-- Original fare -->
+                                           <span class="text-success fw-bold fs-5 ms-2">৳${bus.Fare - 30}</span> <!-- Discounted fare -->
+
                                 </div>
                                 <div class="text-muted small mb-2">${bus.SeatsAvailable} Seat(s) Available</div>
                                 <button class="btn btn-outline-success btn-green btn-sm">BOOK TICKET</button>

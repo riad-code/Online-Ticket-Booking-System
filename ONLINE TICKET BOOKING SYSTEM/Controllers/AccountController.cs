@@ -128,45 +128,45 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         [HttpPost]
         public async Task<IActionResult> UpdateProfile(
-            string Id,
-            string Title,
-            string FirstName,
-            string LastName,
-            string MobileNumber,
-            string Gender,
-            DateTime? DateOfBirth,
-            string Address,
-            string NidNo,
-             string PassportNo,
-            string VisaNo,
-           
-            IFormFile ProfileImage)
+     string Id,
+     string Title,
+     string FirstName,
+     string LastName,
+     string MobileNumber,
+     string Gender,
+     DateTime? DateOfBirth,
+     string Address,
+     string NidNo,
+     string PassportNo,
+     string VisaNo,
+     IFormFile ProfileImage)
         {
             var user = await _userManager.FindByIdAsync(Id);
             if (user == null)
                 return Json(new { success = false, message = "User not found!" });
 
-            // ✅ Update user fields
             if (!string.IsNullOrWhiteSpace(Title)) user.Title = Title;
             if (!string.IsNullOrWhiteSpace(FirstName)) user.FirstName = FirstName;
             if (!string.IsNullOrWhiteSpace(LastName)) user.LastName = LastName;
             if (!string.IsNullOrWhiteSpace(MobileNumber)) user.MobileNumber = MobileNumber;
             if (!string.IsNullOrWhiteSpace(Gender)) user.Gender = Gender;
             if (DateOfBirth.HasValue) user.DateOfBirth = DateOfBirth.Value;
-            if (!string.IsNullOrWhiteSpace(Address)) user.Address = Address;
+
+            // <-- Use the parameter directly here -->
+            if (!string.IsNullOrWhiteSpace(Address))
+                user.Address = Address;
+
             if (!string.IsNullOrWhiteSpace(NidNo)) user.NidNo = NidNo;
             if (!string.IsNullOrWhiteSpace(PassportNo)) user.PassportNo = PassportNo;
             if (!string.IsNullOrWhiteSpace(VisaNo)) user.VisaNo = VisaNo;
-           
 
-            // ✅ Profile Image Upload
             if (ProfileImage != null && ProfileImage.Length > 0)
             {
                 string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads/profile");
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 
-                string fileName = Guid.NewGuid() + Path.GetExtension(ProfileImage.FileName);
+                string fileName = System.Guid.NewGuid() + Path.GetExtension(ProfileImage.FileName);
                 string filePath = Path.Combine(uploadsFolder, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -177,15 +177,12 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 user.ProfileImagePath = "/uploads/profile/" + fileName;
             }
 
-            // ✅ Save changes
             var result = await _userManager.UpdateAsync(user);
             if (result.Succeeded)
                 return Json(new { success = true, message = "Profile updated successfully!" });
 
             return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
         }
-
-
 
     }
 }

@@ -7,11 +7,28 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
 
-<h2 class="text-success fw-bold mt-4 mb-4">🚌 Manage Buses</h2>
+<h2 class="text-success fw-bold mt-4 mb-4"> Manage Buses</h2>
 
 <a href="@Url.Action("CreateBus", "Admin")" class="btn btn-success mb-3">➕ Add New Bus</a>
 
-<table class="table table-bordered table-striped table-hover">
+<!-- Search and Filter -->
+<div class="row mb-3">
+    <div class="col-md-4">
+        <input type="text" id="searchInput" class="form-control" placeholder="🔍 Search (min 3 letters)" />
+    </div>
+    <div class="col-md-2">
+        <select id="rowLimit" class="form-select">
+            <option value="10">Show 10</option>
+            <option value="50">Show 50</option>
+            <option value="100">Show 100</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-secondary" onclick="clearSearch()">❌ Clear</button>
+    </div>
+</div>
+
+<table id="busTable" class="table table-bordered table-striped table-hover">
     <thead class="table-success">
         <tr>
             <th>ID</th>
@@ -54,7 +71,7 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-       function deleteBus(id) {
+    function deleteBus(id) {
         Swal.fire({
             title: 'Are you sure?',
             text: 'This action cannot be undone!',
@@ -79,4 +96,52 @@
         });
     }
 
+    $(document).ready(function () {
+        const $rows = $("#busTable tbody tr");
+        const $searchInput = $('#searchInput');
+        const $rowLimit = $('#rowLimit');
+
+        function applyFilters() {
+            const searchVal = $searchInput.val().toLowerCase();
+            const limit = parseInt($rowLimit.val());
+
+            // Hide all rows initially
+            $rows.hide();
+
+            if (searchVal.length === 0) {
+                // No search, show first 'limit' rows
+                $rows.slice(0, limit).show();
+            } else if (searchVal.length < 3) {
+                // Search text length 1 or 2: show no rows
+                // (all rows hidden)
+            } else {
+                // Search text length >=3: filter rows by search text first
+                const filteredRows = $rows.filter(function () {
+                    return $(this).text().toLowerCase().indexOf(searchVal) > -1;
+                });
+                // Show only first 'limit' rows of filtered rows
+                filteredRows.slice(0, limit).show();
+            }
+        }
+
+        // On search input keyup
+        $searchInput.on('keyup', function () {
+            applyFilters();
+        });
+
+        // On row limit change
+        $rowLimit.on('change', function () {
+            applyFilters();
+        });
+
+        // Clear search button
+        window.clearSearch = function () {
+            $searchInput.val('');
+            applyFilters();
+        };
+
+        // Initialize defaults
+        $rowLimit.val('10');
+        applyFilters();
+    });
 </script>

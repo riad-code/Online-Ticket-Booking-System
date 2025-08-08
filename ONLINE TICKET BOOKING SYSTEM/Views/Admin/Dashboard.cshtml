@@ -18,7 +18,7 @@
 
    
     .card-body:hover {
-        color: #f8f9fa !important;
+        color: black !important;
     }
 
     .card {
@@ -29,7 +29,7 @@
 
 
 <div class="container-fluid mt-4 fw-bold">
-    <h2 class="mb-4 text-success">🎫 Admin Dashboard</h2>
+    <h2 class="mb-4 text-success fw-bold"> Admin Dashboard</h2>
 
     <!-- Stat Summary Cards -->
     <div class="row mb-4">
@@ -50,16 +50,17 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card bg-warning text-dark shadow">
+            <div class="card bg-warning text-white shadow">
                 <div class="card-body">
                     🛣️ Total Routes
-                    <h4 class="card-text">@ViewData["TotalRoutes"]</h4>
+                    <h4 class="mt-2">@ViewData["TotalRoutes"]</h4>
                 </div>
             </div>
         </div>
+
         <div class="col-md-3">
             <div class="card bg-primary text-white shadow">
-                <div class="card-body text-white ">
+                <div class="card-body  ">
                     🎟️ Tickets Sold Today
                     <h4 class="mt-2">@ViewData["TicketsSoldToday"]</h4>
                 </div>
@@ -70,7 +71,7 @@
     <!-- Quick Access Cards -->
     <div class="row mb-4">
         <div class="col-md-3">
-            <a asp-controller="User" asp-action="Index" class="text-decoration-none">
+            <a asp-controller="Admin" asp-action="ManageUsers" class="text-decoration-none">
                 <div class="card text-white bg-primary shadow">
                     <div class="card-body text-center">
                         <i class="fas fa-users-cog fa-2x"></i><br />
@@ -79,6 +80,17 @@
                 </div>
             </a>
         </div>
+        <div class="col-md-3">
+            <a asp-controller="UserManagement" asp-action="Index" class="text-decoration-none">
+                <div class="card text-white bg-pink shadow">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-2x"></i><br />
+                        Customers
+                    </div>
+                </div>
+            </a>
+        </div>
+
         <div class="col-md-3">
             <a asp-controller="Admin" asp-action="ManageBuses" class="text-decoration-none">
                 <div class="card text-white bg-purple shadow">
@@ -90,8 +102,19 @@
             </a>
         </div>
         <div class="col-md-3">
-            <a asp-controller="Route" asp-action="Index" class="text-decoration-none">
+            <a asp-controller="UserManagement" asp-action="Operator" class="text-decoration-none">
                 <div class="card text-white bg-info shadow">
+                    <div class="card-body text-center">
+                        <i class="fas fa-user-tie fa-2x "></i><br />
+                        Manage Operators
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a asp-controller="Route" asp-action="Index" class="text-decoration-none">
+                <div class="card text-white bg-success shadow">
                     <div class="card-body text-center">
                         <i class="fas fa-road fa-2x"></i><br />
                         Manage Routes
@@ -109,7 +132,7 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-3 mt-3">
+        <div class="col-md-3 ">
             <a asp-controller="Report" asp-action="Index" class="text-decoration-none">
                 <div class="card text-white bg-success shadow">
                     <div class="card-body text-center">

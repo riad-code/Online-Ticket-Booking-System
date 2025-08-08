@@ -1,18 +1,16 @@
 ﻿@model ApplicationUser
 @{
     ViewData["Title"] = "My Profile";
-   
 }
 
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-
 <style>
+    /* Your existing CSS here, unchanged */
     body {
         background: #f6f9f8;
         font-family: 'Segoe UI', Tahoma, sans-serif;
     }
-
     .sidebar a,
     .sidebar button {
         display: flex;
@@ -95,7 +93,6 @@
         display: none;
         margin-bottom: 15px;
     }
-
 </style>
 
 <div class="container py-4">
@@ -107,11 +104,8 @@
                 <a asp-area="Identity" asp-page="/Account/ResetPassword"><span class="material-icons">lock</span> Change Password</a>
                 <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
                     <button type="submit" style="display:flex; align-items:center; color: green; gap:5px; font-weight:600;">
-                        <span class="material-icons">logout</span>
-                        Logout
+                        <span class="material-icons">logout</span> Logout
                     </button>
-
-
                 </form>
             </div>
         </div>
@@ -135,7 +129,6 @@
                     <img id="profilePreview" class="profile-img" src="@(string.IsNullOrEmpty(Model.ProfileImagePath) ? "/images/default.png" : Model.ProfileImagePath)" />
                 </div>
 
-                <!-- Moved profile image upload inside form -->
                 <form id="profileForm" enctype="multipart/form-data">
                     <input type="hidden" name="Id" value="@Model.Id" />
 
@@ -203,7 +196,8 @@
                     <div class="field-card">
                         <div class="field-label">Address</div>
                         <div class="field-value">@Model.Address</div>
-                        <textarea class="editable-input form-control">@Model.Address</textarea>
+                        <textarea class="editable-input form-control" name="Address">@Model.Address</textarea>
+
                     </div>
 
                     <!-- NID -->
@@ -231,7 +225,9 @@
         </div>
     </div>
 </div>
+
 <style>
+    
     .sidebar {
         z-index: 1;
         position: relative;
@@ -247,7 +243,6 @@
             z-index: 1055 !important;
         }
 </style>
-
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -302,4 +297,7 @@
             }
         });
     }
+
+   
+    toggleEdit(false);
 </script>

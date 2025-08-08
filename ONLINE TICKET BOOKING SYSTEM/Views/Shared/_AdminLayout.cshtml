@@ -101,7 +101,7 @@
             box-shadow: none !important;
         }
     </style>
-
+    @RenderSection("Styles", required: false)
 
 </head>
 <body class="hold-transition sidebar-mini">
@@ -282,7 +282,7 @@
         </div>
 
         <!-- Footer -->
-        <footer class="main-footer">
+        <footer class="main-footer text-center ">
             <small>&copy; 2025 Online Ticket Booking System. All rights reserved in RiadTech.</small>
         </footer>
 
@@ -295,7 +295,7 @@
     <script src="~/Admin/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="~/Admin/dist/js/adminlte.min.js"></script>
     <script src="~/Admin/dist/js/demo.js"></script>
-   
+  
     @RenderSection("Scripts", required: false)
 </body>
 </html>
