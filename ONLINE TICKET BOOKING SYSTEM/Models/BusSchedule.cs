@@ -1,14 +1,23 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Models
 {
-    using ONLINE_TICKET_BOOKING_SYSTEM.Models;
-
-    using System.ComponentModel.DataAnnotations.Schema;
-
     public class BusSchedule
     {
         public int Id { get; set; }
+
+        // FK to Bus (outbound)
+        public int? BusId { get; set; }
+        [ForeignKey("BusId")]
+        public Bus? Bus { get; set; }
+
+        // Optional FK to return bus
+        public int? ReturnBusId { get; set; }
+        [ForeignKey("ReturnBusId")]
+        public Bus? ReturnBus { get; set; }
+
         public string From { get; set; }
         public string To { get; set; }
         public DateTime JourneyDate { get; set; }
@@ -21,12 +30,10 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Models
         public int SeatsAvailable { get; set; }
         public string? FullRoute { get; set; }
 
+        // Not mapped lists used for search UI (not stored)
         [NotMapped]
-        public List<Bus> AvailableBuses { get; set; }
-
+        public List<Bus>? AvailableBuses { get; set; }
         [NotMapped]
-        public List<Bus> ReturnBuses { get; set; }
+        public List<Bus>? ReturnBuses { get; set; }
     }
-
-
 }

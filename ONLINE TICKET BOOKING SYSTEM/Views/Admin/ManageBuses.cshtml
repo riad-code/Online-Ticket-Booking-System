@@ -21,6 +21,7 @@
             <option value="10">Show 10</option>
             <option value="50">Show 50</option>
             <option value="100">Show 100</option>
+            <option value="150">Show 150</option>
         </select>
     </div>
     <div class="col-md-2">
@@ -59,7 +60,7 @@
                 <td>@bus.SeatsAvailable</td>
                 <td>@bus.FullRoute</td>
                 <td>
-                    <a href="@Url.Action("EditBus", "Admin", new { id = bus.Id })" class="btn btn-warning btn-sm">✏️ Edit</a>
+                    <a href="@Url.Action("EditBus", "Admin", new { id = bus.Id })" class="btn btn-success btn-sm">✏️ Edit</a>
                     <button class="btn btn-danger btn-sm" onclick="deleteBus(@bus.Id)">🗑️ Delete</button>
                 </td>
             </tr>

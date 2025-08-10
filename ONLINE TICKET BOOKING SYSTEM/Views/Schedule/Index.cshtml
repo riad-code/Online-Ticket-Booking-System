@@ -1,0 +1,283 @@
+﻿@model List<ONLINE_TICKET_BOOKING_SYSTEM.Models.BusSchedule>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Manage Schedules";
+}
+
+<h2 class="text-success fw-bold mt-4 mb-4">Manage Schedules</h2>
+
+<a asp-action="Create" class="btn btn-success mb-3">➕ Add New Schedule</a>
+
+<!-- Search and Filter -->
+<div class="row mb-3 g-2 align-items-center">
+    <div class="col-md-3">
+        <input type="text" id="searchFrom" class="form-control" placeholder="From (min 3 letters)" autocomplete="off" />
+    </div>
+    <div class="col-md-3">
+        <input type="text" id="searchTo" class="form-control" placeholder="To (min 3 letters)" autocomplete="off" />
+    </div>
+    <div class="col-md-3">
+        <input type="date" id="searchDate" class="form-control" />
+    </div>
+    <div class="col-md-1">
+        <select id="rowLimit" class="form-select">
+            <option value="10">Show 10</option>
+            <option value="25">Show 25</option>
+            <option value="50">Show 50</option>
+            <option value="100">Show 100</option>
+            <option value="150">Show 150</option>
+        </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+        <button id="searchBtn" class="btn btn-success flex-grow-1">Search</button>
+        <button id="clearBtn" type="button" class="btn btn-outline-success flex-grow-1">Clear</button>
+    </div>
+</div>
+
+<table id="schedulesTable" class="table table-bordered table-striped table-hover align-middle">
+    <thead class="table-success text-success">
+        <tr>
+            <th>Operator</th>
+            <th>Route</th>
+            <th>Date</th>
+            <th>Dep</th>
+            <th>Arr</th>
+            <th>Fare (Tk)</th>
+            <th>Seats</th>
+            <th>Return</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var s in Model)
+        {
+            <tr>
+                <td>@s.OperatorName</td>
+                <td>@s.FullRoute</td>
+                <td>@s.JourneyDate.ToString("dd MMM yyyy")</td>
+                <td>@s.DepartureTime.ToString(@"hh\:mm")</td>
+                <td>@s.ArrivalTime.ToString(@"hh\:mm")</td>
+                <td>@s.Fare</td>
+                <td>@s.SeatsAvailable</td>
+                <td>
+                    @if (s.ReturnDate.HasValue)
+                    {
+                        <div>@s.ReturnDate.Value.ToString("dd MMM yyyy")</div>
+                        <div>
+                            @if (s.ReturnBus != null)
+                            {
+                                <small class="text-muted">Return: @s.ReturnBus.OperatorName</small>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@s.Id" class="btn btn-success btn-sm">✏️ Edit</a>
+                    <button class="btn btn-danger btn-sm delete-schedule" data-id="@s.Id">🗑️ Delete</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Styles {
+    <style>
+        /* Autocomplete dropdown styling */
+        .autocomplete-suggestions {
+            border: 1px solid #ddd;
+            max-height: 180px;
+            overflow-y: auto;
+            background: white;
+            position: absolute;
+            z-index: 1000;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .autocomplete-suggestion {
+            padding: 6px 12px;
+        }
+
+            .autocomplete-suggestion:hover {
+                background-color: green;
+                color: white;
+            }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            const $rows = $("#schedulesTable tbody tr");
+            const $searchFrom = $('#searchFrom');
+            const $searchTo = $('#searchTo');
+            const $searchDate = $('#searchDate');
+            const $rowLimit = $('#rowLimit');
+
+            // Disable past dates for Date input
+            const today = new Date().toISOString().split('T')[0];
+            $searchDate.attr('min', today);
+
+            // Extract unique From and To locations from route column with flexible dash splitting
+            const fromOptions = new Set();
+            const toOptions = new Set();
+
+            $rows.each(function () {
+                const routeText = $(this).find('td:nth-child(2)').text();
+                const parts = routeText.split(/\s*[-–—]\s*/).map(p => p.trim());
+                if (parts.length >= 2) {
+                    fromOptions.add(parts[0]);
+                    toOptions.add(parts[parts.length - 1]);
+                }
+            });
+
+            // Autocomplete dropdown helper
+            function createAutocomplete($input, optionsSet) {
+                let $container;
+
+                function closeDropdown() {
+                    if ($container) {
+                        $container.remove();
+                        $container = null;
+                    }
+                }
+
+                $input.on('input', function () {
+                    const val = $(this).val().toLowerCase();
+                    closeDropdown();
+
+                    if (val.length < 1) return; // Show suggestions on typing at least 1 char
+
+                    const matches = [...optionsSet].filter(opt => opt.toLowerCase().startsWith(val));
+                    if (matches.length === 0) return;
+
+                    $container = $('<div class="autocomplete-suggestions"></div>');
+                    $input.after($container);
+
+                    matches.forEach(match => {
+                        const $item = $('<div class="autocomplete-suggestion"></div>').text(match);
+                        $item.on('mousedown', function () { // use mousedown to prevent blur before click
+                            $input.val(match);
+                            closeDropdown();
+                        });
+                        $container.append($item);
+                    });
+                });
+
+                // Close on click outside
+                $(document).on('click', function (e) {
+                    if (!$input.is(e.target) && (! $container || (!$container.is(e.target) && $container.has(e.target).length === 0))) {
+                        closeDropdown();
+                    }
+                });
+
+                // Close on Escape key
+                $input.on('keydown', function (e) {
+                    if (e.key === "Escape") {
+                        closeDropdown();
+                    }
+                });
+            }
+
+            // Initialize autocomplete on From and To inputs
+            createAutocomplete($searchFrom, fromOptions);
+            createAutocomplete($searchTo, toOptions);
+
+            function applyFilters() {
+                const fromVal = $searchFrom.val().toLowerCase();
+                const toVal = $searchTo.val().toLowerCase();
+                const dateVal = $searchDate.val();
+                const limit = parseInt($rowLimit.val());
+
+                let filteredRows = $rows.filter(function () {
+                    const route = $(this).find('td:nth-child(2)').text().toLowerCase();
+                    const dateText = $(this).find('td:nth-child(3)').text();
+
+                    const matchFrom = fromVal.length >= 3 ? route.includes(fromVal) : true;
+                    const matchTo = toVal.length >= 3 ? route.includes(toVal) : true;
+
+                    const formattedDate = new Date(dateVal).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+                    const matchDate = dateVal ? (dateText === formattedDate) : true;
+
+                    return matchFrom && matchTo && matchDate;
+                });
+
+                $rows.hide();
+                filteredRows.slice(0, limit).show();
+            }
+
+            // Search button click
+            $('#searchBtn').click(function (e) {
+                e.preventDefault();
+
+                if (($searchFrom.val() && $searchFrom.val().length < 3) || ($searchTo.val() && $searchTo.val().length < 3)) {
+                    Swal.fire('Input Error', 'Please enter at least 3 characters for From and To fields if used.', 'warning');
+                    return;
+                }
+
+                applyFilters();
+            });
+
+            // Clear button click
+            $('#clearBtn').click(function () {
+                $searchFrom.val('');
+                $searchTo.val('');
+                $searchDate.val('');
+                $rowLimit.val('10');
+                $rows.show().slice(10).hide();
+            });
+
+            // Row limit change
+            $rowLimit.change(function () {
+                applyFilters();
+            });
+
+            // Initialize view: show first 10 rows only
+            $rows.hide().slice(0, 10).show();
+
+            // Delete schedule with confirmation
+                   $('.delete-schedule').click(function () {
+            const id = $(this).data('id');
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post('@Url.Action("Delete")', { id: id })
+                        .done(function (res) {
+                            if (res.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: res.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                                setTimeout(() => location.reload(), 1500);
+                            } else {
+                                Swal.fire('Error!', res.message, 'error');
+                            }
+                        })
+                        .fail(function () {
+                            Swal.fire('Error!', 'Something went wrong.', 'error');
+                        });
+                }
+            });
+        });
+
+        });
+    </script>
+}

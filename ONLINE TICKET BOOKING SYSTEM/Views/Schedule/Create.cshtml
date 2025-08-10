@@ -1,0 +1,167 @@
+﻿@using ONLINE_TICKET_BOOKING_SYSTEM.ViewModels
+@model CreateScheduleViewModel
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Create Schedule";
+}
+
+<h2 class="mb-4 text-success">Create Schedule</h2>
+
+<form id="createScheduleForm" asp-action="Create" method="post">
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label>Choose Bus (Vehicle)</label>
+            <select asp-for="BusId" class="form-select" id="busSelect" required>
+                <option value="">-- Select Bus --</option>
+                @foreach (var b in Model.AllBuses)
+                {
+                    <option value="@b.Id"
+                            data-from="@b.From"
+                            data-to="@b.To"
+                            data-fullroute="@b.FullRoute"
+                            data-fare="@b.Fare"
+                            data-seats="@b.SeatsAvailable">
+                        @b.OperatorName — @b.FullRoute — ৳@b.Fare
+                    </option>
+                }
+            </select>
+        </div>
+
+        <input type="hidden" name="From" id="From" />
+        <input type="hidden" name="To" id="To" />
+
+        <div class="col-md-3">
+            <label>Journey Date</label>
+            <input asp-for="JourneyDate" class="form-control" type="date" required />
+        </div>
+
+        <div class="col-md-3">
+            <label>Departure Time</label>
+            <input asp-for="DepartureTime" class="form-control" type="time" required />
+        </div>
+
+        <div class="col-md-3">
+            <label>Arrival Time</label>
+            <input asp-for="ArrivalTime" class="form-control" type="time" required />
+        </div>
+
+        <div class="col-md-3">
+            <label>Fare (Tk)</label>
+            <input asp-for="Fare" class="form-control" required />
+        </div>
+
+        <div class="col-md-3">
+            <label>Seats Available</label>
+            <input asp-for="SeatsAvailable" class="form-control" required />
+        </div>
+
+        <div class="col-md-6">
+            <label>Full Route</label>
+            <input asp-for="FullRoute" class="form-control" readonly />
+        </div>
+
+        <div class="col-12">
+            <hr />
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="isReturn" />
+                <label class="form-check-label" for="isReturn">Add Return Bus</label>
+            </div>
+        </div>
+
+        <div id="returnSection" style="display:none;" class="row g-3 mt-2">
+            <div class="col-md-4">
+                <label>Return Date</label>
+                <input asp-for="ReturnDate" class="form-control" type="date" />
+            </div>
+            <div class="col-md-4">
+                <label>Choose Return Bus</label>
+                <select asp-for="ReturnBusId" class="form-select">
+                    <option value="">-- Select Return Bus --</option>
+                    @foreach (var b in Model.AllBuses)
+                    {
+                        <option value="@b.Id">@b.OperatorName — @b.FullRoute — ৳@b.Fare</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <div class="col-12 mt-3">
+            <button class="btn btn-success" type="submit">Save Schedule</button>
+            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            // Update fields on bus select
+            $('#busSelect').change(function () {
+                const sel = $(this).find('option:selected');
+                $('#FullRoute').val(sel.data('fullroute') || '');
+                $('input[name="Fare"]').val(sel.data('fare') || '');
+                $('input[name="SeatsAvailable"]').val(sel.data('seats') || '');
+                // Update hidden From and To inputs to satisfy validation
+                $('#From').val(sel.data('from') || '');
+                $('#To').val(sel.data('to') || '');
+            });
+
+            // Toggle return section visibility
+            $('#isReturn').change(function () {
+                $('#returnSection').toggle(this.checked);
+            });
+
+            // Disable past dates for JourneyDate and ReturnDate
+            const today = new Date().toISOString().split('T')[0];
+            $('input[type="date"][name="JourneyDate"]').attr('min', today);
+            $('input[type="date"][name="ReturnDate"]').attr('min', today);
+
+            // AJAX form submission
+            $('#createScheduleForm').submit(function (e) {
+                e.preventDefault();
+                var form = $(this);
+                var url = form.attr('action');
+                var data = form.serialize();
+
+                Swal.fire({
+                    title: 'Saving...',
+                    didOpen: () => Swal.showLoading(),
+                    allowOutsideClick: false
+                });
+
+                $.post(url, data)
+                    .done(function (res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: res.message || 'Schedule created successfully!',
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                window.location.href = '@Url.Action("Index")';
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: res.message || 'Failed to create schedule.'
+                            });
+                        }
+                    })
+                    .fail(function (xhr) {
+                        let msg = xhr.responseJSON ? xhr.responseJSON.join('\n') : xhr.responseText || 'Failed to create schedule.';
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: msg
+                        });
+                    });
+            });
+        });
+    </script>
+}
