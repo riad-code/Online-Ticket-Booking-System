@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 
@@ -11,9 +12,11 @@ using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250812175719_AddRegisteredAtUtcToAspNetUsers")]
+    partial class AddRegisteredAtUtcToAspNetUsers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,6 +74,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NidNo")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedEmail")
@@ -82,6 +86,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("PassportNo")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordHash")
@@ -117,6 +122,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<string>("VisaNo")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");

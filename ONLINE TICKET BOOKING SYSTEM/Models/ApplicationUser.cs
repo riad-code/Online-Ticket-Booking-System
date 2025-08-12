@@ -14,8 +14,9 @@ public class ApplicationUser : IdentityUser
     public string Address { get; set; } = string.Empty;
     [NotMapped]
     public string FullName => $"{FirstName} {LastName}".Trim();
-    public string NidNo { get; set; } = string.Empty;          
-    public string VisaNo { get; set; } = string.Empty;         
-    public string PassportNo { get; set; } = string.Empty;     
+    public string? NidNo { get; set; }          
+    public string? VisaNo { get; set; }         
+    public string? PassportNo { get; set; }
+    public DateTime RegisteredAtUtc { get; set; }
 }
 

@@ -18,7 +18,9 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 // Configure Identity with ApplicationUser and Roles
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false; // Disable email confirmation for now
+    options.SignIn.RequireConfirmedAccount = false;
+   
+    options.SignIn.RequireConfirmedEmail = false;// Disable email confirmation for now
 })
 .AddRoles<IdentityRole>() // Add Role Support
 .AddEntityFrameworkStores<ApplicationDbContext>();

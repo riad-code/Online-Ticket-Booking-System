@@ -4,6 +4,27 @@
     ViewData["Title"] = "Register";
 }
 
+<style>
+   
+    .register-card .form-control-lg,
+    .register-card .form-select-lg {
+        font-size: 1rem; 
+        padding: .55rem .95rem; 
+        border-radius: .5rem; 
+    }
+
+    .register-card label {
+        margin-bottom: .25rem;
+    }
+
+    .register-card .mb-3 {
+        margin-bottom: .9rem !important;
+    }
+
+    .register-card .mb-1 {
+        margin-bottom: .5rem !important;
+    }
+</style>
 <div class="container-fluid vh-100 p-0">
     <div class="row g-0 h-100">
         <!-- LEFT SIDE: IMAGE SLIDER -->
@@ -45,100 +66,108 @@
                 <img src="~/Admin/Images/logo.jpg.png" alt="RiadTrip Logo" style="width: 160px;" />
             </a>
 
-            <div class="p-5 w-100" style="max-width: 700px;">
+            <div class="p-5 w-100" style="max-width: 560px;">
                 <h4 class="fw-bold mb-2">Create an Account</h4>
                 <p class="text-muted mb-4">Sign up to enjoy seamless travel</p>
 
-                <form asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data">
+                <form asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data" id="registerForm">
                     <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
                     <div class="row g-3">
                         <!-- Left column -->
                         <div class="col-md-6">
                             <!-- Title -->
-                            <select asp-for="Input.Title" class="form-select form-select-lg mb-3">
+                            <label class="form-label" for="titleSelect">Title</label>
+                            <select asp-for="Input.Title" class="form-select form-select-lg mb-3" id="titleSelect">
                                 <option value="">-- Select Title --</option>
                                 <option>Mr.</option>
                                 <option>Mrs.</option>
-                                <option>Miss</option>
-                                <option>Dr.</option>
-                                <option>Prof.</option>
                             </select>
                             <span asp-validation-for="Input.Title" class="text-danger"></span>
 
                             <!-- First Name -->
-                            <input asp-for="Input.FirstName" class="form-control form-control-lg mb-3" placeholder="First Name" />
-                            <span asp-validation-for="Input.FirstName" class="text-danger"></span>
+                            <label class="form-label required-label" for="Input_FirstName">First Name</label>
+                            <input asp-for="Input.FirstName" class="form-control form-control-lg mb-1" placeholder="First Name" required />
+                            <span asp-validation-for="Input.FirstName" class="text-danger mb-3 d-block"></span>
 
                             <!-- Mobile Number -->
-                            <input asp-for="Input.MobileNumber" class="form-control form-control-lg mb-3" placeholder="Mobile Number" />
-                            <span asp-validation-for="Input.MobileNumber" class="text-danger"></span>
+                            <label class="form-label required-label" for="Input_MobileNumber">Mobile Number</label>
+                            <input asp-for="Input.MobileNumber" class="form-control form-control-lg mb-1" placeholder="Mobile Number" required />
+                            <span asp-validation-for="Input.MobileNumber" class="text-danger mb-3 d-block"></span>
 
                             <!-- Gender -->
-                            <label class="form-label">Gender</label>
-                            <select asp-for="Input.Gender" class="form-select form-select-lg mb-3">
+                            <label class="form-label required-label" id="genderLabel" for="genderSelect">Gender</label>
+                            <select asp-for="Input.Gender" class="form-select form-select-lg mb-3" id="genderSelect" required>
                                 <option value="">-- Select Gender --</option>
                                 <option>Male</option>
                                 <option>Female</option>
-                                <option>Custom</option>
+                                <option>Other</option>
                             </select>
                             <span asp-validation-for="Input.Gender" class="text-danger"></span>
 
                             <!-- Address -->
+                            <label class="form-label" for="Input_Address">Address</label>
                             <textarea asp-for="Input.Address" class="form-control form-control-lg mb-3" placeholder="Address" rows="3"></textarea>
                             <span asp-validation-for="Input.Address" class="text-danger"></span>
 
-                            <!-- Passport Number -->
-                            <input asp-for="Input.PassportNo" class="form-control form-control-lg mb-3" placeholder="Passport Number" />
+                            <!-- Passport Number (optional) -->
+                            <label class="form-label" for="Input_PassportNo">Passport Number (optional)</label>
+                            <input asp-for="Input.PassportNo" class="form-control form-control-lg mb-3" placeholder="Passport Number (optional)" />
                             <span asp-validation-for="Input.PassportNo" class="text-danger"></span>
                         </div>
 
                         <!-- Right column -->
                         <div class="col-md-6">
                             <!-- Last Name -->
-                            <input asp-for="Input.LastName" class="form-control form-control-lg mb-3" placeholder="Last Name" />
-                            <span asp-validation-for="Input.LastName" class="text-danger"></span>
+                            <label class="form-label required-label" for="Input_LastName">Last Name</label>
+                            <input asp-for="Input.LastName" class="form-control form-control-lg mb-1" placeholder="Last Name" required />
+                            <span asp-validation-for="Input.LastName" class="text-danger mb-3 d-block"></span>
 
                             <!-- Email -->
-                            <input asp-for="Input.Email" class="form-control form-control-lg mb-3" placeholder="Email Address" />
-                            <span asp-validation-for="Input.Email" class="text-danger"></span>
+                            <label class="form-label required-label" for="Input_Email">Email</label>
+                            <input asp-for="Input.Email" class="form-control form-control-lg mb-1" placeholder="Email Address" required />
+                            <span asp-validation-for="Input.Email" class="text-danger mb-3 d-block"></span>
 
                             <!-- Date Of Birth -->
-                            <label asp-for="Input.DateOfBirth" class="form-label">Date of Birth</label>
-                            <input asp-for="Input.DateOfBirth" type="date" class="form-control form-control-lg mb-3" />
-                            <span asp-validation-for="Input.DateOfBirth" class="text-danger"></span>
+                            <label asp-for="Input.DateOfBirth" class="form-label required-label">Date of Birth</label>
+                            <input asp-for="Input.DateOfBirth" type="date" class="form-control form-control-lg mb-1" placeholder="Date Of Birth" required />
+                            <span asp-validation-for="Input.DateOfBirth" class="text-danger mb-3 d-block"></span>
 
-                            <!-- NID Number -->
-                            <input asp-for="Input.NidNo" class="form-control form-control-lg mb-3" placeholder="NID Number" />
+                            <!-- NID Number (optional) -->
+                            <label class="form-label" for="Input_NidNo">NID Number (optional)</label>
+                            <input asp-for="Input.NidNo" class="form-control form-control-lg mb-3" placeholder="NID Number (optional)" />
                             <span asp-validation-for="Input.NidNo" class="text-danger"></span>
 
-                            <!-- Visa Number -->
-                            <input asp-for="Input.VisaNo" class="form-control form-control-lg mb-3" placeholder="Visa Number" />
+                            <!-- Visa Number (optional) -->
+                            <label class="form-label" for="Input_VisaNo">Visa Number (optional)</label>
+                            <input asp-for="Input.VisaNo" class="form-control form-control-lg mb-3" placeholder="Visa Number (optional)" />
                             <span asp-validation-for="Input.VisaNo" class="text-danger"></span>
 
-                            <!-- Profile Image Upload -->
-                            <label class="form-label">Upload Profile Picture</label>
-                            <input asp-for="Input.ProfileImage" type="file" class="form-control mb-3" accept="image/*" onchange="previewImage(event)" />
+                            <!-- Profile Image Upload (max 2MB) -->
+                            <label class="form-label" for="profileImageInput">Upload Profile Picture (Max 2MB)</label>
+                            <input asp-for="Input.ProfileImage" type="file" class="form-control mb-3" accept="image/*" onchange="previewImage(event)" id="profileImageInput" />
                             <span asp-validation-for="Input.ProfileImage" class="text-danger"></span>
                             <img id="preview" src="#" alt="Preview" style="max-width:100px; margin-top:10px; display:none;" />
 
                             <!-- Password -->
-                            <div class="position-relative mb-3">
-                                <input asp-for="Input.Password" class="form-control form-control-lg" placeholder="Password" type="password" id="passwordInput" />
+                            <label class="form-label required-label" for="passwordInput">Password</label>
+                            <div class="position-relative mb-1">
+                                <input asp-for="Input.Password" class="form-control form-control-lg" placeholder="Password" type="password" id="passwordInput" required />
                                 <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2" onclick="togglePassword('passwordInput')" style="background:none; border:none;">
                                     <i class="bi bi-eye-fill"></i>
                                 </button>
-                                <span asp-validation-for="Input.Password" class="text-danger"></span>
                             </div>
+                            <span asp-validation-for="Input.Password" class="text-danger mb-3 d-block"></span>
 
                             <!-- Confirm Password -->
-                            <div class="position-relative mb-3">
-                                <input asp-for="Input.ConfirmPassword" class="form-control form-control-lg" placeholder="Confirm Password" type="password" id="confirmPasswordInput" />
+                            <label class="form-label required-label" for="confirmPasswordInput">Confirm Password</label>
+                            <div class="position-relative mb-1">
+                                <input asp-for="Input.ConfirmPassword" class="form-control form-control-lg" placeholder="Confirm Password" type="password" id="confirmPasswordInput" required />
                                 <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2" onclick="togglePassword('confirmPasswordInput')" style="background:none; border:none;">
                                     <i class="bi bi-eye-fill"></i>
                                 </button>
-                                <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
                             </div>
+                            <span asp-validation-for="Input.ConfirmPassword" class="text-danger mb-3 d-block"></span>
                         </div>
                     </div>
 
@@ -157,6 +186,7 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function togglePassword(id) {
             var input = document.getElementById(id);
@@ -165,8 +195,93 @@
 
         function previewImage(event) {
             var preview = document.getElementById('preview');
-            preview.src = URL.createObjectURL(event.target.files[0]);
+            var file = event.target.files && event.target.files[0];
+            if (!file) { preview.style.display = 'none'; return; }
+            if (file.size > 2 * 1024 * 1024) {
+                if (window.Swal) {
+                    Swal.fire('Too Large', 'Maximum allowed image size is 2 MB.', 'error');
+                } else {
+                    alert('Maximum allowed image size is 2 MB.');
+                }
+                event.target.value = '';
+                preview.style.display = 'none';
+                return;
+            }
+            preview.src = URL.createObjectURL(file);
             preview.style.display = 'block';
         }
+
+        // Auto-select Gender based on Title (kept exactly)
+        (function () {
+            const title = document.getElementById('titleSelect');
+            const gender = document.getElementById('genderSelect');
+            const mapGender = (t) => {
+                const v = (t || '').toLowerCase().replace('.', '').trim();
+                if (v === 'mr') { gender.value = 'Male'; }
+                else if (v === 'mrs') { gender.value = 'Female'; }
+            };
+            if (title && gender) {
+                title.addEventListener('change', function () { mapGender(this.value); });
+            }
+        })();
+
+        // Add * to labels for required inputs (no design break)
+        (function () {
+            const requiredIds = [
+                'Input_FirstName','Input_LastName','Input_MobileNumber','Input_Email',
+                'Input_DateOfBirth','genderSelect','passwordInput','confirmPasswordInput'
+            ];
+            requiredIds.forEach(id => {
+                const input = document.getElementById(id);
+                if (!input) return;
+                const label = document.querySelector('label[for="' + id + '"]');
+                if (label && !label.querySelector('.req-star')) {
+                    const star = document.createElement('span');
+                    star.className = 'req-star';
+                    star.style.color = '#dc3545';
+                    star.textContent = ' *';
+                    label.appendChild(star);
+                }
+            });
+        })();
+
+        // AJAX submit with SweetAlert — show all errors if any
+        (function () {
+            const form = document.getElementById('registerForm');
+            if (!form) return;
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const fd = new FormData(form);
+                fetch(form.action || window.location.href, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: fd
+                })
+                .then(async res => {
+                    const ct = res.headers.get('Content-Type') || '';
+                    if (ct.includes('application/json')) {
+                        const data = await res.json();
+                        if (data && data.success) {
+                            const msg = data.message || 'Registration successful. Please log in.';
+                            return window.Swal
+                                ? Swal.fire({ icon: 'success', title: 'Success', text: msg, timer: 1400, showConfirmButton: false })
+                                      .then(() => { window.location.href = data.redirectUrl || './Login'; })
+                                : (alert(msg), window.location.href = data.redirectUrl || './Login');
+                        } else {
+                            if (data && data.errors && window.Swal) {
+                                const messages = Object.values(data.errors).flat();
+                                Swal.fire('Error', messages.join('\n'), 'error');
+                                return;
+                            }
+                            window.location.reload();
+                            return;
+                        }
+                    } else {
+                        window.location.reload();
+                    }
+                })
+                .catch(() => form.submit());
+            });
+        })();
     </script>
 }
