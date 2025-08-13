@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using Microsoft.AspNetCore.Mvc;
 using ONLINE_TICKET_BOOKING_SYSTEM.Models;
-using Microsoft.AspNetCore.Hosting;
+using System.Text.RegularExpressions;
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 {
@@ -128,45 +129,96 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         [HttpPost]
         public async Task<IActionResult> UpdateProfile(
-     string Id,
-     string Title,
-     string FirstName,
-     string LastName,
-     string MobileNumber,
-     string Gender,
-     DateTime? DateOfBirth,
-     string Address,
-     string NidNo,
-     string PassportNo,
-     string VisaNo,
-     IFormFile ProfileImage)
+            string Id,
+            string Title,
+            string FirstName,
+            string LastName,
+            string MobileNumber,
+            string Gender,
+            DateTime? DateOfBirth,
+            string Address,
+            string PassportNo,
+            string VisaNo,
+            IFormFile? ProfileImage)
         {
             var user = await _userManager.FindByIdAsync(Id);
             if (user == null)
                 return Json(new { success = false, message = "User not found!" });
 
-            if (!string.IsNullOrWhiteSpace(Title)) user.Title = Title;
-            if (!string.IsNullOrWhiteSpace(FirstName)) user.FirstName = FirstName;
-            if (!string.IsNullOrWhiteSpace(LastName)) user.LastName = LastName;
-            if (!string.IsNullOrWhiteSpace(MobileNumber)) user.MobileNumber = MobileNumber;
-            if (!string.IsNullOrWhiteSpace(Gender)) user.Gender = Gender;
-            if (DateOfBirth.HasValue) user.DateOfBirth = DateOfBirth.Value;
+            // Collect validation errors to mirror Register required rules
+            var errors = new Dictionary<string, string>();
 
-            // <-- Use the parameter directly here -->
+            // Required: FirstName, LastName, MobileNumber(11 digits), Gender, DateOfBirth (>=18 years)
+            if (string.IsNullOrWhiteSpace(FirstName))
+                errors["FirstName"] = "First Name is required.";
+
+            if (string.IsNullOrWhiteSpace(LastName))
+                errors["LastName"] = "Last Name is required.";
+
+            if (string.IsNullOrWhiteSpace(MobileNumber))
+            {
+                errors["MobileNumber"] = "Mobile Number is required.";
+            }
+            else if (!Regex.IsMatch(MobileNumber.Trim(), @"^\d{11}$"))
+            {
+                errors["MobileNumber"] = "Mobile Number must be exactly 11 digits.";
+            }
+
+            if (string.IsNullOrWhiteSpace(Gender))
+                errors["Gender"] = "Gender is required.";
+
+            if (!DateOfBirth.HasValue)
+            {
+                errors["DateOfBirth"] = "Date of birth is required.";
+            }
+            else
+            {
+                var cutoff = DateTime.Today.AddYears(-18);
+                if (DateOfBirth.Value.Date > cutoff)
+                    errors["DateOfBirth"] = "You must be at least 18 years old.";
+            }
+
+            // Optional uniqueness checks (same behavior as Register)
+            if (!string.IsNullOrWhiteSpace(PassportNo))
+            {
+                var exists = _userManager.Users.Any(u => u.PassportNo == PassportNo && u.Id != user.Id);
+                if (exists)
+                    errors["PassportNo"] = "Passport Number is already registered.";
+            }
+            if (!string.IsNullOrWhiteSpace(VisaNo))
+            {
+                var exists = _userManager.Users.Any(u => u.VisaNo == VisaNo && u.Id != user.Id);
+                if (exists)
+                    errors["VisaNo"] = "Visa Number is already registered.";
+            }
+
+            if (errors.Any())
+                return Json(new { success = false, errors });
+
+            // Safe updates (not changing design/flow)
+            if (!string.IsNullOrWhiteSpace(Title)) user.Title = Title.Trim();
+            user.FirstName = FirstName.Trim();
+            user.LastName = LastName.Trim();
+            user.MobileNumber = MobileNumber.Trim();
+            user.Gender = Gender.Trim();
+            user.DateOfBirth = DateOfBirth!.Value;
+
             if (!string.IsNullOrWhiteSpace(Address))
-                user.Address = Address;
+                user.Address = Address.Trim();
+            else
+                user.Address = string.Empty; // keep it non-null
 
-            if (!string.IsNullOrWhiteSpace(NidNo)) user.NidNo = NidNo;
-            if (!string.IsNullOrWhiteSpace(PassportNo)) user.PassportNo = PassportNo;
-            if (!string.IsNullOrWhiteSpace(VisaNo)) user.VisaNo = VisaNo;
+            user.PassportNo = string.IsNullOrWhiteSpace(PassportNo) ? null : PassportNo.Trim();
+            user.VisaNo = string.IsNullOrWhiteSpace(VisaNo) ? null : VisaNo.Trim();
 
+            // Profile image upload (unchanged path)
             if (ProfileImage != null && ProfileImage.Length > 0)
             {
                 string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads/profile");
                 if (!Directory.Exists(uploadsFolder))
                     Directory.CreateDirectory(uploadsFolder);
 
-                string fileName = System.Guid.NewGuid() + Path.GetExtension(ProfileImage.FileName);
+                string fileName = Guid.NewGuid() + Path.GetExtension(ProfileImage.FileName);
                 string filePath = Path.Combine(uploadsFolder, fileName);
 
                 using (var stream = new FileStream(filePath, FileMode.Create))
@@ -183,6 +235,5 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             return Json(new { success = false, message = string.Join(", ", result.Errors.Select(e => e.Description)) });
         }
-
     }
 }

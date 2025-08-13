@@ -70,7 +70,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
             public DateTime? DateOfBirth { get; set; }
 
             public string Address { get; set; } = string.Empty;
-            public string? NidNo { get; set; }         
+            //public string? NidNo { get; set; }         
             public string? PassportNo { get; set; }     
             public string? VisaNo { get; set; }
 
@@ -119,11 +119,11 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
                 }
 
                 // Optional IDs uniqueness
-                if (!string.IsNullOrEmpty(Input.NidNo))
-                {
-                    var nidExists = await _userManager.Users.AnyAsync(u => u.NidNo == Input.NidNo);
-                    if (nidExists) ModelState.AddModelError("Input.NidNo", "NID Number is already registered.");
-                }
+                //  if (!string.IsNullOrEmpty(Input.NidNo))
+                // {
+                // var nidExists = await _userManager.Users.AnyAsync(u => u.NidNo == Input.NidNo);
+                // if (nidExists) ModelState.AddModelError("Input.NidNo", "NID Number is already registered.");
+                //  }
                 if (!string.IsNullOrEmpty(Input.PassportNo))
                 {
                     var passportExists = await _userManager.Users.AnyAsync(u => u.PassportNo == Input.PassportNo);
@@ -191,7 +191,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Areas.Identity.Pages.Account
                 Gender = Input.Gender,
                 DateOfBirth = Input.DateOfBirth,
                 Address = Input.Address,
-                NidNo = Input.NidNo,
+                // NidNo = Input.NidNo,
                 PassportNo = Input.PassportNo,
                 VisaNo = Input.VisaNo,
                 MobileNumber = Input.MobileNumber,

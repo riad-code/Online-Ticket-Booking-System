@@ -6,11 +6,12 @@
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 <style>
-    /* Your existing CSS here, unchanged */
+    /* Original styles (unchanged) */
     body {
         background: #f6f9f8;
         font-family: 'Segoe UI', Tahoma, sans-serif;
     }
+
     .sidebar a,
     .sidebar button {
         display: flex;
@@ -93,6 +94,12 @@
         display: none;
         margin-bottom: 15px;
     }
+
+    /* Small addition for required star (visual only, no layout change) */
+    .req-star {
+        color: #dc3545;
+        font-weight: 700;
+    }
 </style>
 
 <div class="container py-4">
@@ -144,40 +151,37 @@
                         <select class="editable-input form-select" name="Title">
                             <option value="">Select Title</option>
                             <option value="Mr." selected="@(Model.Title == "Mr.")">Mr.</option>
-                            <option value="Ms." selected="@(Model.Title == "Ms.")">Ms.</option>
                             <option value="Mrs." selected="@(Model.Title == "Mrs.")">Mrs.</option>
-                            <option value="Dr." selected="@(Model.Title == "Dr.")">Dr.</option>
-                            <option value="Prof." selected="@(Model.Title == "Prof.")">Prof.</option>
                         </select>
                     </div>
 
-                    <!-- Full Name -->
+                    <!-- Full Name (Required) -->
                     <div class="field-card">
                         <div class="field-label">Full Name</div>
                         <div class="field-value">@($"{Model.FirstName} {Model.LastName}")</div>
-                        <input type="text" class="editable-input" name="FirstName" value="@Model.FirstName" placeholder="First Name" />
-                        <input type="text" class="editable-input mt-2" name="LastName" value="@Model.LastName" placeholder="Last Name" />
+                        <input type="text" class="editable-input" name="FirstName" value="@Model.FirstName" placeholder="First Name" required />
+                        <input type="text" class="editable-input mt-2" name="LastName" value="@Model.LastName" placeholder="Last Name" required />
                     </div>
 
-                    <!-- Email -->
+                    <!-- Email (read-only) -->
                     <div class="field-card">
                         <div class="field-label">Email</div>
                         <div class="field-value">@Model.Email</div>
-                        <input type="email" class="editable-input" name="Email" value="@Model.Email" />
+                        <input type="email" class="editable-input" name="Email" value="@Model.Email" readonly />
                     </div>
 
-                    <!-- Phone -->
+                    <!-- Phone (Required) -->
                     <div class="field-card">
                         <div class="field-label">Phone Number</div>
                         <div class="field-value">@Model.MobileNumber</div>
-                        <input type="text" class="editable-input" name="MobileNumber" maxlength="11" value="@Model.MobileNumber" />
+                        <input type="text" class="editable-input" name="MobileNumber" maxlength="11" pattern="\d{11}" value="@Model.MobileNumber" required />
                     </div>
 
-                    <!-- Gender -->
+                    <!-- Gender (Required) -->
                     <div class="field-card">
                         <div class="field-label">Gender</div>
                         <div class="field-value">@Model.Gender</div>
-                        <select class="editable-input form-select" name="Gender">
+                        <select class="editable-input form-select" name="Gender" required>
                             <option value="">Select Gender</option>
                             <option value="Male" selected="@(Model?.Gender == "Male")">Male</option>
                             <option value="Female" selected="@(Model?.Gender == "Female")">Female</option>
@@ -185,36 +189,28 @@
                         </select>
                     </div>
 
-                    <!-- Date of Birth -->
+                    <!-- Date of Birth (Required) -->
                     <div class="field-card">
                         <div class="field-label">Date of Birth</div>
                         <div class="field-value">@Model.DateOfBirth?.ToString("dd MMM yyyy")</div>
-                        <input type="date" class="editable-input" name="DateOfBirth" value="@Model.DateOfBirth?.ToString("yyyy-MM-dd")" />
+                        <input type="date" class="editable-input" name="DateOfBirth" value="@Model.DateOfBirth?.ToString("yyyy-MM-dd")" required />
                     </div>
 
-                    <!-- Address -->
+                    <!-- Address (Optional) -->
                     <div class="field-card">
                         <div class="field-label">Address</div>
                         <div class="field-value">@Model.Address</div>
                         <textarea class="editable-input form-control" name="Address">@Model.Address</textarea>
-
                     </div>
 
-                    <!-- NID -->
-                    <div class="field-card">
-                        <div class="field-label">NID Number</div>
-                        <div class="field-value">@Model.NidNo</div>
-                        <input type="text" class="editable-input" name="NidNo" value="@Model.NidNo" />
-                    </div>
-
-                    <!-- Passport -->
+                    <!-- Passport (Optional) -->
                     <div class="field-card">
                         <div class="field-label">Passport Number</div>
                         <div class="field-value">@Model.PassportNo</div>
                         <input type="text" class="editable-input" name="PassportNo" value="@Model.PassportNo" />
                     </div>
 
-                    <!-- Visa -->
+                    <!-- Visa (Optional) -->
                     <div class="field-card">
                         <div class="field-label">Visa Number</div>
                         <div class="field-value">@Model.VisaNo</div>
@@ -227,7 +223,6 @@
 </div>
 
 <style>
-    
     .sidebar {
         z-index: 1;
         position: relative;
@@ -269,14 +264,109 @@
         document.querySelectorAll('.editable-input').forEach(el => el.style.display = enable ? 'block' : 'none');
         document.querySelectorAll('.field-value').forEach(el => el.style.display = enable ? 'none' : 'block');
         document.getElementById('profileImageUploadField').style.display = enable ? 'block' : 'none';
+
+        if (enable) {
+            addStarsToRequiredLabels();
+            applyGenderFromTitle(); // ensure initial sync when edit opens
+        }
     }
 
     function previewImage(event) {
         const output = document.getElementById('profilePreview');
-        output.src = URL.createObjectURL(event.target.files[0]);
+        if (event.target.files && event.target.files[0]) {
+            output.src = URL.createObjectURL(event.target.files[0]);
+        }
+    }
+
+    // === Required star on specific labels (visual only) ===
+    function addStarsToRequiredLabels(){
+        const labelMap = {
+            "Full Name": true,
+            "Phone Number": true,
+            "Gender": true,
+            "Date of Birth": true
+        };
+        document.querySelectorAll('.field-card .field-label').forEach(lbl=>{
+            const text = (lbl.textContent || '').trim();
+            if (labelMap[text] && !lbl.querySelector('.req-star')){
+                const s = document.createElement('span');
+                s.className = 'req-star';
+                s.textContent = ' *';
+                lbl.appendChild(s);
+            }
+        });
+    }
+
+    // === Title -> Gender auto map (Mr. => Male, Mrs. => Female) ===
+    function applyGenderFromTitle() {
+        const titleSelect  = document.querySelector('select[name="Title"]');
+        const genderSelect = document.querySelector('select[name="Gender"]');
+        if (!titleSelect || !genderSelect) return;
+
+        const v = (titleSelect.value || '').toLowerCase().replace(/\./g,'').trim();
+        if (v === 'mr')  genderSelect.value = 'Male';
+        if (v === 'mrs') genderSelect.value = 'Female';
+    }
+
+    (function wireTitleGenderMapping(){
+        const titleSelect = document.querySelector('select[name="Title"]');
+        if (titleSelect) {
+            titleSelect.addEventListener('change', applyGenderFromTitle);
+        }
+    })();
+
+    // === Ensure inputs have required/pattern like Register ===
+    (function markRequiredInputs(){
+        const q = (sel)=>document.querySelector(sel);
+        [
+            'input[name="FirstName"]',
+            'input[name="LastName"]',
+            'input[name="MobileNumber"]',
+            'select[name="Gender"]',
+            'input[name="DateOfBirth"]'
+        ].forEach(sel=>{
+            const el = q(sel);
+            if (el) el.setAttribute('required','required');
+        });
+        const mob = q('input[name="MobileNumber"]');
+        if (mob){ mob.setAttribute('pattern','\\d{11}'); mob.setAttribute('maxlength','11'); }
+    })();
+
+    // === Client-side validation (mirror Register page rules) ===
+    function validateProfileForm(){
+        const get = (n)=>document.querySelector(`[name="${n}"]`);
+        const errs = [];
+
+        const firstName = (get('FirstName')?.value || '').trim();
+        const lastName  = (get('LastName')?.value  || '').trim();
+        const mobile    = (get('MobileNumber')?.value || '').trim();
+        const gender    = (get('Gender')?.value || '').trim();
+        const dobStr    = (get('DateOfBirth')?.value || '').trim();
+
+        if(!firstName) errs.push('First Name is required.');
+        if(!lastName)  errs.push('Last Name is required.');
+        if(!mobile)    errs.push('Mobile Number is required.');
+        else if(!/^\d{11}$/.test(mobile)) errs.push('Mobile Number must be exactly 11 digits.');
+        if(!gender)    errs.push('Gender is required.');
+        if(!dobStr)    errs.push('Date of birth is required.');
+        else {
+            const dob = new Date(dobStr);
+            const today = new Date();
+            const cutoff = new Date(today.getFullYear()-18, today.getMonth(), today.getDate());
+            if(dob > cutoff) errs.push('You must be at least 18 years old.');
+        }
+
+        return errs;
     }
 
     function saveProfile() {
+        const errs = validateProfileForm();
+        if (errs.length){
+            if (window.Swal) Swal.fire('Fix these first', errs.join('\n'), 'error');
+            else alert(errs.join('\n'));
+            return;
+        }
+
         const formData = new FormData(profileForm);
         $.ajax({
             url: '@Url.Action("UpdateProfile", "Account")',
@@ -289,7 +379,12 @@
                     Swal.fire({ icon: 'success', title: 'Profile Updated', timer: 1500, showConfirmButton: false })
                         .then(() => location.reload());
                 } else {
-                    Swal.fire('Error', response.message, 'error');
+                    if (response.errors) {
+                        const msgs = Object.values(response.errors).map(v => Array.isArray(v) ? v.join('\n') : v).join('\n');
+                        Swal.fire('Error', msgs, 'error');
+                    } else {
+                        Swal.fire('Error', response.message || 'Update failed.', 'error');
+                    }
                 }
             },
             error: function () {
@@ -298,6 +393,6 @@
         });
     }
 
-   
+    // Initialize in view mode
     toggleEdit(false);
 </script>
