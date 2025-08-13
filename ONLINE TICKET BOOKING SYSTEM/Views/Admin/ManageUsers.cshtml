@@ -1,37 +1,98 @@
 ﻿@using ONLINE_TICKET_BOOKING_SYSTEM.Models
 @model List<ApplicationUser>
 
+@inject UserManager<ApplicationUser> UserManager
+
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Manage Users";
 }
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-<h2 class="mb-4 text-success fw-bold">Manage Users</h2>
+<h2 class="mb-3 text-success fw-bold">Manage Users</h2>
 
-<table class="table table-bordered table-striped align-middle">
-    <thead class="table-success text-success">
-        <tr>
-            <th>UserName</th>
-            <th>Email</th>
-            <th style="width: 150px;">Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var user in Model)
-        {
+<!-- Toolbar -->
+<div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+    <div class="input-group" style="max-width: 380px;">
+        <span class="input-group-text bg-white border-success text-success">
+            <i class="bi bi-search"></i>
+        </span>
+        <input id="userSearch" type="text" class="form-control border-success" placeholder="Search name or email (min 3 chars)" />
+        <button id="clearSearch" class="btn btn-outline-secondary">Clear</button>
+    </div>
+
+    <div class="ms-auto d-flex align-items-center gap-2">
+        <label for="pageSize" class="text-muted small mb-0">Show</label>
+        <select id="pageSize" class="form-select form-select-sm border-success" style="width: 90px;">
+            <option>10</option>
+            <option>25</option>
+            <option>50</option>
+            <option selected>100</option>
+        </select>
+    </div>
+</div>
+
+<div class="table-responsive bg-white rounded shadow-sm p-0">
+    <table id="usersTable" class="table table-hover table-striped align-middle mb-0">
+        <thead class="table-success text-success sticky-top" style="z-index:1;">
             <tr>
-                <td>@user.UserName</td>
-                <td>@user.Email</td>
-                <td>
-                    <button class="btn btn-outline-danger btn-sm delete-user" data-id="@user.Id">
-                        <i class="fas fa-trash-alt"></i> Delete
-                    </button>
-                </td>
+                <th class="ps-3">Full Name</th>
+                <th class="email-col">Email</th>
+                <th class="text-center role-col" style="width: 110px;">Role</th>  
+                <th class="text-end pe-3" style="width: 210px;">Actions</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var user in Model)
+            {
+                var roles = UserManager.GetRolesAsync(user).Result ?? new List<string>();
+                var currentRole = roles.Contains("Admin") ? "Admin" : "User";
+                var isSelf = user.Id == UserManager.GetUserId(User);
+
+                <tr class="user-row"
+                    data-name="@($"{user.FirstName} {user.LastName}".Trim())"
+                    data-email="@user.Email"
+                    data-role="@currentRole">
+                    <td class="ps-3">@($"{user.FirstName} {user.LastName}")</td>
+                    <td class="email-cell" title="@user.Email">@user.Email</td>
+                    <td class="text-center">
+                        <span class="badge role-badge @(currentRole == "Admin" ? "bg-success" : "bg-secondary")">
+                            @currentRole
+                        </span>
+                    </td>
+                    <td class="text-end pe-3">
+                        <div class="d-inline-flex gap-2">
+                            @if (!isSelf)
+                            {
+                                <!-- Assign Role -->
+                                <button class="btn btn-success btn-sm px-3 assign-role"
+                                        data-id="@user.Id"
+                                        data-currentrole="@currentRole">
+                                    <i class="fas fa-user-shield me-1"></i> Assign Role
+                                </button>
+
+                                <!-- Delete -->
+                                <button class="btn btn-danger btn-sm px-3 delete-user" data-id="@user.Id">
+                                    <i class="fas fa-trash-alt me-1"></i> Delete
+                                </button>
+                            }
+                            else
+                            {
+                                <!-- Self-protected -->
+                                <button class="btn btn-secondary btn-sm px-3" disabled>
+                                    <i class="fas fa-user-shield me-1"></i> Own Role
+                                </button>
+                                <button class="btn btn-secondary btn-sm px-3" disabled>
+                                    <i class="fas fa-trash-alt me-1"></i> Self
+                                </button>
+                            }
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 
 <style>
     .table-success {
@@ -39,68 +100,206 @@
         color: #0f5132 !important;
     }
 
-    tbody tr:hover {
-        background-color: #e6f4ea;
-        cursor: pointer;
+    /* Professional table vibe */
+    #usersTable thead th {
+        font-weight: 700;
+        letter-spacing: .2px;
     }
 
-    .btn-outline-danger {
-        border-color: #198754;
-        color: #198754;
+    #usersTable tbody tr:hover {
+        background-color: #f6fbf8;
+    }
+
+    #usersTable tbody td {
+        vertical-align: middle;
+        font-size: .96rem;
+    }
+
+    /* Email column: narrower with ellipsis */
+    .email-col {
+        width: 36%;
+    }
+
+    .email-cell {
+        max-width: 420px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Role badge */
+    .role-col {
+        min-width: 100px;
+    }
+
+    .role-badge {
         font-weight: 600;
-        transition: background-color 0.3s, color 0.3s;
+        letter-spacing: .2px;
     }
 
-        .btn-outline-danger:hover {
-            background-color: red;
-            color: #fff;
-            border-color: #198754;
+    /* Buttons: larger and crisp */
+    .btn-success {
+        background-color: #198754;
+        border-color: #198754;
+    }
+
+        .btn-success:hover {
+            background-color: #157347;
+            border-color: #146c43;
         }
+
+    .btn-danger {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+
+        .btn-danger:hover {
+            background-color: #bb2d3b;
+            border-color: #b02a37;
+        }
+
+    /* Search input outline color on focus */
+    #userSearch:focus, #pageSize:focus {
+        box-shadow: 0 0 0 .2rem rgba(25, 135, 84, .25);
+        border-color: #198754;
+    }
+
+    /* 🔹 SweetAlert dropdown: hover green */
+    .swal2-select option:hover {
+        background-color: #198754 !important;
+        color: #fff !important;
+    }
+
+    /* Sticky header subtle shadow */
+    thead.sticky-top {
+        box-shadow: 0 2px 0 rgba(0,0,0,.03);
+    }
 </style>
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- fontawesome (optional for icons) -->
+    <script src="https://kit.fontawesome.com/a2e0e9f6e0.js" crossorigin="anonymous"></script>
+    <!-- bootstrap icons (for search icon) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
 
     <script>
-        $(document).ready(function () {
+        $(function () {
+            const $rows = $('#usersTable tbody tr.user-row');
+            const $search = $('#userSearch');
+            const $pageSize = $('#pageSize');
+
+            function applyFilters() {
+                const q = ($search.val() || '').trim().toLowerCase();
+                const min = 3;
+
+                // Filter by search 
+                let visible = $rows;
+                if (q.length >= min) {
+                    visible = $rows.filter(function () {
+                        const name = ($(this).data('name') || '').toString().toLowerCase();
+                        const email = ($(this).data('email') || '').toString().toLowerCase();
+                        return name.includes(q) || email.includes(q);
+                    });
+                } else {
+                    visible = $rows; // show all if less than 3 chars
+                }
+
+                $rows.hide();
+                visible.show();
+
+                // Apply row limit (Show 10/25/50/100)
+                const limit = parseInt($pageSize.val(), 10) || 100;
+                if (visible.length > limit) {
+                    visible.slice(limit).hide();
+                }
+            }
+
+            // Search events
+            $search.on('input', function () { applyFilters(); });
+
+            // Clear button
+            $('#clearSearch').on('click', function () {
+                $search.val('');
+                applyFilters();
+                $search.focus();
+            });
+
+            // Page size
+            $pageSize.on('change', function () { applyFilters(); });
+
+            // Initial filter
+            applyFilters();
+
+            // ===== Assign role =====
+            $('.assign-role').on('click', function () {
+                const userId = $(this).data('id');
+                const currentRole = ($(this).data('currentrole') || 'User').toString();
+
+                Swal.fire({
+                    title: 'Assign Role',
+                    input: 'select',
+                    inputOptions: { 'Admin': 'Admin', 'User': 'User' },
+                    inputValue: currentRole,
+                    showCancelButton: true,
+                    confirmButtonText: 'Update',
+                    cancelButtonText: 'Cancel',
+                    confirmButtonColor: '#198754'
+                }).then((result) => {
+                    if (!result.isConfirmed) return;
+                    const role = result.value;
+
+                    $.ajax({
+                        url: '/Admin/AssignRole',
+                        type: 'POST',
+                        data: { userId, role },
+                        success: function (res) {
+                            if (res.success) {
+                                Swal.fire({ icon: 'success', title: 'Success', text: res.message, showConfirmButton: false, timer: 1200 });
+                                setTimeout(() => location.reload(), 1300);
+                            } else {
+                                Swal.fire('Error', res.message || 'Failed to update role.', 'error');
+                            }
+                        },
+                        error: function () {
+                            Swal.fire('Error', 'Something went wrong.', 'error');
+                        }
+                    });
+                });
+            });
+
+            // ===== Delete user =====
             $('.delete-user').click(function () {
-                var userId = $(this).data('id');
+                const userId = $(this).data('id');
 
                 Swal.fire({
                     title: 'Are you sure?',
                     text: "User will be deleted permanently!",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#198754',
+                    confirmButtonColor: '#dc3545',
                     cancelButtonColor: '#6c757d',
                     confirmButtonText: 'Yes, delete!'
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        $.ajax({
-                            url: '/Admin/DeleteUser',
-                            type: 'POST',
-                            data: { id: userId },
-                            success: function (response) {
-                                if (response.success) {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Deleted!',
-                                        text: response.message,
-                                        showConfirmButton: false,
-                                        timer: 1500
-                                    });
+                    if (!result.isConfirmed) return;
 
-                                    setTimeout(() => location.reload(), 1600);
-                                } else {
-                                    Swal.fire('Error!', response.message, 'error');
-                                }
-                            },
-                            error: function () {
-                                Swal.fire('Error!', 'Something went wrong.', 'error');
+                    $.ajax({
+                        url: '/Admin/DeleteUser',
+                        type: 'POST',
+                        data: { id: userId },
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({ icon: 'success', title: 'Deleted!', text: response.message, showConfirmButton: false, timer: 1500 });
+                                setTimeout(() => location.reload(), 1600);
+                            } else {
+                                Swal.fire('Error!', response.message, 'error');
                             }
-                        });
-                    }
+                        },
+                        error: function () {
+                            Swal.fire('Error!', 'Something went wrong.', 'error');
+                        }
+                    });
                 });
             });
         });

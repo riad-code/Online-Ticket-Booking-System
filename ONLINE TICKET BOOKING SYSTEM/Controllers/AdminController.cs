@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 using ONLINE_TICKET_BOOKING_SYSTEM.Models;
 using System.Linq;
@@ -13,13 +14,17 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager; 
 
-        public AdminController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public AdminController(
+            ApplicationDbContext context,
+            UserManager<ApplicationUser> userManager,
+            RoleManager<IdentityRole> roleManager) 
         {
             _context = context;
             _userManager = userManager;
+            _roleManager = roleManager; 
         }
-
 
         public IActionResult Dashboard()
         {
@@ -150,11 +155,72 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             if (user == null)
                 return Json(new { success = false, message = "User not found." });
 
+            // prevent deleting last admin
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+            if (isAdmin)
+            {
+                var adminCount = await (from ur in _context.UserRoles
+                                        join r in _context.Roles on ur.RoleId equals r.Id
+                                        where r.Name == "Admin"
+                                        select ur.UserId).Distinct().CountAsync();
+                if (adminCount <= 1)
+                    return Json(new { success = false, message = "Cannot delete the last remaining admin user." });
+            }
+
             var result = await _userManager.DeleteAsync(user);
             if (result.Succeeded)
                 return Json(new { success = true, message = "User deleted successfully." });
 
             return Json(new { success = false, message = "Failed to delete user." });
+        }
+
+        // ===== NEW: AssignRole (Admin/User) =====
+        [HttpPost]
+        public async Task<IActionResult> AssignRole(string userId, string role)
+        {
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(role))
+                return Json(new { success = false, message = "Invalid request." });
+
+            role = role.Trim();
+            if (role != "Admin" && role != "User")
+                return Json(new { success = false, message = "Unsupported role." });
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+                return Json(new { success = false, message = "User not found." });
+
+            var currentRoles = await _userManager.GetRolesAsync(user);
+            var isCurrentlyAdmin = currentRoles.Contains("Admin");
+
+            // If demoting an admin, ensure at least one admin remains
+            if (isCurrentlyAdmin && role != "Admin")
+            {
+                var adminCount = await (from ur in _context.UserRoles
+                                        join r in _context.Roles on ur.RoleId equals r.Id
+                                        where r.Name == "Admin"
+                                        select ur.UserId).Distinct().CountAsync();
+
+                if (adminCount <= 1)
+                    return Json(new { success = false, message = "Cannot remove Admin from the last remaining admin user." });
+            }
+
+            // Ensure roles exist (defensive)
+            if (!await _roleManager.RoleExistsAsync("Admin"))
+                await _roleManager.CreateAsync(new IdentityRole("Admin"));
+            if (!await _roleManager.RoleExistsAsync("User"))
+                await _roleManager.CreateAsync(new IdentityRole("User"));
+
+            // Remove known roles, then add the selected one (single-role model)
+            if (currentRoles.Contains("Admin"))
+                await _userManager.RemoveFromRoleAsync(user, "Admin");
+            if (currentRoles.Contains("User"))
+                await _userManager.RemoveFromRoleAsync(user, "User");
+
+            var add = await _userManager.AddToRoleAsync(user, role);
+            if (!add.Succeeded)
+                return Json(new { success = false, message = string.Join(", ", add.Errors.Select(e => e.Description)) });
+
+            return Json(new { success = true, message = $"Role updated to {role}." });
         }
     }
 }
