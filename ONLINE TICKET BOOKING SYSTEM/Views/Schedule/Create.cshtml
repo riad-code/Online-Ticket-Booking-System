@@ -34,9 +34,12 @@
                                         data-to="@b.To"
                                         data-fullroute="@b.FullRoute"
                                         data-fare="@b.Fare"
-                                        data-seats="@b.SeatsAvailable">
+                                        data-seats="@b.SeatsAvailable"
+                                        data-departure="@b.DepartureTime.ToString(@"hh\:mm")"
+                                        data-arrival="@b.ArrivalTime.ToString(@"hh\:mm")">
                                     @b.OperatorName — @b.FullRoute — ৳@b.Fare
                                 </option>
+
                             }
                         </select>
                         <div class="form-text">Route, fare & seats auto-fill from selection (you can still adjust).</div>
@@ -131,14 +134,17 @@
     <script>
         $(function () {
             // Select bus -> fill fields
-            $('#busSelect').on('change', function () {
-                const sel = $(this).find('option:selected');
-                $('#FullRoute').val(sel.data('fullroute') || '');
-                $('input[name="Fare"]').val(sel.data('fare') || '');
-                $('input[name="SeatsAvailable"]').val(sel.data('seats') || '');
-                $('#From').val(sel.data('from') || '');
-                $('#To').val(sel.data('to') || '');
-            });
+                   $('#busSelect').on('change', function () {
+            const sel = $(this).find('option:selected');
+            $('#FullRoute').val(sel.data('fullroute') || '');
+            $('input[name="Fare"]').val(sel.data('fare') || '');
+            $('input[name="SeatsAvailable"]').val(sel.data('seats') || '');
+            $('#From').val(sel.data('from') || '');
+            $('#To').val(sel.data('to') || '');
+            $('input[name="DepartureTime"]').val(sel.data('departure') || '');
+            $('input[name="ArrivalTime"]').val(sel.data('arrival') || '');
+        });
+
 
             // Return toggle
             $('#isReturn').on('change', function () {
