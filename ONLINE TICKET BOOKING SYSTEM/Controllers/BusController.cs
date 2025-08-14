@@ -27,38 +27,70 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         [HttpGet]
         public IActionResult Results(string from, string to, DateTime journeyDate, string? returnDate, string tripType)
         {
-            var buses = _context.BusSchedules
-                .Where(b =>
-                    b.From.ToLower().Contains(from.ToLower().Trim()) &&
-                    b.To.ToLower().Contains(to.ToLower().Trim()) &&
-                    b.JourneyDate.Date == journeyDate.Date)
-                .OrderBy(b => b.JourneyDate)
-                .ThenBy(b => b.DepartureTime)
+            // Normalize inputs
+            var fromNorm = (from ?? "").Trim().ToLower();
+            var toNorm = (to ?? "").Trim().ToLower();
+
+            // 1) OUTBOUND: find matching buses by route only (no date filter)
+            var outboundBase = _context.Buses
+                .Where(b => b.From.ToLower().Contains(fromNorm) &&
+                            b.To.ToLower().Contains(toNorm))
+                .OrderBy(b => b.OperatorName).ThenBy(b => b.DepartureTime)
                 .ToList();
 
-            List<BusSchedule>? returnBuses = null;
-
-            var tripTypeNormalized = tripType?.ToLower().Replace(" ", "");
-            if (tripTypeNormalized == "roundway" && !string.IsNullOrEmpty(returnDate))
-
+            // Materialize "virtual" schedules for the requested journeyDate
+            var buses = outboundBase.Select(b => new BusSchedule
             {
-                DateTime retDate = DateTime.Parse(returnDate);
-                returnBuses = _context.BusSchedules
-                    .Where(b =>
-                        b.From.ToLower().Contains(to.ToLower().Trim()) &&
-                        b.To.ToLower().Contains(from.ToLower().Trim()) &&
-                        b.JourneyDate.Date == retDate.Date)
-                    .OrderBy(b => b.JourneyDate)
-                    .ThenBy(b => b.DepartureTime)
+                BusId = b.Id,
+                From = b.From,
+                To = b.To,
+                FullRoute = b.FullRoute,
+                JourneyDate = journeyDate.Date,     // << user-selected date
+                ReturnDate = null,
+                DepartureTime = b.DepartureTime,
+                ArrivalTime = b.ArrivalTime,
+                BusType = b.BusType,
+                OperatorName = b.OperatorName,
+                Fare = b.Fare,
+                SeatsAvailable = b.SeatsAvailable
+            }).OrderBy(s => s.DepartureTime).ToList();
+
+            // 2) RETURN: only when requested
+            List<BusSchedule>? returnBuses = null;
+            var tripTypeNormalized = tripType?.ToLower().Replace(" ", "");
+            if (tripTypeNormalized == "roundway" && !string.IsNullOrWhiteSpace(returnDate))
+            {
+                var retDate = DateTime.Parse(returnDate).Date;
+
+                var returnBase = _context.Buses
+                    .Where(b => b.From.ToLower().Contains(toNorm) &&
+                                b.To.ToLower().Contains(fromNorm))
+                    .OrderBy(b => b.OperatorName).ThenBy(b => b.DepartureTime)
                     .ToList();
+
+                returnBuses = returnBase.Select(b => new BusSchedule
+                {
+                    BusId = b.Id,
+                    From = b.From,            // naturally: to→from route in data
+                    To = b.To,
+                    FullRoute = b.FullRoute,
+                    JourneyDate = retDate,           // << user-selected return date
+                    ReturnDate = null,
+                    DepartureTime = b.DepartureTime,
+                    ArrivalTime = b.ArrivalTime,
+                    BusType = b.BusType,
+                    OperatorName = b.OperatorName,
+                    Fare = b.Fare,
+                    SeatsAvailable = b.SeatsAvailable
+                }).OrderBy(s => s.DepartureTime).ToList();
             }
 
             var vm = new BusSearchResultViewModel
             {
                 From = from,
                 To = to,
-                JourneyDate = journeyDate,
-                ReturnDate = string.IsNullOrEmpty(returnDate) ? null : DateTime.Parse(returnDate),
+                JourneyDate = journeyDate.Date,
+                ReturnDate = string.IsNullOrEmpty(returnDate) ? null : DateTime.Parse(returnDate).Date,
                 TripType = tripType,
                 AvailableBuses = buses,
                 ReturnBuses = returnBuses
@@ -70,7 +102,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
 
 
-
+        // Autocomplete for "From"
         // Autocomplete for "From"
         [HttpGet]
         [AllowAnonymous]
@@ -79,8 +111,9 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             if (string.IsNullOrWhiteSpace(term))
                 return Ok(new List<string>());
 
-            var suggestions = _context.BusSchedules
-                .Where(b => EF.Functions.Like(b.From, $"%{term}%"))
+            var t = term.Trim();
+            var suggestions = _context.Buses
+                .Where(b => EF.Functions.Like(b.From, $"%{t}%"))
                 .Select(b => b.From)
                 .Distinct()
                 .Take(10)
@@ -97,8 +130,9 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             if (string.IsNullOrWhiteSpace(term))
                 return Ok(new List<string>());
 
-            var suggestions = _context.BusSchedules
-                .Where(b => EF.Functions.Like(b.To, $"%{term}%"))
+            var t = term.Trim();
+            var suggestions = _context.Buses
+                .Where(b => EF.Functions.Like(b.To, $"%{t}%"))
                 .Select(b => b.To)
                 .Distinct()
                 .Take(10)
@@ -106,19 +140,20 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             return Ok(suggestions);
         }
+
         [HttpGet]
         public JsonResult GetLocationSuggestions(string term)
         {
             if (string.IsNullOrWhiteSpace(term))
                 return Json(new List<string>());
 
-            term = term.ToLower();
+            term = term.Trim().ToLower();
 
-            var fromLocations = _context.BusSchedules
+            var fromLocations = _context.Buses
                 .Where(b => b.From.ToLower().StartsWith(term))
                 .Select(b => b.From);
 
-            var toLocations = _context.BusSchedules
+            var toLocations = _context.Buses
                 .Where(b => b.To.ToLower().StartsWith(term))
                 .Select(b => b.To);
 

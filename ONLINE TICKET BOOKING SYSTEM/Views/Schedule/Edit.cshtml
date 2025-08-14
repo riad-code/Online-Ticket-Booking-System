@@ -6,115 +6,144 @@
     ViewData["Title"] = "Edit Schedule";
 }
 
-<h2 class="mb-4 text-success">Edit Schedule</h2>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-<form id="editScheduleForm" asp-action="Edit" method="post">
-    <input type="hidden" asp-for="Id" />
-
-    <div class="row g-3">
-        <div class="col-md-6">
-            <label>Choose Bus (Vehicle)</label>
-            <select id="busSelect" name="BusId" class="form-select" required>
-                <option value="">-- Select Bus --</option>
-                @foreach (var b in Model.AllBuses)
-                {
-                    <option value="@b.Id"
-                            data-from="@b.From"
-                            data-to="@b.To"
-                            data-fullroute="@b.FullRoute"
-                            data-fare="@b.Fare"
-                            data-seats="@b.SeatsAvailable"
-                            selected="@(b.Id == Model.BusId ? "selected" : null)">
-                        @b.OperatorName — @b.FullRoute — ৳@b.Fare
-                    </option>
-                }
-            </select>
-        </div>
-
-        <!-- Hidden inputs for From and To to satisfy validation -->
-        <input type="hidden" id="From" name="From" value="@Model.From" />
-        <input type="hidden" id="To" name="To" value="@Model.To" />
-
-        <div class="col-md-3">
-            <label>Journey Date</label>
-            <input asp-for="JourneyDate" class="form-control" type="date" required />
-        </div>
-
-        <div class="col-md-3">
-            <label>Departure Time</label>
-            <input asp-for="DepartureTime" class="form-control" type="time" required />
-        </div>
-
-        <div class="col-md-3">
-            <label>Arrival Time</label>
-            <input asp-for="ArrivalTime" class="form-control" type="time" required />
-        </div>
-
-        <div class="col-md-3">
-            <label>Fare (Tk)</label>
-            <input asp-for="Fare" class="form-control" required />
-        </div>
-
-        <div class="col-md-3">
-            <label>Seats Available</label>
-            <input asp-for="SeatsAvailable" class="form-control" required />
-        </div>
-
-        <div class="col-md-6">
-            <label>Full Route</label>
-            <input asp-for="FullRoute" class="form-control" readonly />
-        </div>
-
-        <div class="col-12">
-            <hr />
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="isReturn" @(Model.ReturnBusId.HasValue ? "checked" : "") />
-                <label class="form-check-label" for="isReturn">Add Return Bus</label>
-            </div>
-        </div>
-
-        <div id="returnSection" style="display:@(Model.ReturnBusId.HasValue ? "block" : "none");" class="row g-3 mt-2">
-            <div class="col-md-4">
-                <label>Return Date</label>
-                <input asp-for="ReturnDate" class="form-control" type="date" />
-            </div>
-            <div class="col-md-4">
-                <label>Choose Return Bus</label>
-                <select id="returnBusSelect" name="ReturnBusId" class="form-select">
-                    <option value="">-- Select Return Bus --</option>
-                    @foreach (var b in Model.AllBuses)
-                    {
-                        <option value="@b.Id"
-                                selected="@(b.Id == Model.ReturnBusId ? "selected" : null)">
-                            @b.OperatorName — @b.FullRoute — ৳@b.Fare
-                        </option>
-                    }
-                </select>
-            </div>
-        </div>
-
-        <div class="col-12 mt-3">
-            <button type="submit" class="btn btn-success">Save Schedule</button>
-            <a asp-action="Index" class="btn btn-secondary">Cancel</a>
-        </div>
+<div class="container py-3">
+    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between mb-3">
+        <h2 class="mb-0 text-success fw-bold">Edit Schedule</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back to Schedules</a>
     </div>
-</form>
+
+    <form id="editScheduleForm" asp-action="Edit" method="post" class="needs-validation" novalidate>
+        <input type="hidden" asp-for="Id" />
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
+                <!-- Bus & Route -->
+                <div class="row g-3">
+                    <div class="col-12">
+                        <h6 class="text-secondary text-uppercase fw-bold mb-2">Bus & Route</h6>
+                    </div>
+
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Choose Bus (Vehicle)</label>
+                        <select id="busSelect" name="BusId" class="form-select" required>
+                            <option value="">-- Select Bus --</option>
+                            @foreach (var b in Model.AllBuses)
+                            {
+                                <option value="@b.Id"
+                                        data-from="@b.From"
+                                        data-to="@b.To"
+                                        data-fullroute="@b.FullRoute"
+                                        data-fare="@b.Fare"
+                                        data-seats="@b.SeatsAvailable"
+                                        data-departure="@b.DepartureTime.ToString(@"hh\:mm")"
+                                        data-arrival="@b.ArrivalTime.ToString(@"hh\:mm")"
+                                        selected="@(b.Id == Model.BusId ? "selected" : null)">
+                                    @b.OperatorName — @b.FullRoute — ৳@b.Fare
+                                </option>
+                            }
+                        </select>
+                        <div class="form-text">Route, times, fare & seats can be auto-filled from the selected bus.</div>
+                    </div>
+
+                    <!-- Hidden From/To (kept for your validation flow) -->
+                    <input type="hidden" id="From" name="From" value="@Model.From" />
+                    <input type="hidden" id="To" name="To" value="@Model.To" />
+
+                    <div class="col-12 col-lg-6">
+                        <label class="form-label">Full Route</label>
+                        <input asp-for="FullRoute" id="FullRoute" class="form-control" readonly />
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <!-- Schedule Details -->
+                <div class="row g-3">
+                    <div class="col-12">
+                        <h6 class="text-secondary text-uppercase fw-bold mb-2">Schedule Details</h6>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label">Journey Date</label>
+                        <input asp-for="JourneyDate" class="form-control" type="date" required />
+                        <div class="form-text">Past dates are disabled.</div>
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label">Departure Time</label>
+                        <input asp-for="DepartureTime" class="form-control" type="time" required />
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label">Arrival Time</label>
+                        <input asp-for="ArrivalTime" class="form-control" type="time" required />
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label">Fare (Tk)</label>
+                        <input asp-for="Fare" class="form-control" required />
+                    </div>
+
+                    <div class="col-12 col-md-6 col-lg-3">
+                        <label class="form-label">Seats Available</label>
+                        <input asp-for="SeatsAvailable" class="form-control" required />
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <!-- Return (Optional) -->
+                <div class="row g-3">
+                    <div class="col-12 d-flex align-items-center justify-content-between">
+                        <h6 class="text-secondary text-uppercase fw-bold mb-2">Return (Optional)</h6>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isReturn" @(Model.ReturnBusId.HasValue ? "checked" : "") />
+                            <label class="form-check-label" for="isReturn">Add Return Bus</label>
+                        </div>
+                    </div>
+
+                    <div id="returnSection" class="row g-3" style="display:@(Model.ReturnBusId.HasValue ? "block" : "none");">
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <label class="form-label">Return Date</label>
+                            <input asp-for="ReturnDate" class="form-control" type="date" />
+                        </div>
+                        <div class="col-12 col-md-6 col-lg-8">
+                            <label class="form-label">Choose Return Bus</label>
+                            <select id="returnBusSelect" name="ReturnBusId" class="form-select">
+                                <option value="">-- Select Return Bus --</option>
+                                @foreach (var b in Model.AllBuses)
+                                {
+                                    <option value="@b.Id" selected="@(b.Id == Model.ReturnBusId ? "selected" : null)">
+                                        @b.OperatorName — @b.FullRoute — ৳@b.Fare
+                                    </option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer bg-white d-flex flex-wrap gap-2 justify-content-end">
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-success">Save Schedule</button>
+            </div>
+        </div>
+    </form>
+</div>
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
-        $(document).ready(function () {
-            // Set min date for JourneyDate and ReturnDate inputs (no past date allowed)
-            function setMinDate() {
-                const today = new Date().toISOString().split('T')[0];
-                $('input[name="JourneyDate"]').attr('min', today);
-                $('input[name="ReturnDate"]').attr('min', today);
-            }
-            setMinDate();
+        $(function () {
+            // Min date (no past)
+            const today = new Date().toISOString().split('T')[0];
+            $('input[name="JourneyDate"]').attr('min', today);
+            $('input[name="ReturnDate"]').attr('min', today);
 
-            // On bus select change, update related fields and hidden From/To inputs
+            // When selecting a bus, auto-fill fields
             $('#busSelect').on('change', function () {
                 const sel = this.options[this.selectedIndex];
                 if (!sel || !sel.dataset) return;
@@ -122,57 +151,55 @@
                 $('#FullRoute').val(sel.dataset.fullroute || '');
                 $('input[name="Fare"]').val(sel.dataset.fare || '');
                 $('input[name="SeatsAvailable"]').val(sel.dataset.seats || '');
+                $('input[name="DepartureTime"]').val(sel.dataset.departure || '');
+                $('input[name="ArrivalTime"]').val(sel.dataset.arrival || '');
                 $('#From').val(sel.dataset.from || '');
                 $('#To').val(sel.dataset.to || '');
             });
 
-            // Toggle return section display
+            // Toggle return area
             $('#isReturn').on('change', function () {
                 $('#returnSection').toggle(this.checked);
             });
 
-            // Ajax submit form with SweetAlert
-            $('#editScheduleForm').submit(function (e) {
+            // Ajax submit
+            $('#editScheduleForm').on('submit', function (e) {
                 e.preventDefault();
 
-                const form = $(this);
-                const url = form.attr('action');
-                const data = form.serialize();
+                const url = $(this).attr('action');
+                const data = $(this).serialize();
 
-                Swal.fire({
-                    title: 'Saving...',
-                    didOpen: () => Swal.showLoading(),
-                    allowOutsideClick: false
-                });
+                Swal.fire({ title: 'Saving...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
 
                 $.post(url, data)
                     .done(function (res) {
                         if (res.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: res.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            }).then(() => {
-                                window.location.href = '@Url.Action("Index", "Schedule")';
-                            });
+                            Swal.fire({ icon: 'success', title: res.message || 'Saved!', timer: 1500, showConfirmButton: false })
+                                .then(() => window.location.href = '@Url.Action("Index", "Schedule")');
                         } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: res.message || 'Failed to save schedule.'
-                            });
+                            Swal.fire({ icon: 'error', title: 'Error', text: res.message || 'Failed to save schedule.' });
                         }
                     })
                     .fail(function (xhr) {
-                        let msg = xhr.responseJSON ? xhr.responseJSON.join('\n') : xhr.responseText || 'Failed to save schedule.';
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: msg
-                        });
+                        const msg = xhr.responseJSON ? xhr.responseJSON.join('\n') : (xhr.responseText || 'Failed to save schedule.');
+                        Swal.fire({ icon: 'error', title: 'Error!', text: msg });
                     });
             });
+
+            // HTML5 validation in Bootstrap style
+            (function () {
+                'use strict';
+                const forms = document.querySelectorAll('.needs-validation');
+                Array.prototype.slice.call(forms).forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            })();
         });
     </script>
 }

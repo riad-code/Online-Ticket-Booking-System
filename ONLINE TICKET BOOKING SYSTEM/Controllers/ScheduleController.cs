@@ -50,15 +50,12 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             if (!ModelState.IsValid)
             {
                 vm.AllBuses = _context.Buses.ToList();
-                // For AJAX, return validation errors as JSON
                 return BadRequest(ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage));
             }
 
             var bus = _context.Buses.FirstOrDefault(b => b.Id == vm.BusId);
             if (bus == null)
-            {
                 return BadRequest("Selected bus not found.");
-            }
 
             var schedule = new BusSchedule
             {
@@ -66,29 +63,34 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 From = bus.From,
                 To = bus.To,
                 FullRoute = bus.FullRoute,
+
                 JourneyDate = vm.JourneyDate.Date,
                 ReturnDate = vm.ReturnDate?.Date,
+
+                // Times/fare/seats come from the form (admin can override)
                 DepartureTime = vm.DepartureTime,
                 ArrivalTime = vm.ArrivalTime,
+                Fare = vm.Fare,
+                SeatsAvailable = vm.SeatsAvailable,
+
                 BusType = bus.BusType,
                 OperatorName = bus.OperatorName,
-                Fare = vm.Fare,
-                SeatsAvailable = vm.SeatsAvailable
+
+                // copy latest BP/DP from Bus
+                BoardingPointsString = bus.BoardingPointsString,
+                DroppingPointsString = bus.DroppingPointsString
             };
 
             if (vm.ReturnBusId.HasValue)
             {
                 var rbus = _context.Buses.FirstOrDefault(b => b.Id == vm.ReturnBusId.Value);
                 if (rbus != null)
-                {
                     schedule.ReturnBusId = vm.ReturnBusId;
-                }
             }
 
             _context.BusSchedules.Add(schedule);
             _context.SaveChanges();
 
-            // Return success JSON for AJAX
             return Json(new { success = true, message = "Schedule created successfully." });
         }
 
@@ -103,15 +105,20 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 Id = sched.Id,
                 BusId = sched.BusId ?? 0,
                 ReturnBusId = sched.ReturnBusId,
+
                 JourneyDate = sched.JourneyDate,
                 ReturnDate = sched.ReturnDate,
+
                 DepartureTime = sched.DepartureTime,
                 ArrivalTime = sched.ArrivalTime,
+
                 Fare = sched.Fare,
                 SeatsAvailable = sched.SeatsAvailable,
+
                 From = sched.From,
                 To = sched.To,
                 FullRoute = sched.FullRoute,
+
                 AllBuses = _context.Buses.ToList()
             };
             return View(vm);
@@ -133,22 +140,29 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             var bus = _context.Buses.FirstOrDefault(b => b.Id == vm.BusId);
             if (bus == null)
-            {
                 return BadRequest("Selected bus not found.");
-            }
 
+            // Update schedule from selected bus + form
             sched.BusId = vm.BusId;
             sched.From = bus.From;
             sched.To = bus.To;
             sched.FullRoute = bus.FullRoute;
+
             sched.DepartureTime = vm.DepartureTime;
             sched.ArrivalTime = vm.ArrivalTime;
+
             sched.JourneyDate = vm.JourneyDate.Date;
             sched.ReturnDate = vm.ReturnDate?.Date;
+
             sched.BusType = bus.BusType;
             sched.OperatorName = bus.OperatorName;
+
             sched.Fare = vm.Fare;
             sched.SeatsAvailable = vm.SeatsAvailable;
+
+            // Keep BP/DP consistent with base bus by default
+            sched.BoardingPointsString = bus.BoardingPointsString;
+            sched.DroppingPointsString = bus.DroppingPointsString;
 
             if (vm.ReturnBusId.HasValue)
             {
@@ -159,6 +173,57 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             else
             {
                 sched.ReturnBusId = null;
+            }
+
+            // === SYNC: Schedule -> Bus (and then Bus -> all schedules for that bus) ===
+            if (sched.BusId.HasValue)
+            {
+                var baseBus = _context.Buses.FirstOrDefault(b => b.Id == sched.BusId.Value);
+                if (baseBus != null)
+                {
+                    // push edits into the Bus
+                    baseBus.From = sched.From;
+                    baseBus.To = sched.To;
+                    baseBus.FullRoute = sched.FullRoute;
+
+                    baseBus.DepartureTime = sched.DepartureTime;
+                    baseBus.ArrivalTime = sched.ArrivalTime;
+
+                    baseBus.BusType = sched.BusType;
+                    baseBus.OperatorName = sched.OperatorName;
+
+                    baseBus.Fare = sched.Fare;
+                    baseBus.SeatsAvailable = sched.SeatsAvailable;
+
+                    baseBus.BoardingPointsString = sched.BoardingPointsString;
+                    baseBus.DroppingPointsString = sched.DroppingPointsString;
+
+                    _context.Buses.Update(baseBus);
+
+                    // then propagate bus values to all linked schedules (immediate consistency)
+                    var linkedSchedules = _context.BusSchedules
+                        .Where(s => s.BusId == baseBus.Id)
+                        .ToList();
+
+                    foreach (var s in linkedSchedules)
+                    {
+                        s.From = baseBus.From;
+                        s.To = baseBus.To;
+                        s.FullRoute = baseBus.FullRoute;
+
+                        s.DepartureTime = baseBus.DepartureTime;
+                        s.ArrivalTime = baseBus.ArrivalTime;
+
+                        s.BusType = baseBus.BusType;
+                        s.OperatorName = baseBus.OperatorName;
+
+                        s.Fare = baseBus.Fare;
+                        s.SeatsAvailable = baseBus.SeatsAvailable;
+
+                        s.BoardingPointsString = baseBus.BoardingPointsString;
+                        s.DroppingPointsString = baseBus.DroppingPointsString;
+                    }
+                }
             }
 
             _context.BusSchedules.Update(sched);

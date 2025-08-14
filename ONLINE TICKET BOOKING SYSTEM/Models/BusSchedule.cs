@@ -18,21 +18,39 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Models
         [ForeignKey("ReturnBusId")]
         public Bus? ReturnBus { get; set; }
 
-        public string From { get; set; }
-        public string To { get; set; }
+        public string From { get; set; } = string.Empty;
+        public string To { get; set; } = string.Empty;
         public DateTime JourneyDate { get; set; }
         public DateTime? ReturnDate { get; set; }
         public TimeSpan DepartureTime { get; set; }
         public TimeSpan ArrivalTime { get; set; }
-        public string BusType { get; set; }
-        public string OperatorName { get; set; }
+        public string BusType { get; set; } = string.Empty;
+        public string OperatorName { get; set; } = string.Empty;
         public decimal Fare { get; set; }
         public int SeatsAvailable { get; set; }
         public string? FullRoute { get; set; }
 
-        // Not mapped lists used for search UI (not stored)
+        // DB columns for points (already in your DB)
+        public string? BoardingPointsString { get; set; }
+        public string? DroppingPointsString { get; set; }
+
+        // Convenience lists for UI filtering
+        [NotMapped]
+        public List<string>? BoardingPoints =>
+            string.IsNullOrWhiteSpace(BoardingPointsString) ? null
+            : BoardingPointsString.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                  .Select(s => s.Trim()).Where(s => s.Length > 0).ToList();
+
+        [NotMapped]
+        public List<string>? DroppingPoints =>
+            string.IsNullOrWhiteSpace(DroppingPointsString) ? null
+            : DroppingPointsString.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                  .Select(s => s.Trim()).Where(s => s.Length > 0).ToList();
+
+        // For view-model transport only
         [NotMapped]
         public List<Bus>? AvailableBuses { get; set; }
+
         [NotMapped]
         public List<Bus>? ReturnBuses { get; set; }
     }

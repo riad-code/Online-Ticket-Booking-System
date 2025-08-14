@@ -76,6 +76,15 @@
         }
 </style>
 
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    bool IsController(params string[] controllers) => controllers.Contains(currentController);
+
+    bool IsControllerActionStartsWith(string controller, string actionPrefix) =>
+        currentController == controller && currentAction.StartsWith(actionPrefix, StringComparison.OrdinalIgnoreCase);
+}
 
 <nav class="mt-2">
     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
@@ -83,10 +92,7 @@
         <!-- Admin Dashboard -->
         <li class="nav-item">
             <a asp-controller="Admin" asp-action="Dashboard"
-               class="nav-link @(
-               ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" &&
-               ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard"
-               ? "active" : "")">
+               class="nav-link @(IsController("Admin") && currentAction.StartsWith("Dashboard") ? "active" : "")">
                 <i class="nav-icon fas fa-tachometer-alt"></i>
                 <p>Dashboard</p>
             </a>
@@ -95,10 +101,7 @@
         <!-- Manage Users -->
         <li class="nav-item">
             <a asp-controller="Admin" asp-action="ManageUsers"
-               class="nav-link @(
-                                   ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" &&
-                                   ViewContext.RouteData.Values["action"]?.ToString() == "ManageUsers"
-                                   ? "active" : "")">
+               class="nav-link @(IsController("Admin") && currentAction.StartsWith("ManageUsers") ? "active" : "")">
                 <i class="nav-icon fas fa-users-cog"></i>
                 <p>Manage Users</p>
             </a>
@@ -107,10 +110,7 @@
         <!-- Manage Routes -->
         <li class="nav-item">
             <a asp-controller="Route" asp-action="Index"
-               class="nav-link @(
-                                   ViewContext.RouteData.Values["controller"]?.ToString() == "Route" &&
-                                   ViewContext.RouteData.Values["action"]?.ToString() == "Index"
-                                   ? "active" : "")">
+               class="nav-link @(IsController("Route") ? "active" : "")">
                 <i class="nav-icon fas fa-route"></i>
                 <p>Manage Bus Routes</p>
             </a>
@@ -119,28 +119,20 @@
         <!-- Manage Schedules -->
         <li class="nav-item">
             <a asp-controller="Schedule" asp-action="Index"
-               class="nav-link @(
-                                   ViewContext.RouteData.Values["controller"]?.ToString() == "Schedule" &&
-                                   ViewContext.RouteData.Values["action"]?.ToString() == "Index"
-                                   ? "active" : "")">
+               class="nav-link @(IsController("Schedule") ? "active" : "")">
                 <i class="nav-icon fas fa-calendar-alt"></i>
                 <p>Manage Bus Schedules</p>
             </a>
         </li>
 
         <!-- Manage Vehicles Dropdown -->
-        <li class="nav-item text-success has-treeview @(
-                            ViewContext.RouteData.Values["controller"]?.ToString() == "Bus" ||
-                            ViewContext.RouteData.Values["controller"]?.ToString() == "Air" ||
-                            ViewContext.RouteData.Values["controller"]?.ToString() == "Train" ||
-                            ViewContext.RouteData.Values["controller"]?.ToString() == "Launch"
-                            ? "menu-open" : "")">
-            <a href="#" class="nav-link @(
-                                        ViewContext.RouteData.Values["controller"]?.ToString() == "Bus" ||
-                                        ViewContext.RouteData.Values["controller"]?.ToString() == "Air" ||
-                                        ViewContext.RouteData.Values["controller"]?.ToString() == "Train" ||
-                                        ViewContext.RouteData.Values["controller"]?.ToString() == "Launch"
-                                        ? "active" : "")">
+        @{
+            bool isManageVehiclesActive =
+            IsController("Bus", "Air", "Train", "Launch") ||
+            IsControllerActionStartsWith("Admin", "ManageBuses");
+        }
+        <li class="nav-item text-success has-treeview @(isManageVehiclesActive ? "menu-open" : "")">
+            <a href="#" class="nav-link @(isManageVehiclesActive ? "active" : "")">
                 <i class="nav-icon fas fa-bus"></i>
                 <p>
                     Manage Vehicles
@@ -149,37 +141,29 @@
             </a>
             <ul class="nav nav-treeview">
                 <li class="nav-item">
-                    <a asp-controller="Admin" asp-action="ManageBuses" class="nav-link @(
-                                                                                             ViewContext.RouteData.Values["controller"]?.ToString() == "Bus" &&
-                                                                                             ViewContext.RouteData.Values["action"]?.ToString() == "ManageBuses"
-                                                                                             ? "active" : "")">
+                    <a asp-controller="Admin" asp-action="ManageBuses"
+                       class="nav-link @(IsControllerActionStartsWith("Admin", "ManageBuses") ? "active" : "")">
                         <i class="fas fa-bus nav-icon text-black"></i>
                         <p>Manage Bus</p>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a asp-controller="Air" asp-action="Index" class="nav-link @(
-                                                                                       ViewContext.RouteData.Values["controller"]?.ToString() == "Air" &&
-                                                                                       ViewContext.RouteData.Values["action"]?.ToString() == "Index"
-                                                                                       ? "active" : "")">
+                    <a asp-controller="Air" asp-action="Index"
+                       class="nav-link @(IsController("Air") ? "active" : "")">
                         <i class="fas fa-plane nav-icon text-black"></i>
                         <p>Manage Air</p>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a asp-controller="Train" asp-action="Index" class="nav-link @(
-                                                                                         ViewContext.RouteData.Values["controller"]?.ToString() == "Train" &&
-                                                                                         ViewContext.RouteData.Values["action"]?.ToString() == "Index"
-                                                                                         ? "active" : "")">
+                    <a asp-controller="Train" asp-action="Index"
+                       class="nav-link @(IsController("Train") ? "active" : "")">
                         <i class="fas fa-train nav-icon text-black"></i>
                         <p>Manage Train</p>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a asp-controller="Launch" asp-action="Index" class="nav-link @(
-                                                                                          ViewContext.RouteData.Values["controller"]?.ToString() == "Launch" &&
-                                                                                          ViewContext.RouteData.Values["action"]?.ToString() == "Index"
-                                                                                          ? "active" : "")">
+                    <a asp-controller="Launch" asp-action="Index"
+                       class="nav-link @(IsController("Launch") ? "active" : "")">
                         <i class="fas fa-ship nav-icon text-black"></i>
                         <p>Manage Launch</p>
                     </a>
@@ -190,10 +174,7 @@
         <!-- Manage Operators -->
         <li class="nav-item">
             <a asp-controller="UserManagement" asp-action="Operator"
-               class="nav-link @(
-                          ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" &&
-                          ViewContext.RouteData.Values["action"]?.ToString() == "Operator"
-                              ? "active" : "")">
+               class="nav-link @(IsController("UserManagement") && currentAction.StartsWith("Operator") ? "active" : "")">
                 <i class="nav-icon fas fa-user-tie"></i>
                 <p>Manage Operators</p>
             </a>
@@ -202,22 +183,16 @@
         <!-- Booked Tickets -->
         <li class="nav-item">
             <a asp-controller="Ticket" asp-action="AllBookings"
-               class="nav-link @(
-                                   ViewContext.RouteData.Values["controller"]?.ToString() == "Ticket" &&
-                                   ViewContext.RouteData.Values["action"]?.ToString() == "AllBookings"
-                                   ? "active" : "")">
+               class="nav-link @(IsController("Ticket") ? "active" : "")">
                 <i class="nav-icon fas fa-ticket-alt"></i>
                 <p>Booked Tickets</p>
             </a>
         </li>
 
-        <!-- Customer List -->
+        <!-- Customers -->
         <li class="nav-item">
             <a asp-controller="UserManagement" asp-action="Index"
-               class="nav-link @(
-                                   ViewContext.RouteData.Values["controller"]?.ToString() == "UserManagement" &&
-                                   ViewContext.RouteData.Values["action"]?.ToString() == "Index"
-                                   ? "active" : "")">
+               class="nav-link @(IsController("UserManagement") && currentAction.StartsWith("Index") ? "active" : "")">
                 <i class="nav-icon fas fa-users"></i>
                 <p>Customers</p>
             </a>
@@ -226,10 +201,7 @@
         <!-- Reports -->
         <li class="nav-item">
             <a asp-controller="Report" asp-action="Index"
-               class="nav-link @(
-                                   ViewContext.RouteData.Values["controller"]?.ToString() == "Report" &&
-                                   ViewContext.RouteData.Values["action"]?.ToString() == "Index"
-                                   ? "active" : "")">
+               class="nav-link @(IsController("Report") ? "active" : "")">
                 <i class="nav-icon fas fa-chart-bar"></i>
                 <p>Reports</p>
             </a>
@@ -238,10 +210,7 @@
         <!-- Send Notifications -->
         <li class="nav-item">
             <a asp-controller="Admin" asp-action="SendEmail"
-               class="nav-link @(
-                                   ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" &&
-                                   ViewContext.RouteData.Values["action"]?.ToString() == "SendEmail"
-                                   ? "active" : "")">
+               class="nav-link @(IsController("Admin") && currentAction.StartsWith("SendEmail") ? "active" : "")">
                 <i class="nav-icon fas fa-envelope"></i>
                 <p>Send Notifications</p>
             </a>
@@ -256,6 +225,5 @@
                 </button>
             </form>
         </li>
-
     </ul>
 </nav>

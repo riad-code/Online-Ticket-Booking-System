@@ -85,6 +85,19 @@
                 <input id="ArrivalTimeInput" name="ArrivalTimeInput" type="time" class="form-control" required />
                 <span class="text-danger" data-valmsg-for="ArrivalTimeInput" data-valmsg-replace="true"></span>
             </div>
+            <div class="col-md-12">
+                <label asp-for="BoardingPointsString" class="form-label">Boarding Points (comma separated)</label>
+                <input asp-for="BoardingPointsString" class="form-control"
+                       placeholder="e.g. Saydabad,Gabtoli,Uttara" />
+                <span asp-validation-for="BoardingPointsString" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-12">
+                <label asp-for="DroppingPointsString" class="form-label">Dropping Points (comma separated)</label>
+                <input asp-for="DroppingPointsString" class="form-control"
+                       placeholder="e.g. Chandpur,Mirpur,Uttara" />
+                <span asp-validation-for="DroppingPointsString" class="text-danger"></span>
+            </div>
 
             <div class="col-md-6">
                 <label asp-for="Fare" class="form-label">Fare (৳)</label>

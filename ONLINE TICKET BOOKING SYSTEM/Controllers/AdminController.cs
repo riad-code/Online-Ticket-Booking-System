@@ -14,16 +14,16 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RoleManager<IdentityRole> _roleManager; 
+        private readonly RoleManager<IdentityRole> _roleManager;
 
         public AdminController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager) 
+            RoleManager<IdentityRole> roleManager)
         {
             _context = context;
             _userManager = userManager;
-            _roleManager = roleManager; 
+            _roleManager = roleManager;
         }
 
         public IActionResult Dashboard()
@@ -31,33 +31,26 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             int totalBuses = _context.Buses.Count();
             ViewData["TotalBuses"] = totalBuses;
             ViewData["TotalUsers"] = _context.Users.Count();
-            var totalRoutes = _context.Buses
-         .Select(b => b.FullRoute)
-         .Distinct()
-         .Count();
+            var totalRoutes = _context.Buses.Select(b => b.FullRoute).Distinct().Count();
             ViewData["TotalRoutes"] = totalRoutes;
             return View();
         }
 
         // ====== Bus Management ======
-
         public IActionResult ManageBuses()
         {
             var buses = _context.Buses.ToList();
             return View(buses);
         }
 
-        public IActionResult CreateBus()
-        {
-            return View();
-        }
+        public IActionResult CreateBus() => View();
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult CreateBus([FromForm] Bus bus, [FromForm] string DepartureTimeInput, [FromForm] string ArrivalTimeInput)
         {
-            ModelState.Remove("DepartureTime");
-            ModelState.Remove("ArrivalTime");
+            ModelState.Remove(nameof(Bus.DepartureTime));
+            ModelState.Remove(nameof(Bus.ArrivalTime));
 
             if (TimeSpan.TryParse(DepartureTimeInput, out var depTime))
                 bus.DepartureTime = depTime;
@@ -69,14 +62,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             else
                 ModelState.AddModelError("ArrivalTimeInput", "Invalid Arrival Time");
 
-            if (string.IsNullOrEmpty(bus.BusType))
-                ModelState.AddModelError("BusType", "Bus Type is required.");
+            if (string.IsNullOrWhiteSpace(bus.BusType))
+                ModelState.AddModelError(nameof(Bus.BusType), "Bus Type is required.");
 
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Where(x => x.Value.Errors.Any())
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray());
-
                 return BadRequest(new { message = "Invalid input. Please fill all fields correctly.", errors });
             }
 
@@ -98,8 +90,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditBus([FromForm] Bus bus, [FromForm] string DepartureTimeInput, [FromForm] string ArrivalTimeInput)
         {
-            ModelState.Remove("DepartureTime");
-            ModelState.Remove("ArrivalTime");
+            ModelState.Remove(nameof(Bus.DepartureTime));
+            ModelState.Remove(nameof(Bus.ArrivalTime));
 
             if (TimeSpan.TryParse(DepartureTimeInput, out var depTime))
                 bus.DepartureTime = depTime;
@@ -111,20 +103,44 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             else
                 ModelState.AddModelError("ArrivalTimeInput", "Invalid Arrival Time");
 
-            if (string.IsNullOrEmpty(bus.BusType))
-                ModelState.AddModelError("BusType", "Bus Type is required.");
+            if (string.IsNullOrWhiteSpace(bus.BusType))
+                ModelState.AddModelError(nameof(Bus.BusType), "Bus Type is required.");
 
             if (!ModelState.IsValid)
             {
                 var errors = ModelState.Where(x => x.Value.Errors.Any())
                     .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Errors.Select(e => e.ErrorMessage).ToArray());
-
                 return BadRequest(new { message = "Invalid input. Please fill all fields correctly.", errors });
             }
 
+            // Update the bus itself
             _context.Buses.Update(bus);
-            await _context.SaveChangesAsync();
 
+            // === SYNC: Bus -> all its schedules ===
+            var schedules = await _context.BusSchedules
+                .Where(s => s.BusId == bus.Id)
+                .ToListAsync();
+
+            foreach (var s in schedules)
+            {
+                s.From = bus.From;
+                s.To = bus.To;
+                s.FullRoute = bus.FullRoute;
+
+                s.DepartureTime = bus.DepartureTime;
+                s.ArrivalTime = bus.ArrivalTime;
+
+                s.BusType = bus.BusType;
+                s.OperatorName = bus.OperatorName;
+
+                s.Fare = bus.Fare;
+                s.SeatsAvailable = bus.SeatsAvailable;
+
+                s.BoardingPointsString = bus.BoardingPointsString;
+                s.DroppingPointsString = bus.DroppingPointsString;
+            }
+
+            await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Bus updated successfully!" });
         }
 
@@ -155,7 +171,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             if (user == null)
                 return Json(new { success = false, message = "User not found." });
 
-            // prevent deleting last admin
             var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
             if (isAdmin)
             {
@@ -174,7 +189,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return Json(new { success = false, message = "Failed to delete user." });
         }
 
-        // ===== NEW: AssignRole (Admin/User) =====
+        // ===== Assign Role (Admin/User) =====
         [HttpPost]
         public async Task<IActionResult> AssignRole(string userId, string role)
         {
@@ -192,7 +207,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             var currentRoles = await _userManager.GetRolesAsync(user);
             var isCurrentlyAdmin = currentRoles.Contains("Admin");
 
-            // If demoting an admin, ensure at least one admin remains
             if (isCurrentlyAdmin && role != "Admin")
             {
                 var adminCount = await (from ur in _context.UserRoles
@@ -204,13 +218,11 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                     return Json(new { success = false, message = "Cannot remove Admin from the last remaining admin user." });
             }
 
-            // Ensure roles exist (defensive)
             if (!await _roleManager.RoleExistsAsync("Admin"))
                 await _roleManager.CreateAsync(new IdentityRole("Admin"));
             if (!await _roleManager.RoleExistsAsync("User"))
                 await _roleManager.CreateAsync(new IdentityRole("User"));
 
-            // Remove known roles, then add the selected one (single-role model)
             if (currentRoles.Contains("Admin"))
                 await _userManager.RemoveFromRoleAsync(user, "Admin");
             if (currentRoles.Contains("User"))
