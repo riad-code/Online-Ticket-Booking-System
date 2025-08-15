@@ -298,6 +298,9 @@
             location.reload();
         });
     }
+    @{
+        var seatsUrlBase = Url.Action("Seats", "Booking");
+    }
 </script>
 <script type="application/json" id="busesJson">
     @Html.Raw(JsonConvert.SerializeObject(Model.AvailableBuses ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.Models.BusSchedule>()))
@@ -420,7 +423,11 @@
 
                                 </div>
                                 <div class="text-muted small mb-2">${bus.SeatsAvailable} Seat(s) Available</div>
-                                <button class="btn btn-outline-success btn-green btn-sm">BOOK TICKET</button>
+                                              <a class="btn btn-outline-success btn-green btn-sm"
+                                               href="/Booking/Seats?scheduleId=${bus.Id}">
+                                                 BOOK TICKET
+                                               </a>
+
                             </div>
                         </div>`;
                     container.append(busHtml);

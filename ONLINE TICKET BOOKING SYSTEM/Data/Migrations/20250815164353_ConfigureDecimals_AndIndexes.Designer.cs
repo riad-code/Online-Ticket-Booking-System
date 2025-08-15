@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 
@@ -11,9 +12,11 @@ using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250815164353_ConfigureDecimals_AndIndexes")]
+    partial class ConfigureDecimals_AndIndexes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -284,17 +287,15 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("CustomerName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("CustomerPhone")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<decimal>("TotalFare")
-                        .HasPrecision(12, 2)
                         .HasColumnType("decimal(12,2)");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -313,10 +314,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 
                     b.Property<int>("BookingId")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("Fare")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
 
                     b.Property<int>("ScheduleSeatId")
                         .HasColumnType("int");
@@ -357,7 +354,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                         .HasColumnType("nvarchar(2000)");
 
                     b.Property<decimal>("Fare")
-                        .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<string>("From")
@@ -414,7 +410,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                         .HasColumnType("nvarchar(2000)");
 
                     b.Property<decimal>("Fare")
-                        .HasPrecision(10, 2)
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<string>("From")
@@ -489,31 +484,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                     b.ToTable("ScheduleSeats");
                 });
 
-            modelBuilder.Entity("ONLINE_TICKET_BOOKING_SYSTEM.Models.SeatLayout", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BlockedSeatsCsv")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("BusId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("LayoutJson")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TotalSeats")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SeatLayouts");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -570,7 +540,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                     b.HasOne("ONLINE_TICKET_BOOKING_SYSTEM.Models.BusSchedule", "BusSchedule")
                         .WithMany()
                         .HasForeignKey("BusScheduleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("BusSchedule");

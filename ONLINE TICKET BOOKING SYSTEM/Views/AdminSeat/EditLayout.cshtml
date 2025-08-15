@@ -1,0 +1,37 @@
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.Models.SeatLayout
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml"; // আপনার Admin layout
+    ViewData["Title"] = "Seat Layout";
+}
+<div class="container py-3">
+    <h3 class="text-success">Seat Layout (Bus @Model.BusId)</h3>
+    @if (TempData["msg"] != null)
+    {
+        <div class="alert alert-success">@TempData["msg"]</div>
+    }
+    <form asp-action="EditLayout" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <input type="hidden" asp-for="BusId" />
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Total Seats</label>
+                <input asp-for="TotalSeats" class="form-control" />
+            </div>
+            <div class="col-12">
+                <label class="form-label">Blocked Seats (CSV, e.g. A1,B4,C7)</label>
+                <input asp-for="BlockedSeatsCsv" class="form-control" />
+            </div>
+            <div class="col-12">
+                <label class="form-label">Layout JSON (optional)</label>
+                <textarea asp-for="LayoutJson" rows="4" class="form-control"></textarea>
+                <div class="form-text">If left blank, A1..D10 will be auto-generated (4 columns x 10 rows = 40 seats)</div>
+            </div>
+            <div class="col-12">
+                <button class="btn btn-success">Save</button>
+                <a asp-controller="Admin" asp-action="ManageBuses" class="btn btn-outline-secondary">Back</a>
+            </div>
+        </div>
+    </form>
+</div>

@@ -42,33 +42,33 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                 oldClrType: typeof(string),
                 oldType: "nvarchar(max)");
 
-            migrationBuilder.AddColumn<string>(
-                name: "BoardingPointsString",
-                table: "BusSchedules",
-                type: "nvarchar(2000)",
-                maxLength: 2000,
-                nullable: true);
+            // migrationBuilder.AddColumn<string>(
+            //name: "BoardingPointsString",
+            // table: "BusSchedules",
+            // type: "nvarchar(2000)",
+            //maxLength: 2000,
+            // nullable: true);
 
-            migrationBuilder.AddColumn<string>(
-                name: "DroppingPointsString",
-                table: "BusSchedules",
-                type: "nvarchar(2000)",
-                maxLength: 2000,
-                nullable: true);
+            //migrationBuilder.AddColumn<string>(
+            // name: "DroppingPointsString",
+            // table: "BusSchedules",
+            // type: "nvarchar(2000)",
+            // maxLength: 2000,
+            //  nullable: true);
 
-            migrationBuilder.AddColumn<string>(
-                name: "BoardingPointsString",
-                table: "Buses",
-                type: "nvarchar(2000)",
-                maxLength: 2000,
-                nullable: true);
+            //migrationBuilder.AddColumn<string>(
+            //name: "BoardingPointsString",
+            //table: "Buses",
+            //type: "nvarchar(2000)",
+            //maxLength: 2000,
+            // nullable: true);
 
-            migrationBuilder.AddColumn<string>(
-                name: "DroppingPointsString",
-                table: "Buses",
-                type: "nvarchar(2000)",
-                maxLength: 2000,
-                nullable: true);
+            //migrationBuilder.AddColumn<string>(
+            //name: "DroppingPointsString",
+            //table: "Buses",
+            //type: "nvarchar(2000)",
+            //maxLength: 2000,
+            //nullable: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_BusSchedules_From_To_JourneyDate",
@@ -86,7 +86,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                 column: "BusId",
                 principalTable: "Buses",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+               onDelete: ReferentialAction.NoAction);
 
             migrationBuilder.AddForeignKey(
                 name: "FK_BusSchedules_Buses_ReturnBusId",
@@ -94,7 +94,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                 column: "ReturnBusId",
                 principalTable: "Buses",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.SetNull);
+              onDelete: ReferentialAction.NoAction);
+
         }
 
         /// <inheritdoc />
@@ -116,21 +117,21 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                 name: "IX_BusSchedules_OperatorName",
                 table: "BusSchedules");
 
-            migrationBuilder.DropColumn(
-                name: "BoardingPointsString",
-                table: "BusSchedules");
+            //migrationBuilder.DropColumn(
+            //name: "BoardingPointsString",
+            //table: "BusSchedules");
 
-            migrationBuilder.DropColumn(
-                name: "DroppingPointsString",
-                table: "BusSchedules");
+            // migrationBuilder.DropColumn(
+            //name: "DroppingPointsString",
+            // table: "BusSchedules");
 
-            migrationBuilder.DropColumn(
-                name: "BoardingPointsString",
-                table: "Buses");
+            // migrationBuilder.DropColumn(
+            //name: "BoardingPointsString",
+            // table: "Buses");
 
-            migrationBuilder.DropColumn(
-                name: "DroppingPointsString",
-                table: "Buses");
+            // migrationBuilder.DropColumn(
+            //name: "DroppingPointsString",
+            // table: "Buses");
 
             migrationBuilder.AlterColumn<string>(
                 name: "To",

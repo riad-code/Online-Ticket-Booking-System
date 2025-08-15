@@ -1,0 +1,24 @@
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.Models.Booking
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Booking Details";
+}
+<div class="container py-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <h4 class="mb-0 text-success">Booking Confirmed</h4>
+        </div>
+        <div class="card-body">
+            <p><strong>Operator:</strong> @Model.BusSchedule.OperatorName</p>
+            <p><strong>Route:</strong> @Model.BusSchedule.FullRoute</p>
+            <p>
+                <strong>Date/Time:</strong> @Model.BusSchedule.JourneyDate.ToString("dd MMM yyyy")
+                — @Model.BusSchedule.DepartureTime
+            </p>
+            <p><strong>Passenger:</strong> @Model.CustomerName (@Model.CustomerPhone)</p>
+            <p><strong>Seats:</strong> @string.Join(", ", Model.Seats.Select(x => x.ScheduleSeat.SeatNo).OrderBy(x => x))</p>
+            <p class="fw-bold">Total Fare: ৳@Model.TotalFare</p>
+            <a href="/" class="btn btn-outline-success">Home</a>
+        </div>
+    </div>
+</div>
