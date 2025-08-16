@@ -1,10 +1,12 @@
-﻿
-@model ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.BusSearchResultViewModel
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.BusSearchResultViewModel
 @using Newtonsoft.Json
 
 @{
     ViewData["Title"] = "Bus Search Results";
     Layout = "_Layout";
+
+    // Server-made base URL for seat page
+    var seatsUrlBase = Url.Action("Seats", "Booking"); // => /Booking/Seats
 }
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
@@ -31,9 +33,9 @@
         font-weight: 600;
     }
 
-    .btn-green:hover {
-        background-color: #00903a;
-    }
+        .btn-green:hover {
+            background-color: #00903a;
+        }
 
     .filter-box, .bus-card {
         background: #fff;
@@ -67,7 +69,24 @@
         border: none !important;
     }
 
-   
+    /* 🔘 Info buttons look like badges but are real buttons (no underline) */
+    .info-btn {
+        border: 1px solid #198754;
+        background: #198754;
+        color: #fff;
+        border-radius: 0.5rem;
+        padding: 4px 10px;
+        font-size: 12px;
+        line-height: 1.1;
+        margin-right: .35rem;
+        margin-bottom: .35rem;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+        .info-btn:hover {
+            filter: brightness(0.95);
+        }
 </style>
 
 <div class="container-fluid mt-4">
@@ -84,7 +103,6 @@
                     <input class="form-check-input" type="radio" name="tripType" id="roundWay" value="Round Way" @(Model.TripType?.Equals("Round Way", StringComparison.OrdinalIgnoreCase) == true ? "checked" : "") />
                     <label class="form-check-label fw-semibold" for="roundWay">Round Way</label>
                 </div>
-
             </div>
 
             <!-- Form -->
@@ -278,9 +296,6 @@
                 </h5>
                 <div id="returnBusesContainer"></div>
             }
-
-
-           
         </div>
     </div>
 </div>
@@ -298,10 +313,8 @@
             location.reload();
         });
     }
-    @{
-        var seatsUrlBase = Url.Action("Seats", "Booking");
-    }
 </script>
+
 <script type="application/json" id="busesJson">
     @Html.Raw(JsonConvert.SerializeObject(Model.AvailableBuses ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.Models.BusSchedule>()))
 </script>
@@ -318,65 +331,70 @@
 
     <script>
         $(document).ready(function () {
-             var today = new Date();
-
-        $("#journeyDate").datepicker({
-            dateFormat: "yy-mm-dd",
-            minDate: 0, // ✅ disables all past dates
-            onSelect: function (selectedDate) {
-                var selected = new Date(selectedDate);
-                $("#returnDate").datepicker("option", "minDate", selected);
-            }
-        });
-
-        $("#returnDate").datepicker({
-            dateFormat: "yy-mm-dd",
-            minDate: 0 // ✅ disables all past dates
-        });
-           let allBuses = [];
-            let allReturnBuses = [];
-
-            try {
-                allBuses = JSON.parse(document.getElementById('busesJson').textContent);
-            } catch (e) {
-                console.error("Error parsing allBuses:", e);
-            }
-
-            try {
-                allReturnBuses = JSON.parse(document.getElementById('returnBusesJson').textContent);
-            } catch (e) {
-                console.error("Error parsing allReturnBuses:", e);
-            }
-
-            // Toggle Return Date visibility
-           function toggleReturnDate() {
-                if ($('#oneWay').is(':checked')) {
-                    $('#returnDateDiv').hide();
-                } else {
-                    $('#returnDateDiv').show();
+            $("#journeyDate").datepicker({
+                dateFormat: "yy-mm-dd",
+                minDate: 0,
+                onSelect: function (selectedDate) {
+                    var selected = new Date(selectedDate);
+                    $("#returnDate").datepicker("option", "minDate", selected);
                 }
-            }
-            toggleReturnDate();
-            $('input[name="tripType"]').change(function () {
-                toggleReturnDate();
             });
 
-            // Autocomplete for From and To inputs
+            $("#returnDate").datepicker({
+                dateFormat: "yy-mm-dd",
+                minDate: 0
+            });
+
+            let allBuses = [];
+            let allReturnBuses = [];
+
+            try { allBuses = JSON.parse(document.getElementById('busesJson').textContent); }
+            catch (e) { console.error("Error parsing allBuses:", e); }
+
+            try { allReturnBuses = JSON.parse(document.getElementById('returnBusesJson').textContent); }
+            catch (e) { console.error("Error parsing allReturnBuses:", e); }
+
+            function toggleReturnDate() {
+                if ($('#oneWay').is(':checked')) { $('#returnDateDiv').hide(); }
+                else { $('#returnDateDiv').show(); }
+            }
+            toggleReturnDate();
+            $('input[name="tripType"]').change(toggleReturnDate);
+
             $("#fromInput, #toInput").autocomplete({
                 source: function (request, response) {
                     $.ajax({
                         url: '/Bus/GetLocationSuggestions',
                         data: { term: request.term },
-                        success: function (data) {
-                            response(data);
-                        }
+                        success: function (data) { response(data); }
                     });
                 },
                 minLength: 1
             });
 
+            // Helpers: escape + split to array (from schedule table strings)
+            function escapeHtml(str) {
+                return String(str || '')
+                    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+                    .replace(/'/g,'&#039;');
+            }
+            function splitCsv(csv) {
+                if (!csv) return [];
+                return String(csv)
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(Boolean);
+            }
+            function listHtmlFromCsv(csv) {
+                const arr = splitCsv(csv);
+                if (arr.length === 0) return '<em>Not provided by operator.</em>';
+                return '<ul style="text-align:left;margin:0;padding-left:18px;">' +
+                       arr.map(i => `<li>${escapeHtml(i)}</li>`).join('') + '</ul>';
+            }
+
             // Render buses function
-          function renderBuses(buses, containerSelector) {
+            function renderBuses(buses, containerSelector) {
                 const container = $(containerSelector);
                 container.empty();
 
@@ -386,6 +404,10 @@
                 }
 
                 buses.forEach(bus => {
+                    // schedule id safe
+                    const scheduleId = bus.Id ?? bus.id ?? bus.scheduleId ?? 0;
+                    const disabled = scheduleId <= 0 ? 'disabled' : '';
+
                     const busHtml = `
                         <div class="bus-card d-flex justify-content-between align-items-start flex-wrap">
                             <div class="me-4">
@@ -393,11 +415,12 @@
                                 <div class="text-muted mb-1">${bus.BusType}</div>
                                 <div class="text-muted small">Route: ${bus.FullRoute}</div>
                                 <span class="badge badge-discount mt-2">🎉 Get 30 TK Discount</span>
-                                <div class="mt-2 text-white">
-                                    <span class="badge bg-success border">Cancellation Policy</span>
-                                    <span class="badge bg-success border">Boarding Point</span>
-                                    <span class="badge bg-success border">Dropping Point</span>
-                                    <span class="badge bg-success border">Amenities</span>
+                                <div class="mt-2">
+                                    <!-- 🔘 info buttons (no underline) fed from schedule table strings -->
+                                    <button type="button" class="info-btn btn-cancel">Cancellation Policy</button>
+                                    <button type="button" class="info-btn btn-board">Boarding Point</button>
+                                    <button type="button" class="info-btn btn-drop">Dropping Point</button>
+                                    <button type="button" class="info-btn btn-amen">Amenities</button>
                                 </div>
                             </div>
                             <div class="text-end">
@@ -418,137 +441,166 @@
                                     </div>
                                 </div>
                                 <div class="mb-1">
-                                          <span class="price-old">৳${bus.Fare}</span> <!-- Original fare -->
-                                           <span class="text-success fw-bold fs-5 ms-2">৳${bus.Fare - 30}</span> <!-- Discounted fare -->
-
+                                    <span class="price-old">৳${bus.Fare}</span>
+                                    <span class="text-success fw-bold fs-5 ms-2">৳${bus.Fare - 30}</span>
                                 </div>
                                 <div class="text-muted small mb-2">${bus.SeatsAvailable} Seat(s) Available</div>
-                                              <a class="btn btn-outline-success btn-green btn-sm"
-                                               href="/Booking/Seats?scheduleId=${bus.Id}">
-                                                 BOOK TICKET
-                                               </a>
-
+                                <a class="btn btn-outline-success btn-green btn-sm ${disabled}"
+                                   href="${'@seatsUrlBase'}?scheduleId=${scheduleId}">
+                                   BOOK TICKET
+                                </a>
                             </div>
                         </div>`;
                     container.append(busHtml);
+
+                    // attach raw bus to card
+                    container.children().last().data('bus', bus);
                 });
             }
 
-            // Duration helper
+            // Click handlers -> all values strictly from schedule table fields
+                  $(document).on('click', '.btn-cancel', function () {
+     const bus = $(this).closest('.bus-card').data('bus') || {};
+     const policy = bus.CancellationPolicy || bus.cancellationPolicy || '';
+     const html = policy ? `<div style="text-align:left;">${escapeHtml(policy).replace(/\n/g,'<br>')}</div>`
+                       : '**General Cancellation Policy:** <br/> <ul><li> **100% Refund:** Up to 48 hours before departure.</li><li> **80% Refund:** Between 24 and 48 hours before departure.</li><li> **No Refund:** Within 24 hours of departure.</li></ul><small>Note: All refunds exclude service fees and are processed within 5-7 business days.</small>';
+     Swal.fire({ title: 'Cancellation Policy', html, icon: 'info' });
+});
+
+// A simple function to escape HTML special characters to prevent XSS.
+// This is a good practice if you're injecting user-provided content into HTML.
+function escapeHtml(unsafe) {
+    return unsafe
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+            $(document).on('click', '.btn-board', function () {
+                const bus = $(this).closest('.bus-card').data('bus') || {};
+                Swal.fire({
+                    title: 'Boarding Points',
+                    html: listHtmlFromCsv(bus.BoardingPointsString || bus.boardingPointsString || ''),
+                    icon: 'info'
+                });
+            });
+
+            $(document).on('click', '.btn-drop', function () {
+                const bus = $(this).closest('.bus-card').data('bus') || {};
+                Swal.fire({
+                    title: 'Dropping Points',
+                    html: listHtmlFromCsv(bus.DroppingPointsString || bus.droppingPointsString || ''),
+                    icon: 'info'
+                });
+            });
+
+            $(document).on('click', '.btn-amen', function () {
+                const bus = $(this).closest('.bus-card').data('bus') || {};
+                Swal.fire({
+                    title: 'Amenities',
+                    html: listHtmlFromCsv(bus.AmenitiesString || bus.amenitiesString || ''),
+                    icon: 'info'
+                });
+            });
+
             function calculateDuration(departure, arrival) {
                 const [dh, dm] = departure.split(':').map(Number);
                 const [ah, am] = arrival.split(':').map(Number);
                 let diffH = ah - dh;
                 let diffM = am - dm;
-                if (diffM < 0) {
-                    diffM += 60;
-                    diffH--;
-                }
+                if (diffM < 0) { diffM += 60; diffH--; }
                 if (diffH < 0) diffH += 24;
                 return `${diffH}h ${diffM}m`;
             }
 
-            // Time range check helper
-           function timeInRanges(timeStr, ranges) {
+            function timeInRanges(timeStr, ranges) {
                 const [h, m] = timeStr.split(':').map(Number);
                 const totalMins = h * 60 + m;
                 for (const range of ranges) {
                     switch (range) {
-                        case 'Early Morning':
-                            if (totalMins < 360) return true;
-                            break;
-                        case 'Morning':
-                            if (totalMins >= 360 && totalMins < 720) return true;
-                            break;
-                        case 'Afternoon':
-                            if (totalMins >= 720 && totalMins < 1080) return true;
-                            break;
-                        case 'Evening':
-                            if (totalMins >= 1080 && totalMins < 1440) return true;
-                            break;
+                        case 'Early Morning': if (totalMins < 360) return true; break;
+                        case 'Morning': if (totalMins >= 360 && totalMins < 720) return true; break;
+                        case 'Afternoon': if (totalMins >= 720 && totalMins < 1080) return true; break;
+                        case 'Evening': if (totalMins >= 1080 && totalMins < 1440) return true; break;
                     }
                 }
                 return false;
             }
 
-            // Filter function
             function applyFilters() {
-            const acChecked = $('#ac').is(':checked');
-            const nonAcChecked = $('#nonac').is(':checked');
-            const operator = $('.filter-box select:eq(0)').val();
-            const boarding = $('.filter-box select:eq(1)').val();
-            const dropping = $('.filter-box select:eq(2)').val();
+                const acChecked = $('#ac').is(':checked');
+                const nonAcChecked = $('#nonac').is(':checked');
+                const operator = $('.filter-box select:eq(0)').val();
+                const boarding = $('.filter-box select:eq(1)').val();
+                const dropping = $('.filter-box select:eq(2)').val();
 
-            const departureTimes = [];
-            if ($('#departureEarlyMorning').is(':checked')) departureTimes.push('Early Morning');
-            if ($('#departureMorning').is(':checked')) departureTimes.push('Morning');
-            if ($('#departureAfternoon').is(':checked')) departureTimes.push('Afternoon');
-            if ($('#departureEvening').is(':checked')) departureTimes.push('Evening');
+                const departureTimes = [];
+                if ($('#departureEarlyMorning').is(':checked')) departureTimes.push('Early Morning');
+                if ($('#departureMorning').is(':checked')) departureTimes.push('Morning');
+                if ($('#departureAfternoon').is(':checked')) departureTimes.push('Afternoon');
+                if ($('#departureEvening').is(':checked')) departureTimes.push('Evening');
 
-            const arrivalTimes = [];
-            if ($('#arrivalEarlyMorning').is(':checked')) arrivalTimes.push('Early Morning');
-            if ($('#arrivalMorning').is(':checked')) arrivalTimes.push('Morning');
-            if ($('#arrivalAfternoon').is(':checked')) arrivalTimes.push('Afternoon');
-            if ($('#arrivalEvening').is(':checked')) arrivalTimes.push('Evening');
+                const arrivalTimes = [];
+                if ($('#arrivalEarlyMorning').is(':checked')) arrivalTimes.push('Early Morning');
+                if ($('#arrivalMorning').is(':checked')) arrivalTimes.push('Morning');
+                if ($('#arrivalAfternoon').is(':checked')) arrivalTimes.push('Afternoon');
+                if ($('#arrivalEvening').is(':checked')) arrivalTimes.push('Evening');
 
-            // Main Buses filter
-            let filteredBuses = allBuses.filter(bus => {
-                const busType = bus.BusType.toLowerCase().replace(/[^a-z]/g, '');
-                const isAcBus = busType.includes('ac') && !busType.includes('non');
-                const isNonAcBus = busType.includes('nonac') || busType.includes('non');
+                let filteredBuses = allBuses.filter(bus => {
+                    const busType = bus.BusType.toLowerCase().replace(/[^a-z]/g, '');
+                    const isAcBus = busType.includes('ac') && !busType.includes('non');
+                    const isNonAcBus = busType.includes('nonac') || busType.includes('non');
 
-                if (acChecked || nonAcChecked) {
-                    if (acChecked && !nonAcChecked && !isAcBus) return false;
-                    if (!acChecked && nonAcChecked && !isNonAcBus) return false;
+                    if (acChecked || nonAcChecked) {
+                        if (acChecked && !nonAcChecked && !isAcBus) return false;
+                        if (!acChecked && nonAcChecked && !isNonAcBus) return false;
+                    }
+
+                    if (operator && operator !== "Search Operator" && operator !== "Other" && bus.OperatorName !== operator) return false;
+                    if (boarding && boarding !== "Search Boarding" && boarding !== "Other" && (!(bus.BoardingPointsString || '').includes(boarding))) return false;
+                    if (dropping && dropping !== "Search Dropping" && dropping !== "Other" && (!(bus.DroppingPointsString || '').includes(dropping))) return false;
+
+                    if (departureTimes.length > 0 && !timeInRanges(bus.DepartureTime, departureTimes)) return false;
+                    if (arrivalTimes.length > 0 && !timeInRanges(bus.ArrivalTime, arrivalTimes)) return false;
+
+                    return true;
+                });
+
+                let filteredReturnBuses = allReturnBuses.filter(bus => {
+                    const busType = bus.BusType.toLowerCase().replace(/[^a-z]/g, '');
+                    const isAcBus = busType.includes('ac') && !busType.includes('non');
+                    const isNonAcBus = busType.includes('nonac') || busType.includes('non');
+
+                    if (acChecked || nonAcChecked) {
+                        if (acChecked && !nonAcChecked && !isAcBus) return false;
+                        if (!acChecked && nonAcChecked && !isNonAcBus) return false;
+                    }
+
+                    if (operator && operator !== "Search Operator" && operator !== "Other" && bus.OperatorName !== operator) return false;
+                    if (boarding && boarding !== "Search Boarding" && boarding !== "Other" && (!(bus.BoardingPointsString || '').includes(boarding))) return false;
+                    if (dropping && dropping !== "Search Dropping" && dropping !== "Other" && (!(bus.DroppingPointsString || '').includes(dropping))) return false;
+
+                    if (departureTimes.length > 0 && !timeInRanges(bus.DepartureTime, departureTimes)) return false;
+                    if (arrivalTimes.length > 0 && !timeInRanges(bus.ArrivalTime, arrivalTimes)) return false;
+
+                    return true;
+                });
+
+                renderBuses(filteredBuses, '#mainBusesContainer');
+
+                if ($('#roundWay').is(':checked') && allReturnBuses.length > 0) {
+                    renderBuses(filteredReturnBuses, '#returnBusesContainer');
+                } else {
+                    $('#returnBusesContainer').empty();
                 }
-
-                if (operator && operator !== "Search Operator" && operator !== "Other" && bus.OperatorName !== operator) return false;
-                if (boarding && boarding !== "Search Boarding" && boarding !== "Other" && (!bus.BoardingPoints || !bus.BoardingPoints.includes(boarding))) return false;
-                if (dropping && dropping !== "Search Dropping" && dropping !== "Other" && (!bus.DroppingPoints || !bus.DroppingPoints.includes(dropping))) return false;
-
-                if (departureTimes.length > 0 && !timeInRanges(bus.DepartureTime, departureTimes)) return false;
-                if (arrivalTimes.length > 0 && !timeInRanges(bus.ArrivalTime, arrivalTimes)) return false;
-
-                return true;
-            });
-
-            // Return Buses filter
-            let filteredReturnBuses = allReturnBuses.filter(bus => {
-                const busType = bus.BusType.toLowerCase().replace(/[^a-z]/g, '');
-                const isAcBus = busType.includes('ac') && !busType.includes('non');
-                const isNonAcBus = busType.includes('nonac') || busType.includes('non');
-
-                if (acChecked || nonAcChecked) {
-                    if (acChecked && !nonAcChecked && !isAcBus) return false;
-                    if (!acChecked && nonAcChecked && !isNonAcBus) return false;
-                }
-
-                if (operator && operator !== "Search Operator" && operator !== "Other" && bus.OperatorName !== operator) return false;
-                if (boarding && boarding !== "Search Boarding" && boarding !== "Other" && (!bus.BoardingPoints || !bus.BoardingPoints.includes(boarding))) return false;
-                if (dropping && dropping !== "Search Dropping" && dropping !== "Other" && (!bus.DroppingPoints || !bus.DroppingPoints.includes(dropping))) return false;
-
-                if (departureTimes.length > 0 && !timeInRanges(bus.DepartureTime, departureTimes)) return false;
-                if (arrivalTimes.length > 0 && !timeInRanges(bus.ArrivalTime, arrivalTimes)) return false;
-
-                return true;
-            });
-
-            renderBuses(filteredBuses, '#mainBusesContainer');
-
-            if ($('#roundWay').is(':checked') && allReturnBuses.length > 0) {
-                renderBuses(filteredReturnBuses, '#returnBusesContainer');
-            } else {
-                $('#returnBusesContainer').empty();
             }
-        }
 
-
-                // Bind filters change event
             $('.filter-box input[type=checkbox], .filter-box select').on('change', applyFilters);
 
-            // ✅ Initial render with filter check
+            // Initial render
             applyFilters();
-               // ** SweetAlert form submit loader + redirect **
+
             $('#busSearchForm').submit(function (e) {
                 e.preventDefault();
 
@@ -566,9 +618,7 @@
                     text: 'Please wait while we fetch available routes.',
                     icon: 'info',
                     allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
+                    didOpen: () => { Swal.showLoading(); }
                 });
 
                 setTimeout(() => {

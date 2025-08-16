@@ -6,6 +6,8 @@ using ONLINE_TICKET_BOOKING_SYSTEM.Models;
 using ONLINE_TICKET_BOOKING_SYSTEM.ViewModels;
 using System;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 {
@@ -21,68 +23,50 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         [HttpGet]
         public IActionResult Index()
         {
-            return View(); 
+            return View();
         }
 
         [HttpGet]
-        public IActionResult Results(string from, string to, DateTime journeyDate, string? returnDate, string tripType)
+        public async Task<IActionResult> Results(string from, string to, DateTime journeyDate, string? returnDate, string tripType)
         {
-            // Normalize inputs
-            var fromNorm = (from ?? "").Trim().ToLower();
-            var toNorm = (to ?? "").Trim().ToLower();
+            if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to))
+                return View(new BusSearchResultViewModel { AvailableBuses = new List<BusSchedule>() });
 
-            // 1) OUTBOUND: find matching buses by route only (no date filter)
-            var outboundBase = _context.Buses
+            var fromNorm = from.Trim().ToLower();
+            var toNorm = to.Trim().ToLower();
+
+            var outboundBase = await _context.Buses
                 .Where(b => b.From.ToLower().Contains(fromNorm) &&
                             b.To.ToLower().Contains(toNorm))
                 .OrderBy(b => b.OperatorName).ThenBy(b => b.DepartureTime)
-                .ToList();
+                .ToListAsync();
 
-            // Materialize "virtual" schedules for the requested journeyDate
-            var buses = outboundBase.Select(b => new BusSchedule
+            var ensuredOutbound = new List<BusSchedule>();
+            foreach (var b in outboundBase)
             {
-                BusId = b.Id,
-                From = b.From,
-                To = b.To,
-                FullRoute = b.FullRoute,
-                JourneyDate = journeyDate.Date,     // << user-selected date
-                ReturnDate = null,
-                DepartureTime = b.DepartureTime,
-                ArrivalTime = b.ArrivalTime,
-                BusType = b.BusType,
-                OperatorName = b.OperatorName,
-                Fare = b.Fare,
-                SeatsAvailable = b.SeatsAvailable
-            }).OrderBy(s => s.DepartureTime).ToList();
+                var s = await EnsureScheduleAsync(b, journeyDate.Date);
+                ensuredOutbound.Add(s);
+            }
+            ensuredOutbound = ensuredOutbound.OrderBy(s => s.DepartureTime).ToList();
 
-            // 2) RETURN: only when requested
-            List<BusSchedule>? returnBuses = null;
+            List<BusSchedule>? returnEnsured = null;
             var tripTypeNormalized = tripType?.ToLower().Replace(" ", "");
             if (tripTypeNormalized == "roundway" && !string.IsNullOrWhiteSpace(returnDate))
             {
                 var retDate = DateTime.Parse(returnDate).Date;
-
-                var returnBase = _context.Buses
+                var returnBase = await _context.Buses
                     .Where(b => b.From.ToLower().Contains(toNorm) &&
                                 b.To.ToLower().Contains(fromNorm))
                     .OrderBy(b => b.OperatorName).ThenBy(b => b.DepartureTime)
-                    .ToList();
+                    .ToListAsync();
 
-                returnBuses = returnBase.Select(b => new BusSchedule
+                returnEnsured = new List<BusSchedule>();
+                foreach (var b in returnBase)
                 {
-                    BusId = b.Id,
-                    From = b.From,            // naturally: to→from route in data
-                    To = b.To,
-                    FullRoute = b.FullRoute,
-                    JourneyDate = retDate,           // << user-selected return date
-                    ReturnDate = null,
-                    DepartureTime = b.DepartureTime,
-                    ArrivalTime = b.ArrivalTime,
-                    BusType = b.BusType,
-                    OperatorName = b.OperatorName,
-                    Fare = b.Fare,
-                    SeatsAvailable = b.SeatsAvailable
-                }).OrderBy(s => s.DepartureTime).ToList();
+                    var s = await EnsureScheduleAsync(b, retDate);
+                    returnEnsured.Add(s);
+                }
+                returnEnsured = returnEnsured.OrderBy(s => s.DepartureTime).ToList();
             }
 
             var vm = new BusSearchResultViewModel
@@ -92,18 +76,96 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 JourneyDate = journeyDate.Date,
                 ReturnDate = string.IsNullOrEmpty(returnDate) ? null : DateTime.Parse(returnDate).Date,
                 TripType = tripType,
-                AvailableBuses = buses,
-                ReturnBuses = returnBuses
+                AvailableBuses = ensuredOutbound,
+                ReturnBuses = returnEnsured
             };
 
-            return View(vm);
+            return View("SearchResults", vm);
+        }
+
+        private async Task<BusSchedule> EnsureScheduleAsync(Bus b, DateTime journeyDate)
+        {
+            var sched = await _context.BusSchedules
+                .FirstOrDefaultAsync(s => s.BusId == b.Id && s.JourneyDate == journeyDate);
+
+            if (sched == null)
+            {
+                sched = new BusSchedule
+                {
+                    BusId = b.Id,
+                    From = b.From,
+                    To = b.To,
+                    FullRoute = b.FullRoute,
+                    JourneyDate = journeyDate,
+                    DepartureTime = b.DepartureTime,
+                    ArrivalTime = b.ArrivalTime,
+                    BusType = b.BusType,
+                    OperatorName = b.OperatorName,
+                    Fare = b.Fare,
+                    SeatsAvailable = b.SeatsAvailable,
+                    BoardingPointsString = b.BoardingPointsString,
+                    DroppingPointsString = b.DroppingPointsString,
+                    IsBlocked = b.IsBlocked // if you use whole-schedule blocking
+                };
+
+                _context.BusSchedules.Add(sched);
+                await _context.SaveChangesAsync(); // gets sched.Id
+
+                // Seed seats
+                if (!await _context.ScheduleSeats.AnyAsync(x => x.BusScheduleId == sched.Id))
+                {
+                    var cols = new[] { "A", "B", "C", "D" };
+                    var names = new List<string>();
+                    for (int r = 1; r <= 10; r++)
+                        foreach (var c in cols) names.Add($"{c}{r}");
+
+                    var seats = names.Select(n => new ScheduleSeat
+                    {
+                        BusScheduleId = sched.Id,
+                        SeatNo = n,
+                        Status = SeatStatus.Available
+                    }).ToList();
+
+                    _context.ScheduleSeats.AddRange(seats);
+                    await _context.SaveChangesAsync();
+
+                    // ✅ Apply Admin blocked seats immediately on creation
+                    var layout = await _context.SeatLayouts.AsNoTracking().FirstOrDefaultAsync(x => x.BusId == b.Id);
+                    if (layout != null && !string.IsNullOrWhiteSpace(layout.BlockedSeatsCsv))
+                    {
+                        var blocked = layout.BlockedSeatsCsv
+                            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                            .Select(s => s.ToUpperInvariant())
+                            .ToHashSet();
+
+                        var toBlock = await _context.ScheduleSeats
+                            .Where(s => s.BusScheduleId == sched.Id &&
+                                        blocked.Contains(s.SeatNo.ToUpper()) &&
+                                        s.Status == SeatStatus.Available)
+                            .ToListAsync();
+
+                        if (toBlock.Count > 0)
+                        {
+                            toBlock.ForEach(s => s.Status = SeatStatus.Blocked);
+                            _context.ScheduleSeats.UpdateRange(toBlock);
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
+                    // refresh count
+                    sched.SeatsAvailable = await _context.ScheduleSeats
+                        .CountAsync(x => x.BusScheduleId == sched.Id && x.Status == SeatStatus.Available);
+                    _context.BusSchedules.Update(sched);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return sched;
         }
 
 
+        // ===== Autocomplete endpoints (unchanged) =====
 
-
-        // Autocomplete for "From"
-        // Autocomplete for "From"
         [HttpGet]
         [AllowAnonymous]
         public IActionResult GetFromSuggestions(string term)
@@ -122,7 +184,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return Ok(suggestions);
         }
 
-        // Autocomplete for "To"
         [HttpGet]
         [AllowAnonymous]
         public IActionResult GetToSuggestions(string term)
@@ -165,8 +226,5 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             return Json(locations);
         }
-
-
-
     }
 }

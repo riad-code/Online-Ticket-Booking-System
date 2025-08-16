@@ -1,37 +1,174 @@
 ﻿@model ONLINE_TICKET_BOOKING_SYSTEM.Models.SeatLayout
 @{
-    Layout = "~/Views/Shared/_AdminLayout.cshtml"; // আপনার Admin layout
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Seat Layout";
 }
-<div class="container py-3">
-    <h3 class="text-success">Seat Layout (Bus @Model.BusId)</h3>
-    @if (TempData["msg"] != null)
-    {
-        <div class="alert alert-success">@TempData["msg"]</div>
-    }
-    <form asp-action="EditLayout" method="post">
-        @Html.AntiForgeryToken()
-        <input type="hidden" asp-for="Id" />
-        <input type="hidden" asp-for="BusId" />
 
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label class="form-label">Total Seats</label>
-                <input asp-for="TotalSeats" class="form-control" />
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ajax-unobtrusive/3.2.6/jquery.unobtrusive-ajax.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function () {
+            // Function to generate the preview
+            function generatePreview() {
+                let layoutJson = $('#LayoutJson').val();
+                let blockedSeatsCsv = $('#BlockedSeatsCsv').val();
+                let totalSeats = $('#TotalSeats').val();
+                let blockedSeats = blockedSeatsCsv.split(',').map(s => s.trim().toUpperCase());
+
+                $.ajax({
+                    url: '@Url.Action("GenerateLayoutPreview", "AdminSeat")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ layoutJson: layoutJson, totalSeats: totalSeats }),
+                    success: function (seatNames) {
+                        let previewHtml = '<h5 class="mt-4 mb-3">Seat Preview</h5><div class="seat-layout-grid">';
+                        if (seatNames && seatNames.length > 0) {
+                            seatNames.forEach(seat => {
+                                let isBlocked = blockedSeats.includes(seat.toUpperCase());
+                                let seatClass = isBlocked ? 'seat blocked' : 'seat available';
+                                previewHtml += `<div class="${seatClass}">${seat}</div>`;
+                            });
+                        } else {
+                            previewHtml += '<p class="text-muted">No seats to display. Check your layout JSON or total seats.</p>';
+                        }
+                        previewHtml += '</div>';
+                        $('#seatPreviewContainer').html(previewHtml);
+                    },
+                    error: function () {
+                        $('#seatPreviewContainer').html('<p class="text-danger">Failed to generate preview. Invalid JSON format.</p>');
+                    }
+                });
+            }
+
+            // Trigger preview on input change
+            $('#LayoutJson, #BlockedSeatsCsv, #TotalSeats').on('input', function () {
+                generatePreview();
+            });
+
+            // Initial preview generation on page load
+            generatePreview();
+        });
+
+        // The updated function to remove the OK button and auto-dismiss
+        function onAjaxSuccess(data) {
+            Swal.fire({
+                title: 'Success!',
+                text: data.message,
+                icon: 'success',
+                showConfirmButton: false, // This removes the OK button
+                timer: 1500 // This automatically closes the alert after 1.5 seconds
+            });
+        }
+
+        function onAjaxFailure(xhr, status, error) {
+            let errorMessage = 'An error occurred. Please try again.';
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                errorMessage = xhr.responseJSON.message;
+            }
+            Swal.fire({
+                title: 'Error!',
+                text: errorMessage,
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        }
+    </script>
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm p-4">
+        <h3 class="card-title text-success mb-4">
+            <i class="fas fa-bus-alt"></i> Seat Layout Configuration (Bus @Model.BusId)
+        </h3>
+        <hr class="mb-4" />
+
+        <form asp-action="EditLayout" method="post"
+              data-ajax="true"
+              data-ajax-method="POST"
+              data-ajax-success="onAjaxSuccess"
+              data-ajax-failure="onAjaxFailure">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="BusId" />
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="form-floating">
+                        <input asp-for="TotalSeats" class="form-control" placeholder="Total Seats" />
+                        <label asp-for="TotalSeats">Total Seats</label>
+                        <span asp-validation-for="TotalSeats" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="form-floating">
+                        <input asp-for="BlockedSeatsCsv" class="form-control" placeholder="Blocked Seats" />
+                        <label asp-for="BlockedSeatsCsv">Blocked Seats (e.g. A1,B4,C7)</label>
+                        <span asp-validation-for="BlockedSeatsCsv" class="text-danger"></span>
+                    </div>
+                    <div class="form-text mt-2">Comma-separated list of blocked seat numbers.</div>
+                </div>
+                <div class="col-12">
+                    <div class="form-floating">
+                        <textarea asp-for="LayoutJson" rows="5" class="form-control" placeholder="Layout JSON" style="height: 120px;"></textarea>
+                        <label asp-for="LayoutJson">Layout JSON (Optional)</label>
+                        <span asp-validation-for="LayoutJson" class="text-danger"></span>
+                    </div>
+                    <div class="form-text mt-2">Provide a JSON array of seat names. If empty, a default A1...D10 layout will be generated.</div>
+                </div>
             </div>
-            <div class="col-12">
-                <label class="form-label">Blocked Seats (CSV, e.g. A1,B4,C7)</label>
-                <input asp-for="BlockedSeatsCsv" class="form-control" />
+
+            <div id="seatPreviewContainer">
             </div>
-            <div class="col-12">
-                <label class="form-label">Layout JSON (optional)</label>
-                <textarea asp-for="LayoutJson" rows="4" class="form-control"></textarea>
-                <div class="form-text">If left blank, A1..D10 will be auto-generated (4 columns x 10 rows = 40 seats)</div>
+
+            <div class="d-flex justify-content-between align-items-center mt-5">
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-save me-2"></i> Save Changes
+                </button>
+                <a asp-controller="Admin" asp-action="ManageBuses" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i> Back to Buses
+                </a>
             </div>
-            <div class="col-12">
-                <button class="btn btn-success">Save</button>
-                <a asp-controller="Admin" asp-action="ManageBuses" class="btn btn-outline-secondary">Back</a>
-            </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
+
+<style>
+    .seat-layout-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 10px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 20px;
+        border: 1px solid #e9ecef;
+    }
+
+    .seat {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 60px;
+        border-radius: 8px;
+        font-weight: bold;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .seat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .seat.available {
+            background-color: #28a745;
+        }
+
+        .seat.blocked {
+            background-color: #dc3545;
+            cursor: not-allowed;
+        }
+</style>
