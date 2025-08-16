@@ -30,7 +30,16 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         public async Task<IActionResult> Results(string from, string to, DateTime journeyDate, string? returnDate, string tripType)
         {
             if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to))
-                return View(new BusSearchResultViewModel { AvailableBuses = new List<BusSchedule>() });
+            {
+                // Also build sidebar universes even if no route entered, so filters still show full data
+                var emptyVm = new BusSearchResultViewModel
+                {
+                    AvailableBuses = new List<BusSchedule>()
+                };
+
+                await FillSidebarUniversesAsync(emptyVm);
+                return View("SearchResults", emptyVm);
+            }
 
             var fromNorm = from.Trim().ToLower();
             var toNorm = to.Trim().ToLower();
@@ -80,7 +89,51 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 ReturnBuses = returnEnsured
             };
 
+            // ✅ Populate left sidebar universes from the FULL database
+            await FillSidebarUniversesAsync(vm);
+
             return View("SearchResults", vm);
+        }
+
+        private async Task FillSidebarUniversesAsync(BusSearchResultViewModel vm)
+        {
+            // Operators: distinct from the whole Buses table
+            vm.AllOperators = await _context.Buses
+                .AsNoTracking()
+                .Select(b => b.OperatorName)
+                .Where(s => s != null && s != "")
+                .Distinct()
+                .OrderBy(s => s)
+                .ToListAsync();
+
+            // Boarding/Dropping: fetch raw CSVs first (server-side), then split on client memory
+            var allBoardingStrings = await _context.Buses
+                .AsNoTracking()
+                .Select(b => b.BoardingPointsString)
+                .Where(s => s != null && s != "")
+                .ToListAsync();
+
+            var allDroppingStrings = await _context.Buses
+                .AsNoTracking()
+                .Select(b => b.DroppingPointsString)
+                .Where(s => s != null && s != "")
+                .ToListAsync();
+
+            vm.AllBoardingPoints = allBoardingStrings
+                .SelectMany(s => s.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            vm.AllDroppingPoints = allDroppingStrings
+                .SelectMany(s => s.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                .Select(s => s.Trim())
+                .Where(s => s.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(s => s, StringComparer.OrdinalIgnoreCase)
+                .ToList();
         }
 
         private async Task<BusSchedule> EnsureScheduleAsync(Bus b, DateTime journeyDate)
@@ -162,7 +215,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             return sched;
         }
-
 
         // ===== Autocomplete endpoints (unchanged) =====
 

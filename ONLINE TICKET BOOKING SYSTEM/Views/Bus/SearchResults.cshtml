@@ -88,7 +88,6 @@
             filter: brightness(0.95);
         }
 </style>
-
 <div class="container-fluid mt-4">
     <!-- 🔍 Top Search Form -->
     <div class="search-header">
@@ -107,41 +106,28 @@
 
             <!-- Form -->
             <form id="busSearchForm" class="row g-3 align-items-end" method="get" action="/Bus/Results">
-                <!-- From -->
                 <div class="col-md-3">
                     <label class="form-label text-muted">From</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-geo-alt-fill text-success"></i>
-                        </span>
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt-fill text-success"></i></span>
                         <input type="text" id="fromInput" name="from" class="form-control border-start-0" placeholder="Enter departure city" required />
                     </div>
                 </div>
-
-                <!-- To -->
                 <div class="col-md-3">
                     <label class="form-label text-muted">To</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-geo-alt-fill text-success"></i>
-                        </span>
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt-fill text-success"></i></span>
                         <input type="text" id="toInput" name="to" class="form-control border-start-0" placeholder="Enter destination city" required />
                     </div>
                 </div>
-
-                <!-- Journey Date -->
                 <div class="col-md-2">
                     <label class="form-label text-muted">Journey Date</label>
                     <input type="text" id="journeyDate" name="journeyDate" class="form-control" required readonly />
                 </div>
-
-                <!-- Return Date -->
                 <div class="col-md-2" id="returnDateDiv">
                     <label class="form-label text-muted">Return Date</label>
                     <input type="text" id="returnDate" name="returnDate" class="form-control" readonly />
                 </div>
-
-                <!-- Search Button -->
                 <div class="col-md-2 d-flex justify-content-end">
                     <button type="submit" class="btn btn-success btn-lg fw-semibold w-100">
                         <i class="bi bi-search me-1"></i> Search
@@ -152,30 +138,27 @@
     </div>
 
     <div class="row">
-        <!-- Filters -->
+        <!-- Filters (LEFT) -->
         <div class="col-md-3">
-            <div class="filter-box ">
+            <div class="filter-box">
                 <h6><strong>Filters</strong></h6>
                 <hr />
                 <button class="btn btn-outline-success btn-sm w-100 mb-3" onclick="resetFilters()">RESET</button>
 
                 <div class="mb-3">
                     <strong class="text-warning">BUS TYPE</strong>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="ac" />
-                        <label class="form-check-label" for="ac">AC</label>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="nonac" />
-                        <label class="form-check-label" for="nonac">Non AC</label>
-                    </div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" id="ac" /><label class="form-check-label" for="ac">AC</label></div>
+                    <div class="form-check"><input class="form-check-input" type="checkbox" id="nonac" /><label class="form-check-label" for="nonac">Non AC</label></div>
                 </div>
 
                 <div class="mb-3">
                     <strong class="text-warning">OPERATOR</strong>
                     <select class="form-control" id="operatorSelect">
                         <option disabled selected>Search Operator</option>
-                        <!-- options filled dynamically -->
+                        @foreach (var op in Model.AllOperators ?? new List<string>())
+                        {
+                            <option>@op</option>
+                        }
                     </select>
                 </div>
 
@@ -183,7 +166,10 @@
                     <strong class="text-warning">BOARDING POINT</strong>
                     <select class="form-control" id="boardingSelect">
                         <option disabled selected>Search Boarding</option>
-                        <!-- options filled dynamically -->
+                        @foreach (var bp in Model.AllBoardingPoints ?? new List<string>())
+                        {
+                            <option>@bp</option>
+                        }
                     </select>
                 </div>
 
@@ -191,69 +177,54 @@
                     <strong class="text-warning">DROPPING POINT</strong>
                     <select class="form-control" id="droppingSelect">
                         <option disabled selected>Search Dropping</option>
-                        <!-- options filled dynamically -->
+                        @foreach (var dp in Model.AllDroppingPoints ?? new List<string>())
+                        {
+                            <option>@dp</option>
+                        }
                     </select>
                 </div>
 
-                <!-- DEPARTURE TIME -->
                 <p class="mb-2 mt-4 fw-bold text-warning">DEPARTURE TIME</p>
                 <div class="form-check mb-2 border p-3 rounded bg-light">
                     <input class="form-check-input" type="checkbox" id="departureMorning" />
-                    <label class="form-check-label" for="departureMorning">
-                        ☀️ Morning<br /><small class="text-muted">06:00 AM - 12:00 PM</small>
-                    </label>
+                    <label class="form-check-label" for="departureMorning">☀️ Morning<br /><small class="text-muted">06:00 AM - 12:00 PM</small></label>
                 </div>
                 <div class="form-check mb-2 border p-3 rounded bg-light">
                     <input class="form-check-input" type="checkbox" id="departureAfternoon" />
-                    <label class="form-check-label" for="departureAfternoon">
-                        🌤️ Afternoon<br /><small class="text-muted">12:00 PM - 06:00 PM</small>
-                    </label>
+                    <label class="form-check-label" for="departureAfternoon">🌤️ Afternoon<br /><small class="text-muted">12:00 PM - 06:00 PM</small></label>
                 </div>
                 <div class="form-check mb-2 border p-3 rounded bg-light">
                     <input class="form-check-input" type="checkbox" id="departureEvening" />
-                    <label class="form-check-label" for="departureEvening">
-                        🌙 Evening<br /><small class="text-muted">06:00 PM - 12:00 AM</small>
-                    </label>
+                    <label class="form-check-label" for="departureEvening">🌙 Evening<br /><small class="text-muted">06:00 PM - 12:00 AM</small></label>
                 </div>
                 <div class="form-check mb-2 border p-3 rounded bg-light">
                     <input class="form-check-input" type="checkbox" id="departureEarlyMorning" />
-                    <label class="form-check-label" for="departureEarlyMorning">
-                        🌄 Early Morning<br /><small class="text-muted">Before 06:00 AM</small>
-                    </label>
+                    <label class="form-check-label" for="departureEarlyMorning">🌄 Early Morning<br /><small class="text-muted">Before 06:00 AM</small></label>
                 </div>
 
-                <!-- ARRIVAL TIME -->
                 <p class="mb-2 mt-4 fw-bold text-warning">ARRIVAL TIME</p>
                 <div class="form-check mb-2 border p-3 rounded bg-light">
                     <input class="form-check-input" type="checkbox" id="arrivalMorning" />
-                    <label class="form-check-label" for="arrivalMorning">
-                        ☀️ Morning<br /><small class="text-muted">06:00 AM - 12:00 PM</small>
-                    </label>
+                    <label class="form-check-label" for="arrivalMorning">☀️ Morning<br /><small class="text-muted">06:00 AM - 12:00 PM</small></label>
                 </div>
                 <div class="form-check mb-2 border p-3 rounded bg-light">
                     <input class="form-check-input" type="checkbox" id="arrivalAfternoon" />
-                    <label class="form-check-label" for="arrivalAfternoon">
-                        🌤️ Afternoon<br /><small class="text-muted">12:00 PM - 06:00 PM</small>
-                    </label>
+                    <label class="form-check-label" for="arrivalAfternoon">🌤️ Afternoon<br /><small class="text-muted">12:00 PM - 06:00 PM</small></label>
                 </div>
                 <div class="form-check mb-2 border p-3 rounded bg-light">
                     <input class="form-check-input" type="checkbox" id="arrivalEvening" />
-                    <label class="form-check-label" for="arrivalEvening">
-                        🌙 Evening<br /><small class="text-muted">06:00 PM - 12:00 AM</small>
-                    </label>
+                    <label class="form-check-label" for="arrivalEvening">🌙 Evening<br /><small class="text-muted">06:00 PM - 12:00 AM</small></label>
                 </div>
                 <div class="form-check mb-2 border p-3 rounded bg-light">
                     <input class="form-check-input" type="checkbox" id="arrivalEarlyMorning" />
-                    <label class="form-check-label" for="arrivalEarlyMorning">
-                        🌄 Early Morning<br /><small class="text-muted">Before 06:00 AM</small>
-                    </label>
+                    <label class="form-check-label" for="arrivalEarlyMorning">🌄 Early Morning<br /><small class="text-muted">Before 06:00 AM</small></label>
                 </div>
             </div>
         </div>
 
-        <!-- Results Section -->
+        <!-- Results (RIGHT) -->
         <div class="col-md-9">
-            <div class="step-line alert bg-success text-white fw-bold ">
+            <div class="step-line alert bg-success text-white fw-bold">
                 Choose Departing Ticket <i class="fa fa-chevron-right mx-1"></i>
                 Passenger Details <i class="fa fa-chevron-right mx-1"></i>
                 Review & Pay
@@ -271,9 +242,8 @@
                 </div>
             </div>
 
-            <!-- Container for main buses (rendered by JS) -->
             <div id="mainBusesContainer"></div>
-            <!-- ======================== Return Trip Section ========================= -->
+
             @if (Model.ReturnDate != null && Model.ReturnBuses != null && Model.ReturnBuses.Any())
             {
                 <h5>
@@ -290,21 +260,14 @@
     function resetFilters() {
         document.querySelectorAll('.filter-box input[type="checkbox"]').forEach(cb => cb.checked = false);
         document.querySelectorAll('.filter-box select').forEach(sel => sel.selectedIndex = 0);
-        Swal.fire({
-            icon: 'success',
-            title: 'Filters reset',
-            showConfirmButton: false,
-            timer: 1000
-        }).then(() => {
-            location.reload();
-        });
+        Swal.fire({ icon: 'success', title: 'Filters reset', showConfirmButton: false, timer: 1000 })
+             .then(() => location.reload());
     }
 </script>
 
 <script type="application/json" id="busesJson">
     @Html.Raw(JsonConvert.SerializeObject(Model.AvailableBuses ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.Models.BusSchedule>()))
 </script>
-
 <script type="application/json" id="returnBusesJson">
     @Html.Raw(JsonConvert.SerializeObject(Model.ReturnBuses ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.Models.BusSchedule>()))
 </script>
@@ -316,7 +279,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        $(document).ready(function () {
+        $(function () {
             $("#journeyDate").datepicker({
                 dateFormat: "yy-mm-dd",
                 minDate: 0,
@@ -325,331 +288,185 @@
                     $("#returnDate").datepicker("option", "minDate", selected);
                 }
             });
+            $("#returnDate").datepicker({ dateFormat: "yy-mm-dd", minDate: 0 });
 
-            $("#returnDate").datepicker({
-                dateFormat: "yy-mm-dd",
-                minDate: 0
-            });
+            let allBuses = [], allReturnBuses = [];
+            try { allBuses = JSON.parse(document.getElementById('busesJson').textContent); } catch {}
+            try { allReturnBuses = JSON.parse(document.getElementById('returnBusesJson').textContent); } catch {}
 
-            let allBuses = [];
-            let allReturnBuses = [];
-
-            try { allBuses = JSON.parse(document.getElementById('busesJson').textContent); }
-            catch (e) { console.error("Error parsing allBuses:", e); }
-
-            try { allReturnBuses = JSON.parse(document.getElementById('returnBusesJson').textContent); }
-            catch (e) { console.error("Error parsing allReturnBuses:", e); }
-
-            function toggleReturnDate() {
-                if ($('#oneWay').is(':checked')) { $('#returnDateDiv').hide(); }
-                else { $('#returnDateDiv').show(); }
-            }
+            function toggleReturnDate(){ $('#oneWay').is(':checked') ? $('#returnDateDiv').hide() : $('#returnDateDiv').show(); }
             toggleReturnDate();
             $('input[name="tripType"]').change(toggleReturnDate);
 
             $("#fromInput, #toInput").autocomplete({
-                source: function (request, response) {
-                    $.ajax({
-                        url: '/Bus/GetLocationSuggestions',
-                        data: { term: request.term },
-                        success: function (data) { response(data); }
-                    });
-                },
+                source: (request, response) => $.getJSON('/Bus/GetLocationSuggestions', { term: request.term }, response),
                 minLength: 1
             });
 
-            // Helpers: escape + split to array (from schedule table strings)
-            function escapeHtml(str) {
-                return String(str || '')
-                    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-                    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
-                    .replace(/'/g,'&#039;');
-            }
-            function splitCsv(csv) {
-                if (!csv) return [];
-                return String(csv)
-                    .split(',')
-                    .map(s => s.trim())
-                    .filter(Boolean);
-            }
-            function listHtmlFromCsv(csv) {
+            function escapeHtml(str){ return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+            function splitCsv(csv){ return !csv ? [] : String(csv).split(',').map(s=>s.trim()).filter(Boolean); }
+            function listHtmlFromCsv(csv){
                 const arr = splitCsv(csv);
-                if (arr.length === 0) return '<em>Not provided by operator.</em>';
-                return '<ul style="text-align:left;margin:0;padding-left:18px;">' +
-                       arr.map(i => `<li>${escapeHtml(i)}</li>`).join('') + '</ul>';
+                if(!arr.length) return '<em>Not provided by operator.</em>';
+                return '<ul style="text-align:left;margin:0;padding-left:18px;">' + arr.map(i=>`<li>${escapeHtml(i)}</li>`).join('') + '</ul>';
             }
 
-            /* ✅ Populate filter selects dynamically from Bus/BusSchedule data */
-            function populateFilters() {
-                const opSet = new Set();
-                const boardSet = new Set();
-                const dropSet = new Set();
-
-                const harvest = (bus) => {
-                    if (bus?.OperatorName) opSet.add(bus.OperatorName);
-                    splitCsv(bus?.BoardingPointsString).forEach(x => boardSet.add(x));
-                    splitCsv(bus?.DroppingPointsString).forEach(x => dropSet.add(x));
-                };
-
-                (allBuses || []).forEach(harvest);
-                (allReturnBuses || []).forEach(harvest);
-
-                const opSel = $('#operatorSelect');
-                const bdSel = $('#boardingSelect');
-                const drSel = $('#droppingSelect');
-
-                const resetAndFill = (sel, placeholder, items) => {
-                    sel.empty();
-                    sel.append(`<option disabled selected>${placeholder}</option>`);
-                    Array.from(items).sort((a,b)=>a.localeCompare(b)).forEach(v => {
-                        if (v) sel.append(`<option>${v}</option>`);
-                    });
-                };
-
-                resetAndFill(opSel, 'Search Operator', opSet);
-                resetAndFill(bdSel, 'Search Boarding', boardSet);
-                resetAndFill(drSel, 'Search Dropping', dropSet);
-            }
-            populateFilters();
-            /* ✅ end dynamic population */
-
-            // Render buses function
-            function renderBuses(buses, containerSelector) {
-                const container = $(containerSelector);
-                container.empty();
-
-                if (!buses || buses.length === 0) {
+            function renderBuses(buses, containerSelector){
+                const container = $(containerSelector).empty();
+                if(!buses || !buses.length){
                     container.append('<div class="alert alert-warning">No buses found for the selected filters.</div>');
                     return;
                 }
-
-                buses.forEach(bus => {
-                    // schedule id safe
+                buses.forEach(bus=>{
                     const scheduleId = bus.Id ?? bus.id ?? bus.scheduleId ?? 0;
                     const disabled = scheduleId <= 0 ? 'disabled' : '';
-
-                    const busHtml = `
-                        <div class="bus-card d-flex justify-content-between align-items-start flex-wrap">
-                            <div class="me-4">
-                                <h5 class="text-success">${bus.OperatorName}</h5>
-                                <div class="text-muted mb-1">${bus.BusType}</div>
-                                <div class="text-muted small">Route: ${bus.FullRoute}</div>
-                                <span class="badge badge-discount mt-2">🎉 Get 30 TK Discount</span>
-                                <div class="mt-2">
-                                    <!-- 🔘 info buttons (no underline) fed from schedule table strings -->
-                                    <button type="button" class="info-btn btn-cancel">Cancellation Policy</button>
-                                    <button type="button" class="info-btn btn-board">Boarding Point</button>
-                                    <button type="button" class="info-btn btn-drop">Dropping Point</button>
-                                    <button type="button" class="info-btn btn-amen">Amenities</button>
+                    const card = `
+                    <div class="bus-card d-flex justify-content-between align-items-start flex-wrap">
+                        <div class="me-4">
+                            <h5 class="text-success">${bus.OperatorName}</h5>
+                            <div class="text-muted mb-1">${bus.BusType}</div>
+                            <div class="text-muted small">Route: ${bus.FullRoute}</div>
+                            <span class="badge badge-discount mt-2">🎉 Get 30 TK Discount</span>
+                            <div class="mt-2">
+                                <button type="button" class="info-btn btn-cancel">Cancellation Policy</button>
+                                <button type="button" class="info-btn btn-board">Boarding Point</button>
+                                <button type="button" class="info-btn btn-drop">Dropping Point</button>
+                                <button type="button" class="info-btn btn-amen">Amenities</button>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <div class="d-flex align-items-center justify-content-end mb-2">
+                                <div class="me-3 text-center">
+                                    <strong>${bus.DepartureTime.substring(0,5)}</strong><br />
+                                    <small class="text-muted">${new Date(bus.JourneyDate).toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'})}</small><br />
+                                    <span class="text-muted">${bus.From}</span>
+                                </div>
+                                <div class="text-center mx-2">
+                                    <i class="fa fa-arrow-right text-success"></i><br />
+                                    <small class="text-muted">${calculateDuration(bus.DepartureTime,bus.ArrivalTime)}</small>
+                                </div>
+                                <div class="ms-3 text-center">
+                                    <strong>${bus.ArrivalTime.substring(0,5)}</strong><br />
+                                    <small class="text-muted">${new Date(bus.JourneyDate).toLocaleDateString('en-GB',{weekday:'short',day:'2-digit',month:'short'})}</small><br />
+                                    <span class="text-muted">${bus.To}</span>
                                 </div>
                             </div>
-                            <div class="text-end">
-                                <div class="d-flex align-items-center justify-content-end mb-2">
-                                    <div class="me-3 text-center">
-                                        <strong>${bus.DepartureTime.substring(0,5)}</strong><br />
-                                        <small class="text-muted">${new Date(bus.JourneyDate).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' })}</small><br />
-                                        <span class="text-muted">${bus.From}</span>
-                                    </div>
-                                    <div class="text-center mx-2">
-                                        <i class="fa fa-arrow-right text-success"></i><br />
-                                        <small class="text-muted">${calculateDuration(bus.DepartureTime, bus.ArrivalTime)}</small>
-                                    </div>
-                                    <div class="ms-3 text-center">
-                                        <strong>${bus.ArrivalTime.substring(0,5)}</strong><br />
-                                        <small class="text-muted">${new Date(bus.JourneyDate).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' })}</small><br />
-                                        <span class="text-muted">${bus.To}</span>
-                                    </div>
-                                </div>
-                                <div class="mb-1">
-                                    <span class="price-old">৳${bus.Fare}</span>
-                                    <span class="text-success fw-bold fs-5 ms-2">৳${bus.Fare - 30}</span>
-                                </div>
-                                <div class="text-muted small mb-2">${bus.SeatsAvailable} Seat(s) Available</div>
-                                <a class="btn btn-outline-success btn-green btn-sm ${disabled}"
-                                   href="${'@seatsUrlBase'}?scheduleId=${scheduleId}">
-                                   BOOK TICKET
-                                </a>
+                            <div class="mb-1">
+                                <span class="price-old">৳${bus.Fare}</span>
+                                <span class="text-success fw-bold fs-5 ms-2">৳${bus.Fare - 30}</span>
                             </div>
-                        </div>`;
-                    container.append(busHtml);
-
-                    // attach raw bus to card
-                    container.children().last().data('bus', bus);
+                            <div class="text-muted small mb-2">${bus.SeatsAvailable} Seat(s) Available</div>
+                            <a class="btn btn-outline-success btn-green btn-sm ${disabled}" href="${'@seatsUrlBase'}?scheduleId=${scheduleId}">BOOK TICKET</a>
+                        </div>
+                    </div>`;
+                    const $el = $(card);
+                    $el.data('bus', bus);
+                    container.append($el);
                 });
             }
 
-            // Click handlers -> all values strictly from schedule table fields
-            $(document).on('click', '.btn-cancel', function () {
+            // Info modals
+            $(document).on('click','.btn-cancel',function(){
                 const bus = $(this).closest('.bus-card').data('bus') || {};
                 const policy = bus.CancellationPolicy || bus.cancellationPolicy || '';
                 const html = policy ? `<div style="text-align:left;">${escapeHtml(policy).replace(/\n/g,'<br>')}</div>`
-                                  : '**General Cancellation Policy:** <br/> <ul><li> **100% Refund:** Up to 48 hours before departure.</li><li> **80% Refund:** Between 24 and 48 hours before departure.</li><li> **No Refund:** Within 24 hours of departure.</li></ul><small>Note: All refunds exclude service fees and are processed within 5-7 business days.</small>';
+                                    : '**General Cancellation Policy:** <br/> <ul><li> **100% Refund:** Up to 48 hours before departure.</li><li> **80% Refund:** Between 24 and 48 hours before departure.</li><li> **No Refund:** Within 24 hours of departure.</li></ul><small>Note: All refunds exclude service fees and are processed within 5-7 business days.</small>';
                 Swal.fire({ title: 'Cancellation Policy', html, icon: 'info' });
             });
+            $(document).on('click','.btn-board',function(){
+                const bus = $(this).closest('.bus-card').data('bus') || {};
+                Swal.fire({ title:'Boarding Points', html:listHtmlFromCsv(bus.BoardingPointsString||bus.boardingPointsString||''), icon:'info' });
+            });
+            $(document).on('click','.btn-drop',function(){
+                const bus = $(this).closest('.bus-card').data('bus') || {};
+                Swal.fire({ title:'Dropping Points', html:listHtmlFromCsv(bus.DroppingPointsString||bus.droppingPointsString||''), icon:'info' });
+            });
+            $(document).on('click','.btn-amen',function(){
+                const bus = $(this).closest('.bus-card').data('bus') || {};
+                Swal.fire({ title:'Amenities', html:listHtmlFromCsv(bus.AmenitiesString||bus.amenitiesString||''), icon:'info' });
+            });
 
-            // A simple function to escape HTML special characters to prevent XSS.
-            function escapeHtml(unsafe) {
-                return unsafe
-                     .replace(/&/g, "&amp;")
-                     .replace(/</g, "&lt;")
-                     .replace(/>/g, "&gt;")
-                     .replace(/"/g, "&quot;")
-                     .replace(/'/g, "&#039;");
+            function calculateDuration(departure, arrival){
+                const [dh,dm]=departure.split(':').map(Number);
+                const [ah,am]=arrival.split(':').map(Number);
+                let H=ah-dh, M=am-dm; if(M<0){M+=60;H--} if(H<0)H+=24; return `${H}h ${M}m`;
+            }
+            function timeInRanges(t, ranges){
+                const [h,m]=t.split(':').map(Number), total=h*60+m;
+                return ranges.some(r => (r==='Early Morning' && total<360) ||
+                                        (r==='Morning' && total>=360 && total<720) ||
+                                        (r==='Afternoon' && total>=720 && total<1080) ||
+                                        (r==='Evening' && total>=1080 && total<1440));
             }
 
-            $(document).on('click', '.btn-board', function () {
-                const bus = $(this).closest('.bus-card').data('bus') || {};
-                Swal.fire({
-                    title: 'Boarding Points',
-                    html: listHtmlFromCsv(bus.BoardingPointsString || bus.boardingPointsString || ''),
-                    icon: 'info'
-                });
-            });
+            function applyFilters(){
+                const acChecked=$('#ac').is(':checked');
+                const nonAcChecked=$('#nonac').is(':checked');
+                const operator=$('#operatorSelect').val();
+                const boarding=$('#boardingSelect').val();
+                const dropping=$('#droppingSelect').val();
 
-            $(document).on('click', '.btn-drop', function () {
-                const bus = $(this).closest('.bus-card').data('bus') || {};
-                Swal.fire({
-                    title: 'Dropping Points',
-                    html: listHtmlFromCsv(bus.DroppingPointsString || bus.droppingPointsString || ''),
-                    icon: 'info'
-                });
-            });
+                const dep=[], arr=[];
+                if($('#departureEarlyMorning').is(':checked')) dep.push('Early Morning');
+                if($('#departureMorning').is(':checked')) dep.push('Morning');
+                if($('#departureAfternoon').is(':checked')) dep.push('Afternoon');
+                if($('#departureEvening').is(':checked')) dep.push('Evening');
 
-            $(document).on('click', '.btn-amen', function () {
-                const bus = $(this).closest('.bus-card').data('bus') || {};
-                Swal.fire({
-                    title: 'Amenities',
-                    html: listHtmlFromCsv(bus.AmenitiesString || bus.amenitiesString || ''),
-                    icon: 'info'
-                });
-            });
+                if($('#arrivalEarlyMorning').is(':checked')) arr.push('Early Morning');
+                if($('#arrivalMorning').is(':checked')) arr.push('Morning');
+                if($('#arrivalAfternoon').is(':checked')) arr.push('Afternoon');
+                if($('#arrivalEvening').is(':checked')) arr.push('Evening');
 
-            function calculateDuration(departure, arrival) {
-                const [dh, dm] = departure.split(':').map(Number);
-                const [ah, am] = arrival.split(':').map(Number);
-                let diffH = ah - dh;
-                let diffM = am - dm;
-                if (diffM < 0) { diffM += 60; diffH--; }
-                if (diffH < 0) diffH += 24;
-                return `${diffH}h ${diffM}m`;
-            }
+                function filterOne(bus){
+                    const busType = (bus.BusType||'').toLowerCase().replace(/[^a-z]/g,'');
+                    const isAc = busType.includes('ac') && !busType.includes('non');
+                    const isNonAc = busType.includes('nonac') || busType.includes('non');
 
-            function timeInRanges(timeStr, ranges) {
-                const [h, m] = timeStr.split(':').map(Number);
-                const totalMins = h * 60 + m;
-                for (const range of ranges) {
-                    switch (range) {
-                        case 'Early Morning': if (totalMins < 360) return true; break;
-                        case 'Morning': if (totalMins >= 360 && totalMins < 720) return true; break;
-                        case 'Afternoon': if (totalMins >= 720 && totalMins < 1080) return true; break;
-                        case 'Evening': if (totalMins >= 1080 && totalMins < 1440) return true; break;
+                    if(acChecked || nonAcChecked){
+                        if(acChecked && !nonAcChecked && !isAc) return false;
+                        if(!acChecked && nonAcChecked && !isNonAc) return false;
                     }
+                    if(operator && operator!=='Search Operator' && operator!=='Other' && bus.OperatorName!==operator) return false;
+                    if(boarding && boarding!=='Search Boarding' && boarding!=='Other' && !((bus.BoardingPointsString||'').includes(boarding))) return false;
+                    if(dropping && dropping!=='Search Dropping' && dropping!=='Other' && !((bus.DroppingPointsString||'').includes(dropping))) return false;
+
+                    if(dep.length && !timeInRanges(bus.DepartureTime, dep)) return false;
+                    if(arr.length && !timeInRanges(bus.ArrivalTime, arr)) return false;
+
+                    return true;
                 }
-                return false;
-            }
 
-            function applyFilters() {
-                const acChecked = $('#ac').is(':checked');
-                const nonAcChecked = $('#nonac').is(':checked');
-                const operator = $('.filter-box select:eq(0)').val();
-                const boarding = $('.filter-box select:eq(1)').val();
-                const dropping = $('.filter-box select:eq(2)').val();
+                const filteredMain = (allBuses||[]).filter(filterOne);
+                const filteredReturn = (allReturnBuses||[]).filter(filterOne);
 
-                const departureTimes = [];
-                if ($('#departureEarlyMorning').is(':checked')) departureTimes.push('Early Morning');
-                if ($('#departureMorning').is(':checked')) departureTimes.push('Morning');
-                if ($('#departureAfternoon').is(':checked')) departureTimes.push('Afternoon');
-                if ($('#departureEvening').is(':checked')) departureTimes.push('Evening');
-
-                const arrivalTimes = [];
-                if ($('#arrivalEarlyMorning').is(':checked')) arrivalTimes.push('Early Morning');
-                if ($('#arrivalMorning').is(':checked')) arrivalTimes.push('Morning');
-                if ($('#arrivalAfternoon').is(':checked')) arrivalTimes.push('Afternoon');
-                if ($('#arrivalEvening').is(':checked')) arrivalTimes.push('Evening');
-
-                let filteredBuses = allBuses.filter(bus => {
-                    const busType = bus.BusType.toLowerCase().replace(/[^a-z]/g, '');
-                    const isAcBus = busType.includes('ac') && !busType.includes('non');
-                    const isNonAcBus = busType.includes('nonac') || busType.includes('non');
-
-                    if (acChecked || nonAcChecked) {
-                        if (acChecked && !nonAcChecked && !isAcBus) return false;
-                        if (!acChecked && nonAcChecked && !isNonAcBus) return false;
-                    }
-
-                    if (operator && operator !== "Search Operator" && operator !== "Other" && bus.OperatorName !== operator) return false;
-                    if (boarding && boarding !== "Search Boarding" && boarding !== "Other" && (!(bus.BoardingPointsString || '').includes(boarding))) return false;
-                    if (dropping && dropping !== "Search Dropping" && dropping !== "Other" && (!(bus.DroppingPointsString || '').includes(dropping))) return false;
-
-                    if (departureTimes.length > 0 && !timeInRanges(bus.DepartureTime, departureTimes)) return false;
-                    if (arrivalTimes.length > 0 && !timeInRanges(bus.ArrivalTime, arrivalTimes)) return false;
-
-                    return true;
-                });
-
-                let filteredReturnBuses = allReturnBuses.filter(bus => {
-                    const busType = bus.BusType.toLowerCase().replace(/[^a-z]/g, '');
-                    const isAcBus = busType.includes('ac') && !busType.includes('non');
-                    const isNonAcBus = busType.includes('nonac') || busType.includes('non');
-
-                    if (acChecked || nonAcChecked) {
-                        if (acChecked && !nonAcChecked && !isAcBus) return false;
-                        if (!acChecked && nonAcChecked && !isNonAcBus) return false;
-                    }
-
-                    if (operator && operator !== "Search Operator" && operator !== "Other" && bus.OperatorName !== operator) return false;
-                    if (boarding && boarding !== "Search Boarding" && boarding !== "Other" && (!(bus.BoardingPointsString || '').includes(boarding))) return false;
-                    if (dropping && dropping !== "Search Dropping" && dropping !== "Other" && (!(bus.DroppingPointsString || '').includes(dropping))) return false;
-
-                    if (departureTimes.length > 0 && !timeInRanges(bus.DepartureTime, departureTimes)) return false;
-                    if (arrivalTimes.length > 0 && !timeInRanges(bus.ArrivalTime, arrivalTimes)) return false;
-
-                    return true;
-                });
-
-                renderBuses(filteredBuses, '#mainBusesContainer');
-
-                if ($('#roundWay').is(':checked') && allReturnBuses.length > 0) {
-                    renderBuses(filteredReturnBuses, '#returnBusesContainer');
-                } else {
+                renderBuses(filteredMain, '#mainBusesContainer');
+                if($('#roundWay').is(':checked') && (allReturnBuses||[]).length){
+                    renderBuses(filteredReturn, '#returnBusesContainer');
+                }else{
                     $('#returnBusesContainer').empty();
                 }
             }
 
             $('.filter-box input[type=checkbox], .filter-box select').on('change', applyFilters);
-
-            // Initial render
             applyFilters();
 
-            $('#busSearchForm').submit(function (e) {
+            $('#busSearchForm').submit(function(e){
                 e.preventDefault();
-
-                const from = $('#fromInput').val().trim();
-                const to = $('#toInput').val().trim();
-                const journeyDate = $('input[name="journeyDate"]').val();
-
-                if (!from || !to || !journeyDate) {
-                    Swal.fire('Error', 'Please fill out all required fields.', 'error');
+                const from=$('#fromInput').val().trim();
+                const to=$('#toInput').val().trim();
+                const journeyDate=$('input[name="journeyDate"]').val();
+                if(!from||!to||!journeyDate){
+                    Swal.fire('Error','Please fill out all required fields.','error');
                     return;
                 }
-
-                Swal.fire({
-                    title: 'Searching...',
-                    text: 'Please wait while we fetch available routes.',
-                    icon: 'info',
-                    allowOutsideClick: false,
-                    didOpen: () => { Swal.showLoading(); }
-                });
-
-                setTimeout(() => {
-                    const returnDate = $('input[name="returnDate"]').val();
-                    let url = `/Bus/Results?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&journeyDate=${journeyDate}`;
-                    if (returnDate && $('#roundWay').is(':checked')) {
-                        url += `&returnDate=${encodeURIComponent(returnDate)}`;
-                    }
-                    url += `&tripType=${$('input[name="tripType"]:checked').val()}`;
-                    window.location.href = url;
-                }, 1500);
+                Swal.fire({ title:'Searching...', text:'Please wait while we fetch available routes.', icon:'info', allowOutsideClick:false, didOpen:()=>Swal.showLoading() });
+                setTimeout(()=>{
+                    const returnDate=$('input[name="returnDate"]').val();
+                    let url=`/Bus/Results?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&journeyDate=${journeyDate}`;
+                    if(returnDate && $('#roundWay').is(':checked')) url+=`&returnDate=${encodeURIComponent(returnDate)}`;
+                    url+=`&tripType=${$('input[name="tripType"]:checked').val()}`;
+                    window.location.href=url;
+                },1200);
             });
         });
     </script>
