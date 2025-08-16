@@ -173,39 +173,25 @@
 
                 <div class="mb-3">
                     <strong class="text-warning">OPERATOR</strong>
-                    <select class="form-control">
+                    <select class="form-control" id="operatorSelect">
                         <option disabled selected>Search Operator</option>
-                        <option>Sheba Green Line</option>
-                        <option>Dola Paribahan</option>
-                        <option>Shohag</option>
-                        <option>Green Line</option>
-                        <option>Executive</option>
-                        <option>Other</option>
+                        <!-- options filled dynamically -->
                     </select>
                 </div>
 
                 <div class="mb-3">
                     <strong class="text-warning">BOARDING POINT</strong>
-                    <select class="form-control">
+                    <select class="form-control" id="boardingSelect">
                         <option disabled selected>Search Boarding</option>
-                        <option>Saydabad</option>
-                        <option>Gabtoli</option>
-                        <option>Uttara</option>
-                        <option>Motijheel</option>
-                        <option>Other</option>
+                        <!-- options filled dynamically -->
                     </select>
                 </div>
 
                 <div class="mb-3">
                     <strong class="text-warning">DROPPING POINT</strong>
-                    <select class="form-control">
+                    <select class="form-control" id="droppingSelect">
                         <option disabled selected>Search Dropping</option>
-                        <option>Chandipur</option>
-                        <option>Pirojpur</option>
-                        <option>Pallabi</option>
-                        <option>Mirpur</option>
-                        <option>Dhanmondi</option>
-                        <option>Other</option>
+                        <!-- options filled dynamically -->
                     </select>
                 </div>
 
@@ -393,6 +379,40 @@
                        arr.map(i => `<li>${escapeHtml(i)}</li>`).join('') + '</ul>';
             }
 
+            /* ✅ Populate filter selects dynamically from Bus/BusSchedule data */
+            function populateFilters() {
+                const opSet = new Set();
+                const boardSet = new Set();
+                const dropSet = new Set();
+
+                const harvest = (bus) => {
+                    if (bus?.OperatorName) opSet.add(bus.OperatorName);
+                    splitCsv(bus?.BoardingPointsString).forEach(x => boardSet.add(x));
+                    splitCsv(bus?.DroppingPointsString).forEach(x => dropSet.add(x));
+                };
+
+                (allBuses || []).forEach(harvest);
+                (allReturnBuses || []).forEach(harvest);
+
+                const opSel = $('#operatorSelect');
+                const bdSel = $('#boardingSelect');
+                const drSel = $('#droppingSelect');
+
+                const resetAndFill = (sel, placeholder, items) => {
+                    sel.empty();
+                    sel.append(`<option disabled selected>${placeholder}</option>`);
+                    Array.from(items).sort((a,b)=>a.localeCompare(b)).forEach(v => {
+                        if (v) sel.append(`<option>${v}</option>`);
+                    });
+                };
+
+                resetAndFill(opSel, 'Search Operator', opSet);
+                resetAndFill(bdSel, 'Search Boarding', boardSet);
+                resetAndFill(drSel, 'Search Dropping', dropSet);
+            }
+            populateFilters();
+            /* ✅ end dynamic population */
+
             // Render buses function
             function renderBuses(buses, containerSelector) {
                 const container = $(containerSelector);
@@ -459,24 +479,24 @@
             }
 
             // Click handlers -> all values strictly from schedule table fields
-                  $(document).on('click', '.btn-cancel', function () {
-     const bus = $(this).closest('.bus-card').data('bus') || {};
-     const policy = bus.CancellationPolicy || bus.cancellationPolicy || '';
-     const html = policy ? `<div style="text-align:left;">${escapeHtml(policy).replace(/\n/g,'<br>')}</div>`
-                       : '**General Cancellation Policy:** <br/> <ul><li> **100% Refund:** Up to 48 hours before departure.</li><li> **80% Refund:** Between 24 and 48 hours before departure.</li><li> **No Refund:** Within 24 hours of departure.</li></ul><small>Note: All refunds exclude service fees and are processed within 5-7 business days.</small>';
-     Swal.fire({ title: 'Cancellation Policy', html, icon: 'info' });
-});
+            $(document).on('click', '.btn-cancel', function () {
+                const bus = $(this).closest('.bus-card').data('bus') || {};
+                const policy = bus.CancellationPolicy || bus.cancellationPolicy || '';
+                const html = policy ? `<div style="text-align:left;">${escapeHtml(policy).replace(/\n/g,'<br>')}</div>`
+                                  : '**General Cancellation Policy:** <br/> <ul><li> **100% Refund:** Up to 48 hours before departure.</li><li> **80% Refund:** Between 24 and 48 hours before departure.</li><li> **No Refund:** Within 24 hours of departure.</li></ul><small>Note: All refunds exclude service fees and are processed within 5-7 business days.</small>';
+                Swal.fire({ title: 'Cancellation Policy', html, icon: 'info' });
+            });
 
-// A simple function to escape HTML special characters to prevent XSS.
-// This is a good practice if you're injecting user-provided content into HTML.
-function escapeHtml(unsafe) {
-    return unsafe
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
-         .replace(/'/g, "&#039;");
-}
+            // A simple function to escape HTML special characters to prevent XSS.
+            function escapeHtml(unsafe) {
+                return unsafe
+                     .replace(/&/g, "&amp;")
+                     .replace(/</g, "&lt;")
+                     .replace(/>/g, "&gt;")
+                     .replace(/"/g, "&quot;")
+                     .replace(/'/g, "&#039;");
+            }
+
             $(document).on('click', '.btn-board', function () {
                 const bus = $(this).closest('.bus-card').data('bus') || {};
                 Swal.fire({
