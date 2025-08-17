@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 
@@ -11,9 +12,11 @@ using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250817180228_AddGenderToBooking")]
+    partial class AddGenderToBooking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -280,9 +283,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                     b.Property<int>("BusScheduleId")
                         .HasColumnType("int");
 
-                    b.Property<string>("CouponCode")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("datetime2");
 
@@ -292,34 +292,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                     b.Property<string>("CustomerPhone")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<decimal>("Discount")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<string>("Gender")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("GrandTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("InsuranceFee")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("PaymentAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("PaymentMethod")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PaymentStatus")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("ProcessingFee")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<string>("TicketPdfPath")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("TotalFare")
@@ -332,14 +305,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BusScheduleId");
-
-                    b.HasIndex("CreatedAtUtc");
-
-                    b.HasIndex("PaymentAt");
-
-                    b.HasIndex("PaymentStatus");
-
-                    b.HasIndex("Status");
 
                     b.ToTable("Bookings");
                 });

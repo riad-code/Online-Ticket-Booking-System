@@ -1,0 +1,133 @@
+﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Booking>
+
+@{
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+    ViewData["Title"] = "My Bookings";
+    string FmtTime(object t)
+    {
+        try
+        {
+            if (t is TimeSpan ts) return DateTime.Today.Add(ts).ToString("hh:mm tt");
+            if (t is DateTime dt) return dt.ToString("hh:mm tt");
+            var s = t?.ToString() ?? "";
+            if (TimeSpan.TryParse(s, out var ts2)) return DateTime.Today.Add(ts2).ToString("hh:mm tt");
+            if (DateTime.TryParse(s, out var dt2)) return dt2.ToString("hh:mm tt");
+            return s;
+        }
+        catch { return ""; }
+    }
+    string Safe(string? x) => string.IsNullOrWhiteSpace(x) ? "" : x.Trim();
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <h4 class="mb-3 text-success"><i class="fas fa-ticket-alt"></i> My Bookings</h4>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="alert alert-info">
+                You have no bookings yet.
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var b in Model)
+                {
+                    var s = b.BusSchedule;
+                    var seats = b.Seats?.Select(x => x.ScheduleSeat?.SeatNo).Where(x => !string.IsNullOrWhiteSpace(x)).OrderBy(x => x).ToList() ?? new List<string>();
+                    <div class="col-lg-6 col-xl-4 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <div class="fw-bold">@Safe(s?.From) → @Safe(s?.To)</div>
+                                        <div class="text-muted small">
+                                            @s?.JourneyDate.ToString("dd MMM yyyy")
+                                            @if (s != null)
+                                            {
+                                                @: • @FmtTime(s.DepartureTime)
+                                            }
+                                        </div>
+                                    </div>
+                                    <span class="badge @GetStatusClass(b.Status)">
+                                        @b.Status
+                                    </span>
+                                </div>
+
+                                <div class="mb-1"><strong>Booking #</strong> @b.Id</div>
+                                <div class="mb-1"><strong>Seats:</strong> @string.Join(", ", seats)</div>
+                                <div class="mb-1"><strong>Total Fare:</strong> ৳@b.TotalFare</div>
+                                <div class="mb-1">
+                                    <strong>Payment:</strong>
+                                    <span class="badge @GetPaymentClass(b.PaymentStatus)">@b.PaymentStatus</span>
+                                </div>
+
+                                <hr />
+
+                                <div class="d-grid gap-2">
+                                    <a class="btn btn-outline-success"
+                                       asp-action="Details"
+                                       asp-route-id="@b.Id">
+                                        View Details
+                                    </a>
+
+                                    @* Show payment button if still unpaid *@
+                                    @if (b.PaymentStatus == ONLINE_TICKET_BOOKING_SYSTEM.Models.PaymentStatus.Unpaid
+                                                                && b.Status == ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.PendingPayment)
+                                    {
+                                        <a class="btn btn-success"
+                                           asp-action="Payment"
+                                           asp-route-id="@b.Id">
+                                            Proceed to Payment
+                                        </a>
+                                    }
+
+                                    @* Show download if approved and PDF exists *@
+                                    @if (b.Status == ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.Approved
+                                                                && !string.IsNullOrWhiteSpace(b.TicketPdfPath))
+                                    {
+                                        <a class="btn btn-primary" href="@b.TicketPdfPath" download>
+                                            <i class="fas fa-file-pdf"></i> Download Ticket (PDF)
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@functions {
+    // Small helpers for pretty badges
+    string GetStatusClass(ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus status)
+    {
+        switch (status)
+        {
+            case ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.PendingPayment: return "badge-warning";
+            case ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.PendingApproval: return "badge-info";
+            case ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.Approved: return "badge-success";
+            case ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.Cancelled: return "badge-danger";
+            default: return "badge-secondary";
+        }
+    }
+    string GetPaymentClass(ONLINE_TICKET_BOOKING_SYSTEM.Models.PaymentStatus ps)
+    {
+        switch (ps)
+        {
+            case ONLINE_TICKET_BOOKING_SYSTEM.Models.PaymentStatus.Unpaid: return "badge-secondary";
+            case ONLINE_TICKET_BOOKING_SYSTEM.Models.PaymentStatus.Paid: return "badge-success";
+            case ONLINE_TICKET_BOOKING_SYSTEM.Models.PaymentStatus.Refunded: return "badge-info";
+            default: return "badge-light";
+        }
+    }
+}

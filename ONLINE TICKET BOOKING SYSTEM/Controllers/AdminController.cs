@@ -26,13 +26,30 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             _roleManager = roleManager;
         }
 
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            int totalBuses = _context.Buses.Count();
-            ViewData["TotalBuses"] = totalBuses;
-            ViewData["TotalUsers"] = _context.Users.Count();
-            var totalRoutes = _context.Buses.Select(b => b.FullRoute).Distinct().Count();
-            ViewData["TotalRoutes"] = totalRoutes;
+            ViewData["TotalBuses"] = await _context.Buses.CountAsync();
+            ViewData["TotalUsers"] = await _context.Users.CountAsync();
+            ViewData["TotalRoutes"] = await _context.Buses
+                .Select(b => b.FullRoute)
+                .Distinct()
+                .CountAsync();
+
+            // Count tickets sold "today" in UTC
+            var startUtc = DateTime.UtcNow.Date;        // 00:00 UTC today
+            var endUtc = startUtc.AddDays(1);         // 00:00 UTC tomorrow
+
+            var ticketsSoldToday = await _context.BookingSeats
+                .AsNoTracking()
+                .Where(bs =>
+                    bs.Booking.PaymentStatus == PaymentStatus.Paid &&
+                    bs.Booking.Status == BookingStatus.Approved &&
+                    bs.Booking.CreatedAtUtc >= startUtc &&
+                    bs.Booking.CreatedAtUtc < endUtc)
+                .CountAsync();
+
+            ViewData["TicketsSoldToday"] = ticketsSoldToday;
+
             return View();
         }
 

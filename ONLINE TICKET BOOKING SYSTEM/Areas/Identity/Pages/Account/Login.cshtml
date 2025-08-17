@@ -3,6 +3,14 @@
 @{
     ViewData["Title"] = "Log in";
 }
+<style>
+    /* adds a red star after elements marked with .req */
+    .req::after {
+        content: " *";
+        color: #dc3545;
+        font-weight: 700;
+    }
+</style>
 
 <div class="container-fluid vh-100 p-0">
     <div class="row g-0 h-100">
@@ -54,21 +62,25 @@
                     <div asp-validation-summary="All" class="text-danger mb-3"></div>
 
                     <!-- Email -->
-                    <div class="mb-3">
+                    <div class="mb-2">
+                        <label asp-for="Input.Email" class="form-label fw-semibold req"></label>
                         <input asp-for="Input.Email" class="form-control form-control-lg" placeholder="Enter email or mobile number" />
                         <span asp-validation-for="Input.Email" class="text-danger"></span>
                     </div>
 
                     <!-- Password -->
-                    <div class="mb-3 position-relative">
-                        <input asp-for="Input.Password" class="form-control form-control-lg" placeholder="Password" type="password" id="passwordInput" />
-                        <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2" onclick="togglePassword()" style="background:none; border:none;">
-                            <i class="bi bi-eye-fill"></i>
-                        </button>
+                    <div class="mb-2">
+                        <label asp-for="Input.Password" class="form-label fw-semibold req"></label>
+                        <div class="position-relative">
+                            <input asp-for="Input.Password" class="form-control form-control-lg" placeholder="Password" type="password" id="passwordInput" />
+                            <button type="button" class="btn btn-sm position-absolute end-0 top-50 translate-middle-y me-2" onclick="togglePassword()" style="background:none; border:none;">
+                                <i class="bi bi-eye-fill"></i>
+                            </button>
+                        </div>
                         <span asp-validation-for="Input.Password" class="text-danger"></span>
                     </div>
 
-                    <!-- Remember Me -->
+                    <!-- Remember Me (not required, no star) -->
                     <div class="form-check mb-3">
                         <input asp-for="Input.RememberMe" class="form-check-input" />
                         <label asp-for="Input.RememberMe" class="form-check-label"></label>

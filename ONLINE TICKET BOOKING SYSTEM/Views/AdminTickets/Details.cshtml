@@ -1,0 +1,35 @@
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.Models.Booking
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Review Ticket";
+}
+<div class="container py-4">
+    <h4>Booking #@Model.Id</h4>
+    <p><b>@Model.CustomerName</b> — @Model.CustomerPhone</p>
+    <p>@Model.BusSchedule?.From → @Model.BusSchedule?.To</p>
+    <p>@Model.BusSchedule?.JourneyDate:dd MMM yyyy | @Model.BusSchedule?.DepartureTime - @Model.BusSchedule?.ArrivalTime</p>
+    <p>Seats: @string.Join(", ", Model.Seats.Select(s => s.ScheduleSeat.SeatNo))</p>
+    <p>Total: <b>৳@Model.GrandTotal</b></p>
+
+    @if (TempData["err"] != null)
+    {
+        <div class="alert alert-danger">@TempData["err"]</div>
+    }
+    @if (TempData["ok"] != null)
+    {
+        <div class="alert alert-success">@TempData["ok"]</div>
+    }
+
+    @if (Model.Status == ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.PendingApproval)
+    {
+        <form asp-action="Approve" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button class="btn btn-success">Approve & Send Ticket</button>
+        </form>
+    }
+    else
+    {
+        <a class="btn btn-outline-success" href="@Model.TicketPdfPath" target="_blank">View Ticket</a>
+    }
+</div>

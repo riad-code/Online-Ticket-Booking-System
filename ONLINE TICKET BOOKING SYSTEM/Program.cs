@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 using ONLINE_TICKET_BOOKING_SYSTEM.Services;
@@ -19,8 +19,7 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 {
     options.SignIn.RequireConfirmedAccount = false;
-   
-    options.SignIn.RequireConfirmedEmail = false;// Disable email confirmation for now
+    options.SignIn.RequireConfirmedEmail = false; // Disable email confirmation for now
 })
 .AddRoles<IdentityRole>() // Add Role Support
 .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -41,6 +40,9 @@ builder.Services.AddSession(options =>
 //  Email Settings & Email Sender Service
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailSender, EmailSender>();
+
+// ✅ Register your PDF service (scoped)
+builder.Services.AddScoped<ITicketPdfService, TicketPdfService>();
 
 var app = builder.Build();
 
@@ -99,20 +101,18 @@ async Task SeedRolesAndAdminAsync(WebApplication app)
     var adminPassword = "Admin@123";
 
     if (await userManager.FindByEmailAsync(adminEmail) == null)
-{
+    {
         var adminUser = new ApplicationUser
         {
             UserName = adminEmail,
             Email = adminEmail,
-            FirstName = "System",     
-            LastName = "Admin",       
+            FirstName = "System",
+            LastName = "Admin",
             ProfileImagePath = "/images/default.png",
             EmailConfirmed = true
         };
 
-
         await userManager.CreateAsync(adminUser, adminPassword);
-    await userManager.AddToRoleAsync(adminUser, "Admin");
-}
-
+        await userManager.AddToRoleAsync(adminUser, "Admin");
+    }
 }

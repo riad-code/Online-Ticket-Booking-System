@@ -1,0 +1,33 @@
+﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Booking>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Manage Tickets";
+}
+<div class="container py-4">
+    <h4 class="mb-3">Pending Approvals</h4>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Passenger</th>
+                <th>Route</th>
+                <th>Date</th>
+                <th>Total</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var b in Model)
+            {
+                <tr>
+                    <td>@b.Id</td>
+                    <td>@b.CustomerName</td>
+                    <td>@b.BusSchedule?.From → @b.BusSchedule?.To</td>
+                    <td>@b.BusSchedule?.JourneyDate.ToString("dd MMM yyyy")</td>
+                    <td>৳@b.GrandTotal</td>
+                    <td><a class="btn btn-sm btn-outline-success" asp-action="Details" asp-route-id="@b.Id">Review</a></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

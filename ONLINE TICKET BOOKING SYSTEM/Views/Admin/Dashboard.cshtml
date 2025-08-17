@@ -60,12 +60,13 @@
 
         <div class="col-md-3">
             <div class="card bg-primary text-white shadow">
-                <div class="card-body  ">
+                <div class="card-body">
                     🎟️ Tickets Sold Today
                     <h4 class="mt-2">@ViewData["TicketsSoldToday"]</h4>
                 </div>
             </div>
         </div>
+
     </div>
 
     <!-- Quick Access Cards -->
@@ -126,13 +127,13 @@
                 <div class="card text-white bg-success shadow">
                     <div class="card-body text-center">
                         <i class="fas fa-road fa-2x"></i><br />
-                        Manage Bus Routes
+                        Manage Train
                     </div>
                 </div>
             </a>
         </div>
         <div class="col-md-3">
-            <a asp-controller="Ticket" asp-action="Index" class="text-decoration-none">
+            <a asp-controller="AdminTickets" asp-action="Index" class="text-decoration-none">
                 <div class="card text-white bg-gradient-primary shadow">
                     <div class="card-body text-center">
                         <i class="fas fa-ticket-alt fa-2x"></i><br />

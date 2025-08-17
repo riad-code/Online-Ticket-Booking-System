@@ -108,14 +108,13 @@
         </li>
 
         <!-- Manage Routes -->
-        <li class="nav-item">
+        <!-- <li class="nav-item">
             <a asp-controller="Route" asp-action="Index"
                class="nav-link @(IsController("Route") ? "active" : "")">
                 <i class="nav-icon fas fa-route"></i>
                 <p>Manage Bus Routes</p>
             </a>
-        </li>
-
+        </li> -->
         <!-- Manage Schedules -->
         <li class="nav-item">
             <a asp-controller="Schedule" asp-action="Index"
@@ -182,10 +181,10 @@
 
         <!-- Booked Tickets -->
         <li class="nav-item">
-            <a asp-controller="Ticket" asp-action="AllBookings"
-               class="nav-link @(IsController("Ticket") ? "active" : "")">
+            <a asp-controller="AdminTickets" asp-action="Index"
+               class="nav-link @(IsController("AdminTickets") ? "active" : "")">
                 <i class="nav-icon fas fa-ticket-alt"></i>
-                <p>Booked Tickets</p>
+                <p>Manage Tickets</p>
             </a>
         </li>
 

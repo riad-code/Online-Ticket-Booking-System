@@ -1,24 +1,269 @@
 ﻿@model ONLINE_TICKET_BOOKING_SYSTEM.Models.Booking
+@using System.Globalization
+@using System.Linq
+
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Booking Details";
+
+    var s = Model?.BusSchedule;
+
+    string Safe(string? x) => string.IsNullOrWhiteSpace(x) ? "" : x.Trim();
+
+    string FormatTime(object? t)
+    {
+        if (t == null) return "";
+        if (t is TimeSpan ts0) return DateTime.Today.Add(ts0).ToString("hh:mm tt");
+        if (t is DateTime dt0) return dt0.ToString("hh:mm tt");
+
+        var str = t.ToString() ?? "";
+        if (TimeSpan.TryParse(str, out var ts1))
+            return DateTime.Today.Add(ts1).ToString("hh:mm tt");
+
+        string[] fmts = { "HH:mm", "H:mm", "hh\\:mm", "h\\:mm", "hh:mm tt", "h:mm tt" };
+        if (DateTime.TryParseExact(str, fmts, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt1))
+            return dt1.ToString("hh:mm tt");
+
+        if (DateTime.TryParse(str, out var dt2))
+            return dt2.ToString("hh:mm tt");
+
+        return str;
+    }
+
+    string JourneyDay(DateTime d) => d.ToString("ddd, dd MMM", CultureInfo.InvariantCulture);
+
+    var seatList = (Model?.Seats ?? Enumerable.Empty<ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingSeat>())
+                    .Select(x => x.ScheduleSeat?.SeatNo)
+                    .Where(x => !string.IsNullOrWhiteSpace(x))
+                    .OrderBy(x => x)
+                    .ToList();
+
+    string firstName = "", lastName = "";
+    if (!string.IsNullOrWhiteSpace(Model?.CustomerName))
+    {
+        var parts = Model.CustomerName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length > 0) firstName = parts[0];
+        if (parts.Length > 1) lastName = string.Join(" ", parts.Skip(1));
+    }
+
+    var emailDisplay = "";
+    if (User?.Identity?.IsAuthenticated == true)
+    {
+        emailDisplay = User.Identity?.Name ?? "";
+    }
+
+    var fare = s?.Fare ?? 0m;
+    var discountedFare = Math.Max(0m, fare - 30m);
+    var totalFare = Model?.TotalFare ?? 0m;
+
+    // ✅ Use the persisted gender directly
+    var genderValue = Model?.Gender ?? "";
+    bool isMale = string.Equals(genderValue, "Male", StringComparison.OrdinalIgnoreCase);
+    bool isFemale = string.Equals(genderValue, "Female", StringComparison.OrdinalIgnoreCase);
 }
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+
+<style>
+    .card-clean {
+        border: 0;
+        box-shadow: 0 2px 12px rgba(0,0,0,.06);
+        border-radius: 12px;
+    }
+
+    .muted {
+        color: #6b7280;
+    }
+
+    .pill {
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: .65rem .9rem;
+        background: #fff;
+    }
+
+    .req::after {
+        content: " *";
+        color: #e11d48;
+        font-weight: 700;
+    }
+
+    .brand-pill {
+        background: #f0fdf4;
+        color: #16a34a;
+        font-weight: 700;
+        padding: .25rem .55rem;
+        border-radius: .5rem;
+    }
+
+    .btn-success {
+        background: #16a34a;
+        border-color: #16a34a;
+    }
+
+        .btn-success:hover {
+            background: #15803d;
+            border-color: #15803d;
+        }
+</style>
+
 <div class="container py-4">
-    <div class="card shadow-sm border-0">
-        <div class="card-header bg-white">
-            <h4 class="mb-0 text-success">Booking Confirmed</h4>
+    <div class="row g-4">
+        <!-- LEFT -->
+        <div class="col-lg-8">
+            <!-- Contact -->
+            <div class="card card-clean mb-3">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
+                             style="width:36px;height:36px;background:#e8f5e9;color:#16a34a;">
+                            <i class="bi bi-telephone-fill"></i>
+                        </div>
+                        <div>
+                            <div class="fw-semibold">Contact Details</div>
+                            <div class="muted small">To receive your E-tickets & updates</div>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label req">Mobile No.</label>
+                            <div class="pill d-flex align-items-center">
+                                <span class="me-2 muted">+88</span>
+                                <span class="fw-semibold">@Safe(Model?.CustomerPhone)</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label req">Email</label>
+                            <div class="pill">@Safe(emailDisplay)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Passenger -->
+            <div class="card card-clean">
+                <div class="card-body">
+                    <div class="mb-2">
+                        <div class="fw-semibold">Passenger Details</div>
+                        <div class="muted small">Passenger info</div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="me-2 rounded-circle d-inline-flex align-items-center justify-content-center"
+                             style="width:32px;height:32px;background:#eef2ff;color:#4338ca;">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                        <div class="fw-semibold">Passenger 1</div>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label req">First Name</label>
+                            <input class="form-control" value="@firstName" disabled />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label req">Last Name</label>
+                            <input class="form-control" value="@lastName" disabled />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label req">Gender</label>
+                            <div class="d-flex gap-2">
+                                <button type="button"
+                                        class="btn @(isMale ? "btn-success" : "btn-outline-success") px-4" disabled>
+                                    Male
+                                </button>
+                                <button type="button"
+                                        class="btn @(isFemale ? "btn-success" : "btn-outline-success") px-4" disabled>
+                                    Female
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            <p><strong>Operator:</strong> @Model.BusSchedule.OperatorName</p>
-            <p><strong>Route:</strong> @Model.BusSchedule.FullRoute</p>
-            <p>
-                <strong>Date/Time:</strong> @Model.BusSchedule.JourneyDate.ToString("dd MMM yyyy")
-                — @Model.BusSchedule.DepartureTime
-            </p>
-            <p><strong>Passenger:</strong> @Model.CustomerName (@Model.CustomerPhone)</p>
-            <p><strong>Seats:</strong> @string.Join(", ", Model.Seats.Select(x => x.ScheduleSeat.SeatNo).OrderBy(x => x))</p>
-            <p class="fw-bold">Total Fare: ৳@Model.TotalFare</p>
-            <a href="/" class="btn btn-outline-success">Home</a>
+
+        <!-- RIGHT -->
+        <div class="col-lg-4">
+            <div class="card card-clean">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="~/Admin/Images/logo.jpg.png" style="width:48px;height:48px;object-fit:contain;" class="me-2" />
+                        <div>
+                            <div class="fw-semibold">@Safe(s?.OperatorName)</div>
+                            <div class="muted small">@Safe(s?.BusType)</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="muted">FARE</div>
+                        <div class="text-end">
+                            <div class="text-decoration-line-through muted">৳@fare</div>
+                            <div class="fs-5 fw-bold text-success">৳@discountedFare</div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="muted">SEATS</div>
+                        <div class="fw-semibold">@string.Join(", ", seatList)</div>
+                    </div>
+
+                    <hr />
+
+                    <div class="row g-2 align-items-center mb-3">
+                        <div class="col-6">
+                            <div class="muted small">DEPARTURE</div>
+                            <div class="fw-bold">@Safe(s?.From)</div>
+                            <div>@FormatTime(s?.DepartureTime)</div>
+                            <small class="muted">@JourneyDay(s?.JourneyDate ?? DateTime.Today)</small>
+                        </div>
+                        <div class="col-6 text-end">
+                            <div class="muted small">ARRIVAL</div>
+                            <div class="fw-bold">@Safe(s?.To)</div>
+                            <div>@FormatTime(s?.ArrivalTime)</div>
+                            <small class="muted">@JourneyDay(s?.JourneyDate ?? DateTime.Today)</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="muted">BOARDING POINT</div>
+                        <div class="fw-semibold">
+                            @Safe((s?.BoardingPointsString ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).FirstOrDefault())
+                            <span class="ms-2 muted">@FormatTime(s?.DepartureTime)</span>
+                        </div>
+                    </div>
+
+                    <!-- Proceed button -->
+                    @if (Model.Status == ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.PendingPayment)
+                    {
+                        <a class="btn btn-success w-100 py-2"
+                           asp-action="Payment"
+                           asp-route-id="@Model.Id">
+                            PROCEED TO PAYMENT
+                        </a>
+                    }
+
+
+                    <div class="mt-3 muted small">
+                        Please complete payment to get your e-ticket.
+                    </div>
+                </div>
+
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-semibold">Total</span>
+                        <span class="fw-bold text-success">৳@totalFare</span>
+                    </div>
+
+                    <!-- ✅ Download Ticket if approved -->
+                    @if (Model.Status == ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.Approved
+                                        && !string.IsNullOrWhiteSpace(Model.TicketPdfPath))
+                    {
+                        <a class="btn btn-success w-100" href="@Model.TicketPdfPath" download>
+                            <i class="bi bi-file-earmark-pdf me-1"></i> Download Ticket (PDF)
+                        </a>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 </div>

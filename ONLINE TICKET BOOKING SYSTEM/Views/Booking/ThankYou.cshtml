@@ -1,0 +1,9 @@
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.Models.Booking
+@{
+    Layout = "_Layout"; ViewData["Title"] = "Thank You";
+}
+<div class="container py-5 text-center">
+    <h3 class="text-success fw-bold">Payment Received</h3>
+    <p>Your booking (#@Model.Id) is now <strong>pending approval</strong> by admin. You will receive the PDF ticket via email after approval.</p>
+    <a class="btn btn-outline-success" asp-action="Details" asp-route-id="@Model.Id">View Booking</a>
+</div>
