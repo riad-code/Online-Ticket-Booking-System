@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;       // ✅ for IEmailSender
+using Microsoft.AspNetCore.Identity.UI.Services;       
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 using ONLINE_TICKET_BOOKING_SYSTEM.Models;
-using ONLINE_TICKET_BOOKING_SYSTEM.Services;           // ✅ to cast to EmailSender for attachments
+using ONLINE_TICKET_BOOKING_SYSTEM.Services;           
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -18,19 +18,19 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
-        // ✅ Added for emailing
+      
         private readonly IEmailSender _email;
 
         public AdminController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
-            IEmailSender email) // ✅ added
+            IEmailSender email) 
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
-            _email = email;     // ✅ added
+            _email = email;    
         }
 
         public async Task<IActionResult> Dashboard()
@@ -43,8 +43,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 .CountAsync();
 
             // Count tickets sold "today" in UTC
-            var startUtc = DateTime.UtcNow.Date;        // 00:00 UTC today
-            var endUtc = startUtc.AddDays(1);           // 00:00 UTC tomorrow
+            var startUtc = DateTime.UtcNow.Date;        
+            var endUtc = startUtc.AddDays(1);           
 
             var ticketsSoldToday = await _context.BookingSeats
                 .AsNoTracking()
@@ -60,7 +60,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return View();
         }
 
-        // ====== Bus Management ======
+       
         public IActionResult ManageBuses()
         {
             var buses = _context.Buses.ToList();
@@ -137,10 +137,10 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 return BadRequest(new { message = "Invalid input. Please fill all fields correctly.", errors });
             }
 
-            // Update the bus itself
+          
             _context.Buses.Update(bus);
 
-            // === SYNC: Bus -> all its schedules ===
+      
             var schedules = await _context.BusSchedules
                 .Where(s => s.BusId == bus.Id)
                 .ToListAsync();
@@ -181,7 +181,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return Json(new { success = true, message = "Bus deleted successfully." });
         }
 
-        // ===== Manage Users =====
+     
         public IActionResult ManageUsers()
         {
             var users = _userManager.Users.ToList();
@@ -213,7 +213,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return Json(new { success = false, message = "Failed to delete user." });
         }
 
-        // ===== Assign Role (Admin/User) =====
+      
         [HttpPost]
         public async Task<IActionResult> AssignRole(string userId, string role)
         {
@@ -259,9 +259,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return Json(new { success = true, message = $"Role updated to {role}." });
         }
 
-        // =========================
-        // ✅ ADMIN → SEND EMAIL (with optional attachment)
-        // =========================
+
 
         [HttpGet]
         public async Task<IActionResult> SendEmail()
@@ -303,7 +301,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 return RedirectToAction(nameof(SendEmail));
             }
 
-            // Try to send with attachment if possible
+          
             if (_email is ONLINE_TICKET_BOOKING_SYSTEM.Services.EmailSender concrete && attachment != null && attachment.Length > 0)
             {
                 using var ms = new MemoryStream();
@@ -318,7 +316,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             }
             else
             {
-                // fallback without attachment
+               
                 await _email.SendEmailAsync(
                     finalEmail,
                     subject ?? "(no subject)",

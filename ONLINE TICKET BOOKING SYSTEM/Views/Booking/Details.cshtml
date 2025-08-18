@@ -135,8 +135,9 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label req">Email</label>
-                            <div class="pill">@Safe(emailDisplay)</div>
+                            <div class="pill">@((ViewBag.UserEmail as string) ?? "")</div>
                         </div>
+
                     </div>
                 </div>
             </div>

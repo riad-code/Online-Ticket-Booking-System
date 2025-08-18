@@ -65,7 +65,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 })
                 .ToListAsync();
 
-            // Pass a concrete type to the view instead of anonymous/ViewBag
+           
             return View(recent);
         }
     }

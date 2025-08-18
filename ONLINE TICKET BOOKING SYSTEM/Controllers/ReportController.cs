@@ -18,11 +18,11 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             _ctx = ctx;
         }
 
-        // View: filters + table + totals
+      
         [HttpGet]
         public async Task<IActionResult> Index(DateTime? from = null, DateTime? to = null)
         {
-            // treat incoming dates as local-day range -> convert to UTC range
+           
             var fromLocal = (from ?? DateTime.Today).Date;
             var toLocalEnd = (to ?? DateTime.Today).Date.AddDays(1).AddTicks(-1);
 
@@ -49,7 +49,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             decimal revenue = bookings.Sum(b => b.GrandTotal);
 
-            // keep YYYY-MM-DD for inputs (local)
+            
             ViewBag.From = fromLocal.ToString("yyyy-MM-dd");
             ViewBag.To = toLocalEnd.ToString("yyyy-MM-dd");
             ViewBag.TicketsSold = ticketsSold;
@@ -58,7 +58,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return View(bookings);
         }
 
-        // Download report as PDF
+       
         [HttpGet]
         public async Task<IActionResult> Download(DateTime? from = null, DateTime? to = null)
         {
@@ -88,7 +88,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             decimal revenue = bookings.Sum(b => b.GrandTotal);
 
-            // Pick QuestPDF license (also set once in Program.cs at startup)
+            
             QuestPDF.Settings.License = LicenseType.Community;
 
             using var stream = new MemoryStream();
@@ -98,7 +98,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 {
                     page.Margin(30);
 
-                    // Simple text header (no images / placeholders)
+                   
                     page.Header().Column(col =>
                     {
                         col.Item().Text("RiadTrip — Sales Report").SemiBold().FontSize(16);

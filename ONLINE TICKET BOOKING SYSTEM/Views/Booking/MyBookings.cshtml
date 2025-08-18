@@ -63,7 +63,8 @@
 
                                 <div class="mb-1"><strong>Booking #</strong> @b.Id</div>
                                 <div class="mb-1"><strong>Seats:</strong> @string.Join(", ", seats)</div>
-                                <div class="mb-1"><strong>Total Fare:</strong> ৳@b.TotalFare</div>
+                               <div class="mb-1"><strong>Total Payable:</strong> ৳@b.GrandTotal</div>
+
                                 <div class="mb-1">
                                     <strong>Payment:</strong>
                                     <span class="badge @GetPaymentClass(b.PaymentStatus)">@b.PaymentStatus</span>

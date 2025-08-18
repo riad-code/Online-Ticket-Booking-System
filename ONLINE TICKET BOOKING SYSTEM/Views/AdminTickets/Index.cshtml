@@ -8,7 +8,7 @@
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>#</th>
+                <th>ID</th>
                 <th>Passenger</th>
                 <th>Route</th>
                 <th>Date</th>
@@ -24,7 +24,8 @@
                     <td>@b.CustomerName</td>
                     <td>@b.BusSchedule?.From → @b.BusSchedule?.To</td>
                     <td>@b.BusSchedule?.JourneyDate.ToString("dd MMM yyyy")</td>
-                    <td>৳@b.GrandTotal</td>
+                    <td>৳@(b.GrandTotal + b.InsuranceFee)</td>
+
                     <td><a class="btn btn-sm btn-outline-success" asp-action="Details" asp-route-id="@b.Id">Review</a></td>
                 </tr>
             }

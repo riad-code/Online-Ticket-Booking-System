@@ -30,11 +30,11 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Models
         public int SeatsAvailable { get; set; }
         public string? FullRoute { get; set; }
 
-        // DB columns for points (already in your DB)
+   
         public string? BoardingPointsString { get; set; }
         public string? DroppingPointsString { get; set; }
         public bool IsBlocked { get; set; } = false;
-        // Convenience lists for UI filtering
+ 
         [NotMapped]
         public List<string>? BoardingPoints =>
             string.IsNullOrWhiteSpace(BoardingPointsString) ? null

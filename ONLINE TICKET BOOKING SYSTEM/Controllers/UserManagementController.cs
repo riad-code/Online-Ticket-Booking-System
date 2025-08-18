@@ -17,10 +17,10 @@ public class UserManagementController : Controller
         _context = context;
     }
 
-    // GET: /UserManagement/Index
+  
     public IActionResult Index()
     {
-        var users = _userManager.Users.ToList(); // Get all users from Identity
+        var users = _userManager.Users.ToList(); 
 
         return View(users);
     }

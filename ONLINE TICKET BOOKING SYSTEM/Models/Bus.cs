@@ -40,11 +40,11 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Models
         [Required(ErrorMessage = "Full Route is required.")]
         public string FullRoute { get; set; } = string.Empty;
 
-        // DB columns (nullable)
+  
         public string? BoardingPointsString { get; set; }
         public string? DroppingPointsString { get; set; }
         public bool IsBlocked { get; set; } = false;
-        // Convenience for UI filtering (NotMapped)
+        
         [NotMapped]
         public List<string>? BoardingPoints =>
             string.IsNullOrWhiteSpace(BoardingPointsString) ? null

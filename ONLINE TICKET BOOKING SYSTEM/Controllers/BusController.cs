@@ -31,7 +31,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         {
             if (string.IsNullOrWhiteSpace(from) || string.IsNullOrWhiteSpace(to))
             {
-                // Also build sidebar universes even if no route entered, so filters still show full data
                 var emptyVm = new BusSearchResultViewModel
                 {
                     AvailableBuses = new List<BusSchedule>()
@@ -89,7 +88,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 ReturnBuses = returnEnsured
             };
 
-            // ✅ Populate left sidebar universes from the FULL database
+           
             await FillSidebarUniversesAsync(vm);
 
             return View("SearchResults", vm);
@@ -97,7 +96,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         private async Task FillSidebarUniversesAsync(BusSearchResultViewModel vm)
         {
-            // Operators: distinct from the whole Buses table
+           
             vm.AllOperators = await _context.Buses
                 .AsNoTracking()
                 .Select(b => b.OperatorName)
@@ -106,7 +105,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 .OrderBy(s => s)
                 .ToListAsync();
 
-            // Boarding/Dropping: fetch raw CSVs first (server-side), then split on client memory
+           
             var allBoardingStrings = await _context.Buses
                 .AsNoTracking()
                 .Select(b => b.BoardingPointsString)
@@ -158,13 +157,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                     SeatsAvailable = b.SeatsAvailable,
                     BoardingPointsString = b.BoardingPointsString,
                     DroppingPointsString = b.DroppingPointsString,
-                    IsBlocked = b.IsBlocked // if you use whole-schedule blocking
+                    IsBlocked = b.IsBlocked 
                 };
 
                 _context.BusSchedules.Add(sched);
-                await _context.SaveChangesAsync(); // gets sched.Id
+                await _context.SaveChangesAsync(); 
 
-                // Seed seats
+               
                 if (!await _context.ScheduleSeats.AnyAsync(x => x.BusScheduleId == sched.Id))
                 {
                     var cols = new[] { "A", "B", "C", "D" };
@@ -182,7 +181,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                     _context.ScheduleSeats.AddRange(seats);
                     await _context.SaveChangesAsync();
 
-                    // ✅ Apply Admin blocked seats immediately on creation
                     var layout = await _context.SeatLayouts.AsNoTracking().FirstOrDefaultAsync(x => x.BusId == b.Id);
                     if (layout != null && !string.IsNullOrWhiteSpace(layout.BlockedSeatsCsv))
                     {
@@ -216,7 +214,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return sched;
         }
 
-        // ===== Autocomplete endpoints (unchanged) =====
+   
 
         [HttpGet]
         [AllowAnonymous]

@@ -15,7 +15,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         public IActionResult Index()
         {
-            // Automatically redirect to /Bus/Index
+            
             return RedirectToAction("Index", "Bus");
         }
 

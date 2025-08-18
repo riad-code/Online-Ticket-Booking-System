@@ -17,7 +17,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         public AdminSeatController(ApplicationDbContext context) => _context = context;
 
-        // Existing EditLayout (GET)
+       
         [HttpGet]
         public async Task<IActionResult> EditLayout(int busId)
         {
@@ -40,7 +40,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return View(layout);
         }
 
-        // Updated EditLayout (POST) for Ajax
+       
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> EditLayout(SeatLayout model)
@@ -75,7 +75,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             }
         }
 
-        // New action to support real-time preview on the frontend
+       
         [HttpPost]
         public IActionResult GenerateLayoutPreview([FromBody] LayoutPreviewRequest request)
         {
@@ -91,14 +91,14 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             }
         }
 
-        // Helper classes for the new action
+        
         public class LayoutPreviewRequest
         {
             public string? LayoutJson { get; set; }
             public int TotalSeats { get; set; }
         }
 
-        // Existing helper methods...
+      
         private static string GenerateDefaultLayoutJson(int total)
         {
             var cols = new[] { "A", "B", "C", "D" };
@@ -117,7 +117,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         private static List<string> ParseSeatNames(string? json, int totalFallback)
         {
-            // Implementation remains the same
+          
             try
             {
                 var arr = System.Text.Json.JsonSerializer.Deserialize<string[]>(json ?? "[]");
@@ -141,13 +141,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         private static HashSet<string> ParseBlocked(string? csv)
         {
-            // Implementation remains the same
+           
             return new HashSet<string>(
                 (csv ?? "")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
                 StringComparer.OrdinalIgnoreCase);
         }
 
-        // ... Existing actions and helpers
+        
     }
 }

@@ -19,7 +19,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             _context = context;
         }
 
-        // GET: /Schedule
+       
         public async Task<IActionResult> Index()
         {
             var schedules = await _context.BusSchedules
@@ -32,7 +32,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return View(schedules);
         }
 
-        // GET: /Schedule/Create
+       
         public IActionResult Create()
         {
             var vm = new CreateScheduleViewModel
@@ -43,7 +43,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return View(vm);
         }
 
-        // POST: /Schedule/Create (AJAX)
+       
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateScheduleViewModel vm)
@@ -72,7 +72,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 BusType = bus.BusType,
                 OperatorName = bus.OperatorName,
                 Fare = vm.Fare,
-                SeatsAvailable = vm.SeatsAvailable, // will be recalculated after seeding
+                SeatsAvailable = vm.SeatsAvailable, 
                 BoardingPointsString = bus.BoardingPointsString,
                 DroppingPointsString = bus.DroppingPointsString
             };
@@ -85,9 +85,9 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             }
 
             _context.BusSchedules.Add(schedule);
-            await _context.SaveChangesAsync(); // schedule.Id now available
+            await _context.SaveChangesAsync(); 
 
-            // ✅ If seats for this schedule don't exist yet, seed from bus layout
+          
             if (!await _context.ScheduleSeats.AnyAsync(x => x.BusScheduleId == schedule.Id))
             {
                 var layout = await _context.SeatLayouts
@@ -103,13 +103,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                     }
                     catch
                     {
-                        // ignore and fallback
+                        
                     }
                 }
 
                 if (names.Count == 0)
                 {
-                    // 🔁 fallback: ৪ কলাম × ১০ রো = ৪০ সিট (A1..D10)
+                   
                     var cols = new[] { "A", "B", "C", "D" };
                     for (int r = 1; r <= 10; r++)
                     {
@@ -134,7 +134,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
                 _context.ScheduleSeats.AddRange(seats);
 
-                // ✅ recalc SeatsAvailable from seeded seats
                 schedule.SeatsAvailable = seats.Count(s => s.Status == SeatStatus.Available);
                 _context.BusSchedules.Update(schedule);
 
@@ -144,7 +143,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return Json(new { success = true, message = "Schedule created successfully." });
         }
 
-        // GET: /Schedule/Edit/{id}
+     
         public async Task<IActionResult> Edit(int id)
         {
             var sched = await _context.BusSchedules.FindAsync(id);
@@ -169,7 +168,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return View(vm);
         }
 
-        // POST: /Schedule/Edit (AJAX)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(CreateScheduleViewModel vm)
@@ -188,7 +186,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             if (bus == null)
                 return BadRequest("Selected bus not found.");
 
-            // Update schedule fields from VM + base bus
+          
             sched.BusId = vm.BusId;
             sched.From = bus.From;
             sched.To = bus.To;
@@ -214,7 +212,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 sched.ReturnBusId = null;
             }
 
-            // ===== SCHEDULE -> BUS SYNC (optional) =====
+          
             if (sched.BusId.HasValue)
             {
                 var baseBus = await _context.Buses.FirstOrDefaultAsync(b => b.Id == sched.BusId.Value);
@@ -237,7 +235,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return Json(new { success = true, message = "Schedule updated successfully." });
         }
 
-        // POST: /Schedule/Delete (AJAX)
+      
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -251,7 +249,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return Json(new { success = true, message = "Schedule deleted successfully." });
         }
 
-        // POST: /Schedule/Search (for front-end booking)
+      
         [HttpPost]
         public async Task<IActionResult> Search(string from, string to, DateTime journeyDate, DateTime? returnDate)
         {

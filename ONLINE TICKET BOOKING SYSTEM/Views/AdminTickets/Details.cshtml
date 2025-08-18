@@ -7,9 +7,14 @@
     <h4>Booking #@Model.Id</h4>
     <p><b>@Model.CustomerName</b> — @Model.CustomerPhone</p>
     <p>@Model.BusSchedule?.From → @Model.BusSchedule?.To</p>
-    <p>@Model.BusSchedule?.JourneyDate:dd MMM yyyy | @Model.BusSchedule?.DepartureTime - @Model.BusSchedule?.ArrivalTime</p>
+    <p>
+        @Model.BusSchedule?.JourneyDate:dd MMM yyyy |
+        @Model.BusSchedule?.DepartureTime - @Model.BusSchedule?.ArrivalTime
+    </p>
     <p>Seats: @string.Join(", ", Model.Seats.Select(s => s.ScheduleSeat.SeatNo))</p>
-    <p>Total: <b>৳@Model.GrandTotal</b></p>
+
+  
+    <p>Total: <b>৳@(Model.GrandTotal + Model.InsuranceFee)</b></p>
 
     @if (TempData["err"] != null)
     {
