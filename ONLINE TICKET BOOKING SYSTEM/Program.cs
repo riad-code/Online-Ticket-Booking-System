@@ -3,8 +3,15 @@ using Microsoft.EntityFrameworkCore;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 using ONLINE_TICKET_BOOKING_SYSTEM.Services;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using QuestPDF.Infrastructure;   // ⬅️ add this
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ⬇️ Configure QuestPDF license ONCE at startup (Community is free if you qualify)
+QuestPDF.Settings.License = LicenseType.Community;
+// If you have a Professional license, use:
+// QuestPDF.Settings.License = LicenseType.Professional;
+// QuestPDF.Settings.LicenseKey = builder.Configuration["QuestPdf:LicenseKey"];
 
 //  Add Database Connection
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
@@ -79,7 +86,7 @@ app.Run();
 
 
 //  Seed Roles and Admin User Method
-async Task SeedRolesAndAdminAsync(WebApplication app)
+static async Task SeedRolesAndAdminAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();

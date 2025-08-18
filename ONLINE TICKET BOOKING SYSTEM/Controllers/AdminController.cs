@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;       // ✅ for IEmailSender
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 using ONLINE_TICKET_BOOKING_SYSTEM.Models;
+using ONLINE_TICKET_BOOKING_SYSTEM.Services;           // ✅ to cast to EmailSender for attachments
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -16,14 +18,19 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
+        // ✅ Added for emailing
+        private readonly IEmailSender _email;
+
         public AdminController(
             ApplicationDbContext context,
             UserManager<ApplicationUser> userManager,
-            RoleManager<IdentityRole> roleManager)
+            RoleManager<IdentityRole> roleManager,
+            IEmailSender email) // ✅ added
         {
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
+            _email = email;     // ✅ added
         }
 
         public async Task<IActionResult> Dashboard()
@@ -37,7 +44,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             // Count tickets sold "today" in UTC
             var startUtc = DateTime.UtcNow.Date;        // 00:00 UTC today
-            var endUtc = startUtc.AddDays(1);         // 00:00 UTC tomorrow
+            var endUtc = startUtc.AddDays(1);           // 00:00 UTC tomorrow
 
             var ticketsSoldToday = await _context.BookingSeats
                 .AsNoTracking()
@@ -250,6 +257,77 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 return Json(new { success = false, message = string.Join(", ", add.Errors.Select(e => e.Description)) });
 
             return Json(new { success = true, message = $"Role updated to {role}." });
+        }
+
+        // =========================
+        // ✅ ADMIN → SEND EMAIL (with optional attachment)
+        // =========================
+
+        [HttpGet]
+        public async Task<IActionResult> SendEmail()
+        {
+            var users = await _userManager.Users
+                .OrderBy(u => u.Email)
+                .Select(u => new { u.Id, u.Email, Name = (u.FirstName + " " + u.LastName).Trim() })
+                .ToListAsync();
+
+            ViewBag.Users = users;
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SendEmail(string toUserId, string toEmail, string subject, string message, IFormFile? attachment)
+        {
+            if (string.IsNullOrWhiteSpace(toEmail) && string.IsNullOrWhiteSpace(toUserId))
+            {
+                TempData["err"] = "Select a user or type an email.";
+                return RedirectToAction(nameof(SendEmail));
+            }
+
+            string finalEmail = toEmail;
+            if (!string.IsNullOrWhiteSpace(toUserId))
+            {
+                var user = await _userManager.FindByIdAsync(toUserId);
+                if (user == null)
+                {
+                    TempData["err"] = "Selected user not found.";
+                    return RedirectToAction(nameof(SendEmail));
+                }
+                finalEmail = user.Email!;
+            }
+
+            if (string.IsNullOrWhiteSpace(finalEmail))
+            {
+                TempData["err"] = "No email address.";
+                return RedirectToAction(nameof(SendEmail));
+            }
+
+            // Try to send with attachment if possible
+            if (_email is ONLINE_TICKET_BOOKING_SYSTEM.Services.EmailSender concrete && attachment != null && attachment.Length > 0)
+            {
+                using var ms = new MemoryStream();
+                await attachment.CopyToAsync(ms);
+                await concrete.SendEmailWithAttachmentAsync(
+                    finalEmail,
+                    subject ?? "(no subject)",
+                    string.IsNullOrWhiteSpace(message) ? "<p>(no content)</p>" : message,
+                    ms.ToArray(),
+                    Path.GetFileName(attachment.FileName)
+                );
+            }
+            else
+            {
+                // fallback without attachment
+                await _email.SendEmailAsync(
+                    finalEmail,
+                    subject ?? "(no subject)",
+                    string.IsNullOrWhiteSpace(message) ? "(no content)" : message
+                );
+            }
+
+            TempData["ok"] = $"Email sent to {finalEmail}.";
+            return RedirectToAction(nameof(SendEmail));
         }
     }
 }
