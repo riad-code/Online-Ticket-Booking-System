@@ -236,11 +236,11 @@
                     <!-- Proceed button -->
                     @if (Model.Status == ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.PendingPayment)
                     {
-                        <a class="btn btn-success w-100 py-2"
-                           asp-action="Payment"
-                           asp-route-id="@Model.Id">
-                            PROCEED TO PAYMENT
+                        <a class="btn btn-success" href="/Payment/Payment?id=@Model.Id">
+                            Proceed to Payment
                         </a>
+
+
                     }
 
 

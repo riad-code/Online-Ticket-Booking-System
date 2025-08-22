@@ -3,38 +3,81 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Review Ticket";
 }
+
 <div class="container py-4">
-    <h4>Booking #@Model.Id</h4>
-    <p><b>@Model.CustomerName</b> — @Model.CustomerPhone</p>
-    <p>@Model.BusSchedule?.From → @Model.BusSchedule?.To</p>
-    <p>
-        @Model.BusSchedule?.JourneyDate:dd MMM yyyy |
-        @Model.BusSchedule?.DepartureTime - @Model.BusSchedule?.ArrivalTime
-    </p>
-    <p>Seats: @string.Join(", ", Model.Seats.Select(s => s.ScheduleSeat.SeatNo))</p>
+    <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Booking #@Model.Id</h4>
+            <span class="badge bg-warning text-dark">
+                @Model.Status.ToString()
+            </span>
+        </div>
 
-  
-    <p>Total: <b>৳@(Model.GrandTotal + Model.InsuranceFee)</b></p>
+        <div class="card-body">
+            <h5 class="fw-bold text-secondary mb-3">Passenger Details</h5>
+            <p class="mb-1"><i class="bi bi-person-fill"></i> <b>@Model.CustomerName</b></p>
+            <p class="mb-1"><i class="bi bi-telephone-fill"></i> @Model.CustomerPhone</p>
+            <p class="mb-3"><i class="bi bi-envelope-fill"></i> @Model.CustomerEmail</p>
 
-    @if (TempData["err"] != null)
-    {
-        <div class="alert alert-danger">@TempData["err"]</div>
-    }
-    @if (TempData["ok"] != null)
-    {
-        <div class="alert alert-success">@TempData["ok"]</div>
-    }
+            <hr />
 
-    @if (Model.Status == ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.PendingApproval)
-    {
-        <form asp-action="Approve" method="post">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="id" value="@Model.Id" />
-            <button class="btn btn-success">Approve & Send Ticket</button>
-        </form>
-    }
-    else
-    {
-        <a class="btn btn-outline-success" href="@Model.TicketPdfPath" target="_blank">View Ticket</a>
-    }
+            <h5 class="fw-bold text-secondary mb-3">Journey Details</h5>
+            <p class="mb-1"><i class="bi bi-geo-alt-fill"></i> @Model.BusSchedule?.From → @Model.BusSchedule?.To</p>
+            <p class="mb-1">
+                <i class="bi bi-calendar-event-fill"></i>
+                @Model.BusSchedule?.JourneyDate:dd MMM yyyy
+            </p>
+            <p class="mb-3">
+                <i class="bi bi-clock-fill"></i>
+                @Model.BusSchedule?.DepartureTime - @Model.BusSchedule?.ArrivalTime
+            </p>
+            <p class="mb-3">
+                <i class="bi bi-layout-sidebar-inset"></i> Seats:
+                <b>@string.Join(", ", Model.Seats.Select(s => s.ScheduleSeat.SeatNo))</b>
+            </p>
+
+            <hr />
+
+            <h5 class="fw-bold text-secondary mb-3">Payment</h5>
+            <p class="mb-1">Fare: ৳@Model.TotalFare</p>
+            <p class="mb-1">Processing Fee: ৳@Model.ProcessingFee</p>
+         
+            <p class="mb-1 text-success fw-bold">
+                Total Payable: ৳@(Model.GrandTotal)
+            </p>
+
+            @if (TempData["err"] != null)
+            {
+                <div class="alert alert-danger mt-3">@TempData["err"]</div>
+            }
+            @if (TempData["ok"] != null)
+            {
+                <div class="alert alert-success mt-3">@TempData["ok"]</div>
+            }
+
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                @if (Model.Status == ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.PendingApproval)
+                {
+                    <form asp-action="Approve" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button class="btn btn-success">
+                            <i class="bi bi-check-circle-fill"></i> Approve & Send Ticket
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a class="btn btn-outline-success" href="@Model.TicketPdfPath" target="_blank">
+                        <i class="bi bi-file-earmark-pdf"></i> View Ticket
+                    </a>
+                }
+
+                <!-- 🔙 Back button -->
+                <a asp-action="Index" asp-controller="AdminTickets" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left-circle"></i> Back to Bookings
+                </a>
+            </div>
+        </div>
+    </div>
 </div>

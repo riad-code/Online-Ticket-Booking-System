@@ -1,0 +1,10 @@
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.Models.Booking
+
+<div class="container py-5 text-center">
+    <h2 class="text-success">Payment Successful!</h2>
+    <p>Your payment for booking <strong>@Model.Id</strong> has been successfully processed.</p>
+    <p>Thank you for using our service!</p>
+    <div class="mt-4">
+        <a class="btn btn-primary" asp-action="Details" asp-route-id="@Model.Id">View Booking Details</a>
+    </div>
+</div>

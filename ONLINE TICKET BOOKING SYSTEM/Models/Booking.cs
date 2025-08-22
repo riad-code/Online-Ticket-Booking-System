@@ -21,6 +21,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Models
 
         public string? CustomerName { get; set; }
         public string? CustomerPhone { get; set; }
+        public string? CustomerEmail { get; set; }
         public string? Gender { get; set; }
 
         public decimal TotalFare { get; set; }

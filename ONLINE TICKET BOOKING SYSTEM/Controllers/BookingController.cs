@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 using ONLINE_TICKET_BOOKING_SYSTEM.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using ONLINE_TICKET_BOOKING_SYSTEM.Services;
 using System.Text.RegularExpressions;
 
@@ -14,7 +14,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
-
         private readonly IEmailSender _emailSender;
         private readonly ITicketPdfService _ticketPdf;
 
@@ -50,6 +49,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             if (schedule == null) return NotFound("Schedule not found.");
 
+            // Seed schedule seats if not exists
             if (!await _context.ScheduleSeats.AnyAsync(x => x.BusScheduleId == scheduleId))
             {
                 var cols = new[] { "A", "B", "C", "D" };
@@ -68,6 +68,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 await _context.SaveChangesAsync();
             }
 
+            // Apply blocked seats from SeatLayout
             var layout = await _context.SeatLayouts
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x => x.BusId == schedule.BusId);
@@ -99,6 +100,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 .OrderBy(s => s.SeatNo)
                 .ToListAsync();
 
+            // Prefill user info
             if (User?.Identity?.IsAuthenticated == true)
             {
                 var usr = await _userManager.GetUserAsync(User);
@@ -114,7 +116,12 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Confirm(int scheduleId, string customerName, string customerPhone, [FromForm] string seatNos)
+        public async Task<IActionResult> Confirm(
+            int scheduleId,
+            string customerName,
+            string customerPhone,
+            string? customerEmail,
+            [FromForm] string seatNos)
         {
             if (string.IsNullOrWhiteSpace(seatNos))
             {
@@ -145,7 +152,21 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 return RedirectToAction(nameof(Seats), new { scheduleId });
             }
 
+            // --- Fare & totals (keep consistent with PaymentController) ---
             var discountedFare = Math.Max(0, schedule.Fare - 30);
+            var totalFare = discountedFare * seats.Count;
+
+            // Add your fixed/optional charges/discounts here if needed
+            var processing = 30m;
+            var insurance = 0m;      // set later if user chooses
+            var discount = 0m;
+
+            var grandTotal = totalFare + processing + insurance - discount;
+            if (grandTotal <= 0)
+            {
+                TempData["err"] = "Grand total must be greater than zero.";
+                return RedirectToAction(nameof(Seats), new { scheduleId });
+            }
 
             using var tx = await _context.Database.BeginTransactionAsync();
 
@@ -162,14 +183,26 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 BusScheduleId = scheduleId,
                 CustomerName = customerName,
                 CustomerPhone = customerPhone,
+                CustomerEmail = string.IsNullOrWhiteSpace(customerEmail)
+                                    ? await _context.Users.Where(u => u.Id == _userManager.GetUserId(User))
+                                                          .Select(u => u.Email)
+                                                          .FirstOrDefaultAsync()
+                                    : customerEmail,
                 Gender = genderFromUser,
-                TotalFare = discountedFare * seats.Count,
+
+                TotalFare = totalFare,
+                ProcessingFee = processing,
+                InsuranceFee = insurance,
+                Discount = discount,
+                GrandTotal = grandTotal,
+
                 Status = BookingStatus.PendingPayment,
                 PaymentStatus = PaymentStatus.Unpaid
             };
             _context.Bookings.Add(booking);
             await _context.SaveChangesAsync();
 
+            // Link seats
             var links = seats.Select(s => new BookingSeat
             {
                 BookingId = booking.Id,
@@ -178,17 +211,21 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             });
             _context.BookingSeats.AddRange(links);
 
+            // Mark schedule seats as booked
             seats.ForEach(s => s.Status = SeatStatus.Booked);
             _context.ScheduleSeats.UpdateRange(seats);
 
+            // Update available count
             schedule.SeatsAvailable = Math.Max(0, schedule.SeatsAvailable - seats.Count);
             _context.BusSchedules.Update(schedule);
 
             await _context.SaveChangesAsync();
             await tx.CommitAsync();
 
+            // ✅ STEP 1: Redirect to Details (not Payment)
             return RedirectToAction(nameof(Details), new { id = booking.Id });
         }
+
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
@@ -200,66 +237,29 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             if (booking == null) return NotFound();
 
             ViewBag.UserEmail = await _context.Users
-     .Where(u => u.Id == booking.UserId)
-     .Select(u => u.Email)
-     .FirstOrDefaultAsync();
+                .Where(u => u.Id == booking.UserId)
+                .Select(u => u.Email)
+                .FirstOrDefaultAsync();
 
-
+            // From this view, your existing "Proceed to Payment" button should link to:
+            // /Payment/Payment?id=@Model.Id
             return View(booking);
         }
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> Payment(int id, string? coupon = null)
-        {
-            var b = await _context.Bookings
-                .Include(x => x.BusSchedule)
-                .Include(x => x.Seats).ThenInclude(bs => bs.ScheduleSeat)
-                .FirstOrDefaultAsync(x => x.Id == id);
-            if (b == null) return NotFound();
 
-            b.CouponCode = coupon;
-            b.ProcessingFee = 30;
-            b.InsuranceFee = 0; // only added if user selects on POST
-            b.Discount = (!string.IsNullOrWhiteSpace(coupon) && coupon.Trim().ToUpper() == "SAVE30") ? 30 : 0;
-            b.GrandTotal = b.TotalFare + b.ProcessingFee + b.InsuranceFee - b.Discount;
-
-            return View(b);
-        }
-
-        [Authorize]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Payment(int id, PaymentMethod method, bool withInsurance, string? couponCode)
-        {
-            var b = await _context.Bookings
-                .Include(x => x.BusSchedule)
-                .Include(x => x.Seats).ThenInclude(bs => bs.ScheduleSeat)
-                .FirstOrDefaultAsync(x => x.Id == id);
-            if (b == null) return NotFound();
-
-            b.ProcessingFee = 30;
-            b.InsuranceFee = withInsurance ? 10 : 0;
-            b.Discount = (!string.IsNullOrWhiteSpace(couponCode) && couponCode.Trim().ToUpper() == "SAVE30") ? 30 : 0;
-            b.CouponCode = couponCode;
-            b.PaymentMethod = method;
-            b.GrandTotal = b.TotalFare + b.ProcessingFee + b.InsuranceFee - b.Discount;
-
-            b.PaymentStatus = PaymentStatus.Paid;
-            b.Status = BookingStatus.PendingApproval;
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(ThankYou), new { id = b.Id });
-        }
+        // Payment actions are in PaymentController.
 
         [Authorize]
         [HttpGet]
         public async Task<IActionResult> ThankYou(int id)
         {
-            var b = await _context.Bookings.Include(x => x.BusSchedule).FirstOrDefaultAsync(x => x.Id == id);
+            var b = await _context.Bookings
+                .Include(x => x.BusSchedule)
+                .FirstOrDefaultAsync(x => x.Id == id);
             if (b == null) return NotFound();
             return View(b);
         }
 
+        // Send E-Ticket to Customer
         [HttpPost]
         public async Task<IActionResult> SendTicket(int bookingId, string userEmail)
         {
@@ -270,28 +270,40 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             if (booking == null) return NotFound("Booking not found.");
 
+            // Use booking.CustomerEmail if userEmail is not provided
+            userEmail = string.IsNullOrWhiteSpace(userEmail) ? booking.CustomerEmail : userEmail;
+            if (string.IsNullOrWhiteSpace(userEmail))
+                return BadRequest("No email address provided for the ticket.");
+
             byte[] pdfBytes = await _ticketPdf.GenerateAsync(booking);
 
-            if (_emailSender is EmailSender concrete)
+            try
             {
-                await concrete.SendEmailWithAttachmentAsync(
-                    userEmail,
-                    $"Your E-Ticket (#{booking.Id})",
-                    $"<h3>Hello {booking.CustomerName},</h3><p>Your ticket is attached as PDF.</p>",
-                    pdfBytes ?? Array.Empty<byte>(),
-                    $"Ticket_{booking.Id}.pdf"
-                );
-            }
-            else
-            {
-                await _emailSender.SendEmailAsync(
-                    userEmail,
-                    $"Your E-Ticket (#{booking.Id})",
-                    "Your ticket is confirmed. Please login to download the PDF."
-                );
-            }
+                if (_emailSender is EmailSender concrete)
+                {
+                    await concrete.SendEmailWithAttachmentAsync(
+                        userEmail!,
+                        $"Your E-Ticket (#{booking.Id})",
+                        $"<h3>Hello {booking.CustomerName},</h3><p>Your ticket is attached as PDF.</p>",
+                        pdfBytes ?? Array.Empty<byte>(),
+                        $"Ticket_{booking.Id}.pdf"
+                    );
+                }
+                else
+                {
+                    await _emailSender.SendEmailAsync(
+                        userEmail!,
+                        $"Your E-Ticket (#{booking.Id})",
+                        "Your ticket is confirmed. Please login to download the PDF."
+                    );
+                }
 
-            return Ok("Ticket email sent.");
+                return Ok("Ticket email sent.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("Error sending ticket email: " + ex.Message);
+            }
         }
 
         [Authorize(Roles = "User")]
@@ -309,7 +321,5 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             return View(bookings);
         }
-       
-
     }
 }

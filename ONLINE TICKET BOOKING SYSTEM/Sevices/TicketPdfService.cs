@@ -1,122 +1,222 @@
-﻿using ONLINE_TICKET_BOOKING_SYSTEM.Models;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using ONLINE_TICKET_BOOKING_SYSTEM.Models;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using System.Linq;
-using System.Threading.Tasks;
 
 public class TicketPdfService : ITicketPdfService
 {
     public Task<byte[]> GenerateAsync(Booking b)
     {
-        var s = b.BusSchedule!;
-        var seats = string.Join(", ", b.Seats.OrderBy(x => x.ScheduleSeat!.SeatNo).Select(x => x.ScheduleSeat!.SeatNo));
+        // Be defensive against nulls
+        var s = b.BusSchedule ?? new BusSchedule();
+        var seats = string.Join(", ",
+            (b.Seats ?? Array.Empty<BookingSeat>())
+                .Where(x => x?.ScheduleSeat?.SeatNo != null)
+                .OrderBy(x => x!.ScheduleSeat!.SeatNo)
+                .Select(x => x!.ScheduleSeat!.SeatNo!));
 
-        var bytes = Document.Create(c =>
+        var bytes = Document.Create(doc =>
         {
-            c.Page(p =>
+            doc.Page(page =>
             {
-                p.Size(PageSizes.A4);
-                p.Margin(36);
-                p.DefaultTextStyle(x => x.FontFamily(Fonts.Arial).FontSize(12));
+                page.Size(PageSizes.A4);
+                page.Margin(36);
+                page.DefaultTextStyle(t => t.FontSize(11));
 
-                p.Content().PaddingVertical(10).Column(col =>
+                page.Content().Column(col =>
                 {
-                    // --- Ticket Header ---
+                    // ===== Header =====
                     col.Item().Row(row =>
                     {
-                        row.RelativeItem().Column(headerCol =>
+                        row.RelativeItem().Column(h =>
                         {
-                            headerCol.Item().Text("RiadTrip").SemiBold().FontSize(24).FontColor(Colors.Green.Darken2);
-                            headerCol.Item().Text("e-Ticket").SemiBold().FontSize(18).FontColor(Colors.Grey.Darken1);
+                            h.Item().Text("RiadTrip")
+                                .SemiBold().FontSize(24).FontColor(Colors.Green.Darken2);
+                            h.Item().Text("Electronic Ticket")
+                                .SemiBold().FontSize(13).FontColor(Colors.Grey.Darken1);
                         });
-                        row.ConstantItem(100).AlignCenter().Column(qrCol =>
+
+                        row.ConstantItem(150).AlignRight().Column(r =>
                         {
-                            qrCol.Item().Text("QR Code").FontSize(8);
-                            qrCol.Item().Placeholder();
+                            r.Item().Text($"PNR / Booking ID: {b.Id}")
+                                .SemiBold().FontSize(12).FontColor(Colors.Blue.Darken2);
+                            r.Item().PaddingTop(4).Text($"Issued: {DateTime.Now:dd MMM yyyy, hh:mm tt}")
+                                .FontSize(10).FontColor(Colors.Grey.Darken1);
                         });
                     });
 
-                    col.Item().PaddingTop(10).Text($"Booking ID: {b.Id}").SemiBold().FontSize(14).FontColor(Colors.Blue.Darken2);
-                    col.Item().PaddingVertical(15).LineHorizontal(1f).LineColor(Colors.Grey.Lighten1);
+                    col.Item().PaddingVertical(10)
+                        .LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
 
-                    // --- Passenger Info ---
-                    col.Item().Text("Passenger Details").SemiBold().FontSize(14).FontColor(Colors.Black);
-                    col.Item().PaddingTop(5).Column(passengerCol =>
-                    {
-                        passengerCol.Item().Row(row =>
+                    // ===== Passenger =====
+                    col.Item().Container()
+                        .Background(Colors.Grey.Lighten5)
+                        .Padding(12)
+                        .Border(0.5f).BorderColor(Colors.Grey.Lighten2)
+                        .Column(p =>
                         {
-                            row.RelativeItem().Text($"Name: {b.CustomerName}").SemiBold();
-                            row.RelativeItem().Text($"Phone: {b.CustomerPhone}").SemiBold();
-                        });
-                        passengerCol.Item().PaddingTop(5).Text($"Gender: {b.Gender}").SemiBold();
-                    });
+                            p.Item().Text("Passenger Details")
+                                .SemiBold().FontSize(13);
 
-                    col.Item().PaddingVertical(15).LineHorizontal(1f).LineColor(Colors.Grey.Lighten1);
-
-                    // --- Journey Info ---
-                    col.Item().Text("Journey Information").SemiBold().FontSize(14);
-                    col.Item().PaddingTop(5).Column(journeyCol =>
-                    {
-                        journeyCol.Item().Row(row =>
-                        {
-                            row.RelativeItem().Text($"Operator: {s.OperatorName}").SemiBold();
-                            row.RelativeItem().Text($"Bus Type: {s.BusType}").SemiBold();
-                        });
-                        journeyCol.Item().Text($"Route: {s.From} → {s.To}").SemiBold();
-                        journeyCol.Item().Row(row =>
-                        {
-                            row.RelativeItem().Text($"Date: {s.JourneyDate:dd MMM yyyy}").SemiBold();
-                            row.RelativeItem().Text($"Time: {s.DepartureTime} - {s.ArrivalTime}").SemiBold();
-                        });
-                    });
-
-                    col.Item().PaddingVertical(15).LineHorizontal(1f).LineColor(Colors.Grey.Lighten1);
-
-                    // --- Payment Breakdown ---
-                    col.Item().Text("Payment Details").SemiBold().FontSize(14);
-                    col.Item().PaddingTop(5).Column(paymentCol =>
-                    {
-                        paymentCol.Item().Row(r =>
-                        {
-                            r.RelativeItem().Text("Ticket Price");
-                            r.AutoItem().Text($"৳{b.TotalFare:0}");
-                        });
-                        paymentCol.Item().Row(r =>
-                        {
-                            r.RelativeItem().Text("Processing Fee");
-                            r.AutoItem().Text($"৳{b.ProcessingFee:0}");
-                        });
-                        if (b.InsuranceFee > 0)
-                        {
-                            paymentCol.Item().Row(r =>
+                            p.Item().PaddingTop(6).Row(r =>
                             {
-                                r.RelativeItem().Text("Insurance");
-                                r.AutoItem().Text($"৳{b.InsuranceFee:0}");
+                                r.RelativeItem().Text(t =>
+                                {
+                                    t.Span("Name: ").SemiBold();
+                                    t.Span(b.CustomerName ?? "-");
+                                });
+
+                                r.RelativeItem().Text(t =>
+                                {
+                                    t.Span("Phone: ").SemiBold();
+                                    t.Span(b.CustomerPhone ?? "-");
+                                });
                             });
-                        }
-                        if (b.Discount > 0)
-                        {
-                            paymentCol.Item().Row(r =>
+
+                            p.Item().PaddingTop(4).Text(t =>
                             {
-                                r.RelativeItem().Text("Discount");
-                                r.AutoItem().Text($"-৳{b.Discount:0}");
+                                t.Span("Email: ").SemiBold();
+                                t.Span(b.CustomerEmail ?? "-");
                             });
-                        }
 
-                        paymentCol.Item().PaddingTop(8).BorderTop(1).Row(r =>
-                        {
-                            r.RelativeItem().Text("Total Paid").SemiBold();
-                            r.AutoItem().Text($"৳{(b.GrandTotal + b.InsuranceFee):0.##}").SemiBold().FontColor(Colors.Green.Darken2);
+                            if (!string.IsNullOrWhiteSpace(b.Gender))
+                            {
+                                p.Item().PaddingTop(4).Text(t =>
+                                {
+                                    t.Span("Gender: ").SemiBold();
+                                    t.Span(b.Gender!);
+                                });
+                            }
                         });
-                    });
 
-                    col.Item().PaddingTop(20).Text("Important Notes").FontSize(10).FontColor(Colors.Grey.Darken1);
-                    col.Item().Text("• Arrive at terminal 30 min before departure.").FontSize(9).FontColor(Colors.Grey.Darken1);
-                    col.Item().Text("• Show this ticket to bus conductor.").FontSize(9).FontColor(Colors.Grey.Darken1);
+                    col.Item().PaddingVertical(10)
+                        .LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+
+                    // ===== Journey =====
+                    col.Item().Container()
+                        .Padding(6)
+                        .Column(j =>
+                        {
+                            j.Item().Text("Journey Information")
+                                .SemiBold().FontSize(13);
+
+                            j.Item().PaddingTop(6).Row(r =>
+                            {
+                                r.RelativeItem().Text(t =>
+                                {
+                                    t.Span("Operator: ").SemiBold();
+                                    t.Span(s.OperatorName ?? "-");
+                                });
+
+                                r.RelativeItem().Text(t =>
+                                {
+                                    t.Span("Bus Type: ").SemiBold();
+                                    t.Span(s.BusType ?? "-");
+                                });
+                            });
+
+                            j.Item().PaddingTop(4).Text(t =>
+                            {
+                                t.Span("Route: ").SemiBold();
+                                t.Span($"{s.From} → {s.To}");
+                            });
+
+                            j.Item().PaddingTop(4).Row(r =>
+                            {
+                                r.RelativeItem().Text(t =>
+                                {
+                                    t.Span("Date: ").SemiBold();
+                                    t.Span($"{s.JourneyDate:dd MMM yyyy}");
+                                });
+
+                                r.RelativeItem().Text(t =>
+                                {
+                                    t.Span("Time: ").SemiBold();
+                                    t.Span($"{s.DepartureTime} - {s.ArrivalTime}");
+                                });
+                            });
+
+                            j.Item().PaddingTop(4).Text(t =>
+                            {
+                                t.Span("Seats: ").SemiBold();
+                                t.Span(seats);
+                            });
+                        });
+
+                    col.Item().PaddingVertical(10)
+                        .LineHorizontal(1).LineColor(Colors.Grey.Lighten1);
+
+                    // ===== Payment (No Insurance in Total) =====
+                    col.Item().Container()
+                        .Background(Colors.Grey.Lighten5)
+                        .Padding(12)
+                        .Border(0.5f).BorderColor(Colors.Grey.Lighten2)
+                        .Column(pay =>
+                        {
+                            pay.Item().Text("Payment Details")
+                                .SemiBold().FontSize(13);
+
+                            pay.Item().PaddingTop(6).Row(r =>
+                            {
+                                r.RelativeItem().Text("Ticket Price");
+                                r.AutoItem().Text($"৳{b.TotalFare:0}");
+                            });
+
+                            pay.Item().Row(r =>
+                            {
+                                r.RelativeItem().Text("Processing Fee");
+                                r.AutoItem().Text($"৳{b.ProcessingFee:0}");
+                            });
+
+                            if (b.Discount > 0)
+                            {
+                                pay.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Text("Discount");
+                                    r.AutoItem().Text($"-৳{b.Discount:0}");
+                                });
+                            }
+
+                            // Total Paid = GrandTotal (as per your requirement)
+                            var totalPaid = b.GrandTotal;
+
+                            pay.Item().PaddingTop(8)
+                               .BorderTop(1).BorderColor(Colors.Grey.Lighten2)
+                               .Row(r =>
+                               {
+                                   r.RelativeItem().Text("Total Paid").SemiBold();
+                                   r.AutoItem().Text($"৳{totalPaid:0.##}")
+                                       .SemiBold().FontColor(Colors.Green.Darken2);
+                               });
+                        });
+
+                    // ===== Notes =====
+                    col.Item().PaddingTop(14).Column(n =>
+                    {
+                        n.Item().Text("Important Notes")
+                            .SemiBold().FontSize(10).FontColor(Colors.Grey.Darken1);
+
+                        n.Item().Text("• Arrive at terminal 30 minutes before departure.")
+                            .FontSize(9).FontColor(Colors.Grey.Darken1);
+
+                        n.Item().Text("• Keep a digital or printed copy of this ticket.")
+                            .FontSize(9).FontColor(Colors.Grey.Darken1);
+
+                        n.Item().Text("• Present this ticket to the bus conductor during boarding.")
+                            .FontSize(9).FontColor(Colors.Grey.Darken1);
+
+                        n.Item().Text("• Tickets are subject to the operator’s cancellation policy.")
+                            .FontSize(9).FontColor(Colors.Grey.Darken1);
+                    });
                 });
 
-                p.Footer().AlignCenter().Text("Thank you for choosing RiadTrip").FontSize(10);
+                page.Footer()
+                    .AlignCenter()
+                    .Text("Thank you for choosing RiadTrip")
+                    .FontSize(10).FontColor(Colors.Grey.Darken1);
             });
         }).GeneratePdf();
 

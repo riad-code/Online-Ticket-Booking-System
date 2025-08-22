@@ -24,9 +24,14 @@
                     <td>@b.CustomerName</td>
                     <td>@b.BusSchedule?.From → @b.BusSchedule?.To</td>
                     <td>@b.BusSchedule?.JourneyDate.ToString("dd MMM yyyy")</td>
-                    <td>৳@(b.GrandTotal + b.InsuranceFee)</td>
-
-                    <td><a class="btn btn-sm btn-outline-success" asp-action="Details" asp-route-id="@b.Id">Review</a></td>
+                    <td>
+                        ৳@(b.GrandTotal + b.InsuranceFee)
+                    </td>
+                    <td>
+                        <a class="btn btn-sm btn-outline-success" asp-action="Details" asp-route-id="@b.Id">
+                            Review
+                        </a>
+                    </td>
                 </tr>
             }
         </tbody>
