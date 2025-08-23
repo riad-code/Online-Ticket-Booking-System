@@ -31,6 +31,7 @@
                 <i class="bi bi-clock-fill"></i>
                 @Model.BusSchedule?.DepartureTime - @Model.BusSchedule?.ArrivalTime
             </p>
+
             <p class="mb-3">
                 <i class="bi bi-layout-sidebar-inset"></i> Seats:
                 <b>@string.Join(", ", Model.Seats.Select(s => s.ScheduleSeat.SeatNo))</b>
@@ -41,7 +42,7 @@
             <h5 class="fw-bold text-secondary mb-3">Payment</h5>
             <p class="mb-1">Fare: ৳@Model.TotalFare</p>
             <p class="mb-1">Processing Fee: ৳@Model.ProcessingFee</p>
-         
+
             <p class="mb-1 text-success fw-bold">
                 Total Payable: ৳@(Model.GrandTotal)
             </p>

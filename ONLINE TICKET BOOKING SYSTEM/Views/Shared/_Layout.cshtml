@@ -4,13 +4,12 @@
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
 @{
-   var currentPath = Context.Request.Path.Value?.ToLower();
-bool hideLayout = currentPath.Contains("/account/login") 
-               || currentPath.Contains("/account/register")
-               || currentPath.Contains("/account/forgotpassword")
-               || currentPath.Contains("/account/verifyotp")
-               || currentPath.Contains("/account/resetpassword");
-
+    var currentPath = Context.Request.Path.Value?.ToLower();
+    bool hideLayout = currentPath.Contains("/account/login")
+                || currentPath.Contains("/account/register")
+                || currentPath.Contains("/account/forgotpassword")
+                || currentPath.Contains("/account/verifyotp")
+                || currentPath.Contains("/account/resetpassword");
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -24,15 +23,12 @@ bool hideLayout = currentPath.Contains("/account/login")
     <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-   
-
 </head>
 <body>
     @if (!hideLayout)
     {
         <header>
             <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-2 fixed-top">
-
                 <div class="container">
                     <a class="navbar-brand d-flex align-items-center" asp-controller="Bus" asp-action="Index" style="height: 100px;">
                         <img src="~/Admin/Images/logo.jpg.png" alt="RiadTrip" style="height: 100px; width: auto;" />
@@ -67,8 +63,6 @@ bool hideLayout = currentPath.Contains("/account/login")
                                 </a>
                             </li>
 
-
-
                             <li class="nav-item me-3">
                                 <a href="#"
                                    class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg @(currentPath.Contains("/launch") ? "active-page" : "")">
@@ -94,7 +88,7 @@ bool hideLayout = currentPath.Contains("/account/login")
                                         BETA
                                     </span>
                                 </a>
-                            </li>                      
+                            </li>
                         </ul>
                         <ul class="navbar-nav align-items-center">
                             <li class="nav-item me-3 ">
@@ -110,7 +104,7 @@ bool hideLayout = currentPath.Contains("/account/login")
             <style>
                 body {
                     font-family: "Libre Franklin", sans-serif;
-                    padding-top: 120px; 
+                    padding-top: 120px;
                 }
 
                 .hover-green-bg {
@@ -129,88 +123,85 @@ bool hideLayout = currentPath.Contains("/account/login")
                     background-color: transparent !important;
                 }
             </style>
-
         </header>
     }
 
     <div class="container-fluid p-0">
-        <main role="main" class="pb-3">
+        <!-- ✅ pb-3 changed to pb-0 to remove white space -->
+        <main role="main" class="pb-0">
             @RenderBody()
         </main>
     </div>
 
     @if (!hideLayout)
     {
-       
-                <footer class="text-white pt-5 pb-3" style="background: #238A71; font-family: 'Libre Franklin', sans-serif;">
-                    <div class="container">
-                        <div class="row">
-                            <!-- Left Branding Column -->
-                            <div class="col-md-4 mb-4">
+        <footer class="text-white pt-5 pb-3"
+                style="background:#238A71; font-family:'Libre Franklin', sans-serif; margin-top:0;">
+            <div class="container">
+                <div class="row">
+                    <!-- Left Branding Column -->
+                    <div class="col-md-4 mb-4">
                         <img src="~/Admin/Images/white-logo.png" alt="RiadTrip Logo" style="height: auto; width:150px;" />
                         <p class="mt-1" style="line-height: 1.7;">
                             <strong>RiadTrip</strong>, proudly owned and operated by RiadTech Limited, is Bangladesh’s smartest and most trusted online ticket booking platform.
                         </p>
+                    </div>
 
-                            </div>
+                    <!-- Quick Links -->
+                    <div class="col-md-2 mb-4">
+                        <h6 class="fw-bold">Quick Links</h6>
+                        <ul class="list-unstyled mt-3">
+                            <li><a href="#" class="text-white text-decoration-none">Home</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">About Us</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Contact Us</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Deals and Offer</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Insurance Claim</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Cancel Ticket</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Bus Reservation</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Blog</a></li>
+                        </ul>
+                    </div>
 
-                            <!-- Quick Links -->
-                            <div class="col-md-2 mb-4">
-                                <h6 class="fw-bold">Quick Links</h6>
-                                <ul class="list-unstyled mt-3">
-                                    <li><a href="#" class="text-white text-decoration-none">Home</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">About Us</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Contact Us</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Deals and Offer</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Insurance Claim</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Cancel Ticket</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Bus Reservation</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Blog</a></li>
-                                </ul>
-                            </div>
+                    <!-- Services -->
+                    <div class="col-md-3 mb-4">
+                        <h6 class="fw-bold">Services</h6>
+                        <ul class="list-unstyled mt-3">
+                            <li><a href="/Bus" class="text-white text-decoration-none">Bus Tickets</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Air Tickets</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Train Tickets</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Launch Tickets</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Event Tickets</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Park Tickets</a></li>
+                        </ul>
+                    </div>
 
-                            <!-- Services -->
-                            <div class="col-md-3 mb-4">
-                                <h6 class="fw-bold">Services</h6>
-                                <ul class="list-unstyled mt-3">
-                                    <li><a href="/Bus" class="text-white text-decoration-none">Bus Tickets</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Air Tickets</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Train Tickets</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Launch Tickets</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Event Tickets</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Park Tickets</a></li>
-                                </ul>
-                            </div>
+                    <!-- Information -->
+                    <div class="col-md-3 mb-4">
+                        <h6 class="fw-bold">Information</h6>
+                        <ul class="list-unstyled mt-3">
+                            <li><a href="#" class="text-white text-decoration-none">Privacy Policy</a></li>
+                            <li><a href="#" class="text-white text-decoration-none">Terms & Conditions</a></li>
+                        </ul>
+                    </div>
+                </div>
 
-                            <!-- Information -->
-                            <div class="col-md-3 mb-4">
-                                <h6 class="fw-bold">Information</h6>
-                                <ul class="list-unstyled mt-3">
-                                    <li><a href="#" class="text-white text-decoration-none">Privacy Policy</a></li>
-                                    <li><a href="#" class="text-white text-decoration-none">Terms & Conditions</a></li>
-                                </ul>
-                            </div>
-                        </div>
-
-                        <!-- Bottom -->
-                        <div class="row  pt-3 mt-3">
-                            <div class="col-md-6">
-                        <p class="mb-0">&copy; 2015 - 2025 RiadTech Ltd. All Rights Reserved.</p>
-                            </div>
-                            <div class="col-md-6 text-md-end">
+                <!-- Bottom -->
+                <div class="row  pt-3 mt-3">
+                    <div class="col-md-6">
+                        <p class="mb-0">&copy; 2025 RiadTech Ltd. All Rights Reserved.</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
                         <a href="https://www.facebook.com/ahriadahmmed" class="text-white me-3"><i class="fab fa-facebook-f"></i></a>
                         <a href="https://www.instagram.com/riiddsss21" class="text-white me-3"><i class="fab fa-instagram"></i></a>
                         <a href="https://www.linkedin.com/in/abrar-hanif-riad" class="text-white"><i class="fab fa-linkedin-in"></i></a>
-                            </div>
-                        </div>
                     </div>
-                </footer>
+                </div>
+            </div>
+        </footer>
 
-                <!-- Required CDN -->
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-                <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
-
-  
+        <!-- Required CDN -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     }
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -220,4 +211,3 @@ bool hideLayout = currentPath.Contains("/account/login")
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
-

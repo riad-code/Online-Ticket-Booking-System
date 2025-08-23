@@ -2,38 +2,163 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Manage Tickets";
+    var pendingCount = Model?.Count() ?? 0;
 }
+
 <div class="container py-4">
-    <h4 class="mb-3">Pending Approvals</h4>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Passenger</th>
-                <th>Route</th>
-                <th>Date</th>
-                <th>Total</th>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var b in Model)
-            {
-                <tr>
-                    <td>@b.Id</td>
-                    <td>@b.CustomerName</td>
-                    <td>@b.BusSchedule?.From → @b.BusSchedule?.To</td>
-                    <td>@b.BusSchedule?.JourneyDate.ToString("dd MMM yyyy")</td>
-                    <td>
-                        ৳@(b.GrandTotal + b.InsuranceFee)
-                    </td>
-                    <td>
-                        <a class="btn btn-sm btn-outline-success" asp-action="Details" asp-route-id="@b.Id">
-                            Review
-                        </a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+
+    <!-- Header + Page length selector -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h4 class="mb-0">
+            Pending Approvals
+            <span class="badge bg-success-subtle text-success border border-success ms-2">@pendingCount</span>
+        </h4>
+
+        <div class="d-flex align-items-center gap-2">
+            <label for="pageLength" class="form-label mb-0 small text-muted">Show rows</label>
+            <select id="pageLength" class="form-select form-select-sm" style="width: 120px;">
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="ticketsTable">
+                    <thead class="table-light sticky-top">
+                        <tr class="text-muted">
+                            <th style="width: 80px;">ID</th>
+                            <th>Passenger</th>
+                            <th>Route</th>
+                            <th style="width: 160px;">Date</th>
+                            <th style="width: 140px;">Total</th>
+                            <th style="width: 110px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var b in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">#@b.Id</td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span>@b.CustomerName</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-success-subtle text-success border border-success fw-normal">
+                                        @b.BusSchedule?.From → @b.BusSchedule?.To
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span>@b.BusSchedule?.JourneyDate.ToString("dd MMM yyyy")</span>
+                                    </div>
+                                </td>
+                                <td class="fw-semibold">
+                                    ৳@(b.GrandTotal + b.InsuranceFee)
+                                </td>
+                                <td class="text-end">
+                                    <a class="btn btn-sm btn-outline-success" asp-action="Details" asp-route-id="@b.Id">
+                                        <i class="bi bi-eye me-1"></i> Review
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table footer: results + pager -->
+            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top bg-light small">
+                <div>
+                    Showing <span id="shownCount">0</span> of <span id="totalCount">@pendingCount</span> tickets
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-outline-secondary" id="btnPrev" disabled>
+                        <i class="bi bi-chevron-left"></i> Prev
+                    </button>
+                    <span id="pageInfo" class="text-muted">Page 1 / 1</span>
+                    <button class="btn btn-sm btn-outline-secondary" id="btnNext" disabled>
+                        Next <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        (() => {
+            const tbl = document.getElementById('ticketsTable');
+            const rows = Array.from(tbl.querySelectorAll('tbody tr'));
+            const totalCountEl = document.getElementById('totalCount');
+            const shownCountEl = document.getElementById('shownCount');
+            const pageLengthSel = document.getElementById('pageLength');
+            const btnPrev = document.getElementById('btnPrev');
+            const btnNext = document.getElementById('btnNext');
+            const pageInfo = document.getElementById('pageInfo');
+
+            totalCountEl.textContent = rows.length;
+
+            let pageSize = parseInt(pageLengthSel.value, 10) || 10;
+            let page = 1;
+
+            function totalPages() {
+                return Math.max(1, Math.ceil(rows.length / pageSize));
+            }
+
+            function renderPage() {
+                const tp = totalPages();
+                if (page > tp) page = tp;
+                if (page < 1) page = 1;
+
+                const start = (page - 1) * pageSize;
+                const end = start + pageSize;
+
+                let shown = 0;
+                rows.forEach((tr, idx) => {
+                    const visible = idx >= start && idx < end;
+                    tr.style.display = visible ? '' : 'none';
+                    if (visible) shown++;
+                });
+
+                shownCountEl.textContent = shown;
+                pageInfo.textContent = `Page ${page} / ${tp}`;
+                btnPrev.disabled = (page <= 1);
+                btnNext.disabled = (page >= tp);
+            }
+
+            pageLengthSel.addEventListener('change', () => {
+                pageSize = parseInt(pageLengthSel.value, 10) || 10;
+                page = 1;
+                renderPage();
+            });
+
+            btnPrev.addEventListener('click', () => {
+                page--; renderPage();
+            });
+            btnNext.addEventListener('click', () => {
+                page++; renderPage();
+            });
+
+            // initial
+            renderPage();
+        })();
+    </script>
+    <style>
+        .badge.bg-success-subtle {
+            background-color: rgba(25,135,84,.08) !important;
+        }
+
+        .sticky-top th {
+            z-index: 1;
+        }
+    </style>
+}
