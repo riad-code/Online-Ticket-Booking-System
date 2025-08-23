@@ -22,9 +22,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         }
 
         public async Task<IActionResult> Index()
-            => View(await _ctx.Bookings.Include(b => b.BusSchedule)
-                .Where(b => b.Status == BookingStatus.PendingApproval)
-                .OrderByDescending(b => b.Id).ToListAsync());
+     => View(await _ctx.Bookings
+         .Include(b => b.BusSchedule)
+         .Where(b => b.Status == BookingStatus.PendingApproval
+                  || b.Status == BookingStatus.CancelRequested)   // ← include cancel requests
+         .OrderByDescending(b => b.Id)
+         .ToListAsync());
+
 
         public async Task<IActionResult> Details(int id)
         {
@@ -78,6 +82,94 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             TempData["ok"] = "Approved & ticket emailed.";
             return RedirectToAction(nameof(Details), new { id });
         }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveCancellation(int id,
+    [FromServices] ONLINE_TICKET_BOOKING_SYSTEM.Data.ApplicationDbContext db,
+    [FromServices] Microsoft.AspNetCore.Identity.UI.Services.IEmailSender emailSender,
+    [FromServices] Microsoft.Extensions.Options.IOptions<ONLINE_TICKET_BOOKING_SYSTEM.Services.EmailSettings> opts)
+        {
+            var b = await db.Bookings
+                .Include(x => x.BusSchedule)
+                .Include(x => x.Seats).ThenInclude(s => s.ScheduleSeat)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (b == null)
+            {
+                TempData["err"] = "Booking not found.";
+                return RedirectToAction("Index");
+            }
+
+            // Finalize cancel: change status and free seats
+            b.Status = ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.Cancelled;
+
+            foreach (var bs in b.Seats)
+            {
+                var seat = bs?.ScheduleSeat;
+                if (seat == null) continue;
+
+                var piBooked = seat.GetType().GetProperty("IsBooked");
+                if (piBooked != null && piBooked.PropertyType == typeof(bool) && piBooked.CanWrite)
+                    piBooked.SetValue(seat, false);
+                else
+                {
+                    var piAvail = seat.GetType().GetProperty("IsAvailable");
+                    if (piAvail != null && piAvail.PropertyType == typeof(bool) && piAvail.CanWrite)
+                        piAvail.SetValue(seat, true);
+                }
+            }
+
+            await db.SaveChangesAsync();
+
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(b.CustomerEmail))
+                    await emailSender.SendEmailAsync(b.CustomerEmail,
+                        $"Cancellation approved for PNR #{b.Id}",
+                        "Your booking has been cancelled. If a refund applies, it will be processed as per policy.");
+
+                var adminEmail = opts.Value.AdminEmail;
+                if (!string.IsNullOrWhiteSpace(adminEmail))
+                    await emailSender.SendEmailAsync(adminEmail,
+                        $"[Approved] Cancellation PNR #{b.Id}",
+                        "The cancellation request has been approved.");
+            }
+            catch { }
+
+            TempData["ok"] = "Cancellation approved.";
+            return RedirectToAction("Details", new { id = b.Id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectCancellation(int id,
+            [FromServices] ONLINE_TICKET_BOOKING_SYSTEM.Data.ApplicationDbContext db,
+            [FromServices] Microsoft.AspNetCore.Identity.UI.Services.IEmailSender emailSender)
+        {
+            var b = await db.Bookings.FirstOrDefaultAsync(x => x.Id == id);
+            if (b == null)
+            {
+                TempData["err"] = "Booking not found.";
+                return RedirectToAction("Index");
+            }
+
+            // Send back to a normal approved/confirmed state (pick the right status for your app)
+            b.Status = ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.Approved;
+            await db.SaveChangesAsync();
+
+            try
+            {
+                if (!string.IsNullOrWhiteSpace(b.CustomerEmail))
+                    await emailSender.SendEmailAsync(b.CustomerEmail,
+                        $"Cancellation rejected for PNR #{b.Id}",
+                        "Your cancellation request was rejected. Please contact support if you have questions.");
+            }
+            catch { }
+
+            TempData["ok"] = "Cancellation request rejected.";
+            return RedirectToAction("Details", new { id = b.Id });
+        }
+
 
     }
 }

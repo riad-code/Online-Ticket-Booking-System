@@ -1,8 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using Microsoft.AspNetCore.Identity.UI.Services; // IEmailSender
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Identity.UI.Services; // IEmailSender
 using ONLINE_TICKET_BOOKING_SYSTEM.Services;
+using System.Threading.Tasks;
+
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 {
@@ -96,11 +98,74 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult CancelTicket(string pnr, string phoneOrEmail, string reason)
+        public async Task<IActionResult> CancelTicket(
+     string pnr,
+     string phoneOrEmail,
+     string? reason,
+     [FromServices] ONLINE_TICKET_BOOKING_SYSTEM.Data.ApplicationDbContext db,
+     [FromServices] Microsoft.AspNetCore.Identity.UI.Services.IEmailSender emailSender,
+     [FromServices] Microsoft.Extensions.Options.IOptions<ONLINE_TICKET_BOOKING_SYSTEM.Services.EmailSettings> opts)
         {
-            // TODO: Validate PNR and trigger cancellation workflow if desired
-            TempData["ok"] = "Cancellation request submitted. Please check your email/SMS for confirmation.";
+            if (string.IsNullOrWhiteSpace(pnr) || string.IsNullOrWhiteSpace(phoneOrEmail))
+            {
+                TempData["err"] = "Please provide PNR and phone/email.";
+                return RedirectToAction(nameof(CancelTicket));
+            }
+
+            if (!int.TryParse(pnr.Trim(), out var bookingId))
+            {
+                TempData["err"] = "Invalid PNR / Booking ID.";
+                return RedirectToAction(nameof(CancelTicket));
+            }
+
+            var booking = await db.Bookings
+                .Include(b => b.BusSchedule)
+                .Include(b => b.Seats).ThenInclude(s => s.ScheduleSeat)
+                .FirstOrDefaultAsync(b => b.Id == bookingId);
+
+            if (booking == null)
+            {
+                TempData["err"] = "Booking not found.";
+                return RedirectToAction(nameof(CancelTicket));
+            }
+
+            var key = phoneOrEmail.Trim().ToLowerInvariant();
+            var phoneMatch = (booking.CustomerPhone ?? "").Trim().ToLowerInvariant() == key;
+            var emailMatch = (booking.CustomerEmail ?? "").Trim().ToLowerInvariant() == key;
+            if (!phoneMatch && !emailMatch)
+            {
+                TempData["err"] = "Phone/Email does not match this booking.";
+                return RedirectToAction(nameof(CancelTicket));
+            }
+
+            // Mark as requested (DO NOT cancel yet)
+            booking.Status = ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.CancelRequested;
+
+            // If you have these properties they will be set; if not, this is safely ignored.
+            var piReason = booking.GetType().GetProperty("CancelReason");
+            if (piReason != null && piReason.CanWrite) piReason.SetValue(booking, reason);
+            var piUpdated = booking.GetType().GetProperty("UpdatedAt");
+            if (piUpdated != null && piUpdated.CanWrite) piUpdated.SetValue(booking, DateTime.UtcNow);
+
+            await db.SaveChangesAsync();
+
+            // Notify admin
+            try
+            {
+                var adminEmail = opts.Value.AdminEmail;
+                if (!string.IsNullOrWhiteSpace(adminEmail))
+                {
+                    var subjectAdmin = $"[Cancel Request] PNR #{booking.Id}";
+                    var bodyAdmin = $"A customer requested cancellation for PNR #{booking.Id}.<br/>Reason: {System.Net.WebUtility.HtmlEncode(reason)}";
+                    await emailSender.SendEmailAsync(adminEmail, subjectAdmin, bodyAdmin);
+                }
+            }
+            catch { /* ignore mail errors */ }
+
+            TempData["ok"] = "Your cancel request has been submitted. We will notify you after admin review.";
             return RedirectToAction(nameof(CancelTicket));
         }
+
+
     }
 }

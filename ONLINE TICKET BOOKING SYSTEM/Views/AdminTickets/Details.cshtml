@@ -74,6 +74,28 @@
                     </a>
                 }
 
+                <!-- 🔹 NEW: show when customer requested cancellation -->
+                @if (Model.Status == ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.CancelRequested)
+                {
+                    <div>
+                        <form asp-action="ApproveCancellation" asp-controller="AdminTickets" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button class="btn btn-danger">
+                                <i class="bi bi-x-circle-fill"></i> Approve Cancellation
+                            </button>
+                        </form>
+
+                        <form asp-action="RejectCancellation" asp-controller="AdminTickets" method="post" class="d-inline ms-2">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@Model.Id" />
+                            <button class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-counterclockwise"></i> Reject Request
+                            </button>
+                        </form>
+                    </div>
+                }
+
                 <!-- 🔙 Back button -->
                 <a asp-action="Index" asp-controller="AdminTickets" class="btn btn-secondary">
                     <i class="bi bi-arrow-left-circle"></i> Back to Bookings

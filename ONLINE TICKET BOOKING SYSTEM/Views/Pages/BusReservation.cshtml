@@ -1,5 +1,57 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+﻿@{
+    ViewData["Title"] = "Bus Reservation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<div class="container py-5">
+    <div class="d-flex justify-content-between flex-wrap align-items-center mb-4">
+        <h1 class="fw-bold mb-2" style="color:#198754;">Group / Corporate Reservation</h1>
+        <a asp-controller="Bus" asp-action="Index" class="btn btn-success">Search Buses</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="p-4 bg-light rounded-3 h-100">
+                <form class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Company / Group Name</label>
+                        <input type="text" class="form-control" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Passengers</label>
+                        <input type="number" class="form-control" min="1" value="20" required />
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Journey Date</label>
+                        <input type="date" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">From</label>
+                        <input type="text" class="form-control" required />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">To</label>
+                        <input type="text" class="form-control" required />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Notes (optional)</label>
+                        <textarea class="form-control" rows="4"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button class="btn btn-success px-4">Request Quote</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="p-4 border rounded-3 h-100">
+                <h5 class="fw-semibold">Why book with RiadTrip?</h5>
+                <ul class="mb-0 text-muted">
+                    <li>Verified operators & modern coaches</li>
+                    <li>Flexible payment & invoicing</li>
+                    <li>Dedicated account manager</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
