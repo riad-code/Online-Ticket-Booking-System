@@ -16,6 +16,9 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
         public DbSet<ScheduleSeat> ScheduleSeats { get; set; } = default!;
         public DbSet<Booking> Bookings { get; set; } = default!;
         public DbSet<BookingSeat> BookingSeats { get; set; } = default!;
+        public DbSet<ONLINE_TICKET_BOOKING_SYSTEM.Models.ContactMessage> ContactMessages { get; set; }
+
+
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

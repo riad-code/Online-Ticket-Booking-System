@@ -6,6 +6,7 @@
         public int SMTPPort { get; set; }
         public string SenderEmail { get; set; }
         public string SenderPassword { get; set; }
+        public string AdminEmail { get; set; } = "";
     }
 }
 

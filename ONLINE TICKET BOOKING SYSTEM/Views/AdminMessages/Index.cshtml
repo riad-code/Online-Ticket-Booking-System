@@ -1,0 +1,91 @@
+﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.ContactMessage>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Messages";
+    var q = ViewBag.q as string;
+
+    // Safe cast for ViewBag.take
+    int take = 20;
+    if (ViewBag.take != null)
+    {
+        try { take = Convert.ToInt32(ViewBag.take); } catch { take = 20; }
+    }
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Contact Messages</h4>
+
+        <form method="get" class="d-flex gap-2">
+            <input type="text" name="q" value="@q" class="form-control" placeholder="Search name / email / message" style="max-width:300px;" />
+            <select id="pageLength" class="form-select form-select-sm" style="width: 120px;">
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            <button class="btn btn-success">Apply</button>
+        </form>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead class="table-success">
+                    <tr>
+                        <th>ID</th>
+                        <th>When</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Preview</th>
+                        <th>Status</th>
+                        <th style="width:160px;"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null)
+                    {
+                        foreach (var m in Model)
+                        {
+                            <tr>
+                                <td>@m.Id</td>
+                                <td>@m.SentAt.ToLocalTime().ToString("dd MMM yyyy, hh:mm tt")</td>
+                                <td>@m.Name</td>
+                                <td>@m.Email</td>
+                                <td>
+                                    @{
+                                        var msg = m.Message ?? string.Empty;
+                                        var preview = msg.Length > 60 ? msg.Substring(0, 60) + "…" : msg;
+                                    }
+                                    @preview
+                                </td>
+                                <td>
+                                    @if (m.IsRead)
+                                    {
+                                        <span class="badge bg-secondary">Read</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">New</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <a asp-action="Details" asp-route-id="@m.Id" class="btn btn-sm btn-outline-success">Open</a>
+                                    <form asp-action="Delete" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@m.Id" />
+                                        <button class="btn btn-sm btn-outline-danger" onclick="return confirm('Delete this message?');">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    @if (Model == null || !Model.Any())
+                    {
+                        <tr><td colspan="7" class="text-center py-4 text-muted">No messages found.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

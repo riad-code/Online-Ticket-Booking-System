@@ -211,7 +211,14 @@
             <a asp-controller="Admin" asp-action="SendEmail"
                class="nav-link @(IsController("Admin") && currentAction.StartsWith("SendEmail") ? "active" : "")">
                 <i class="nav-icon fas fa-envelope"></i>
-                <p>Send Notifications</p>
+                <p>Send Messages</p>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a asp-controller="AdminMessages" asp-action="Index"
+               class="nav-link @(IsController("AdminMessages") && currentAction.StartsWith("Index") ? "active" : "")">
+                <i class="nav-icon fas fa-inbox"></i>
+                <p> Get Messages</p>
             </a>
         </li>
 
