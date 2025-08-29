@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 
@@ -11,9 +12,11 @@ using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250825185035_Air_IntegratedDbContext")]
+    partial class Air_IntegratedDbContext
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -281,10 +284,12 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("AmountDue")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
 
                     b.Property<decimal>("AmountPaid")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
 
                     b.Property<int>("Children")
                         .HasColumnType("int");
@@ -332,6 +337,10 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AllianceCode")
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
+
                     b.Property<string>("IataCode")
                         .IsRequired()
                         .HasMaxLength(2)
@@ -339,8 +348,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
 
                     b.HasKey("Id");
 
@@ -360,13 +369,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 
                     b.Property<string>("City")
                         .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Country")
                         .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("nvarchar(80)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("IataCode")
                         .IsRequired()
@@ -375,8 +384,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("nvarchar(120)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
 
@@ -395,18 +404,20 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Baggage")
-                        .HasMaxLength(40)
-                        .HasColumnType("nvarchar(40)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("BaseFare")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
 
                     b.Property<int>("Cabin")
                         .HasColumnType("int");
 
                     b.Property<string>("Currency")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(3)
+                        .HasColumnType("nvarchar(3)");
 
                     b.Property<int>("FlightScheduleId")
                         .HasColumnType("int");
@@ -423,11 +434,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("TaxesAndFees")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("FlightScheduleId");
+                    b.HasIndex("FlightScheduleId", "Rbd")
+                        .IsUnique();
 
                     b.ToTable("FareClasses");
                 });
@@ -453,8 +466,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Equipment")
-                        .HasMaxLength(12)
-                        .HasColumnType("nvarchar(12)");
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("FlightNumber")
                         .IsRequired()
@@ -489,29 +502,11 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("Cabin")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ChosenRbd")
-                        .HasMaxLength(2)
-                        .HasColumnType("nvarchar(2)");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("nvarchar(3)");
-
                     b.Property<int>("FlightScheduleId")
                         .HasColumnType("int");
 
                     b.Property<int>("ItineraryId")
                         .HasColumnType("int");
-
-                    b.Property<decimal>("PaxBase")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("PaxTax")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateOnly>("TravelDate")
                         .HasColumnType("date");
@@ -545,13 +540,16 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<decimal>("GrandTotal")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
 
                     b.Property<decimal>("TotalBase")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
 
                     b.Property<decimal>("TotalTax")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(12, 2)
+                        .HasColumnType("decimal(12,2)");
 
                     b.HasKey("Id");
 
@@ -574,8 +572,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Gender")
                         .HasMaxLength(10)
@@ -583,8 +580,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("nvarchar(60)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PassportNo")
                         .HasMaxLength(20)
@@ -1031,7 +1027,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data.Migrations
                     b.HasOne("ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.FlightSchedule", "FlightSchedule")
                         .WithMany()
                         .HasForeignKey("FlightScheduleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.Itinerary", "Itinerary")

@@ -80,11 +80,15 @@
     var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
     var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
 
-    bool IsController(params string[] controllers) => controllers.Contains(currentController);
+    bool IsController(params string[] controllers) =>
+        controllers.Any(c => string.Equals(c, currentController, StringComparison.OrdinalIgnoreCase));
 
     bool IsControllerActionStartsWith(string controller, string actionPrefix) =>
-        currentController == controller && currentAction.StartsWith(actionPrefix, StringComparison.OrdinalIgnoreCase);
+        string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
+        && currentAction?.StartsWith(actionPrefix, StringComparison.OrdinalIgnoreCase) == true;
+    bool isAirSectionActive = IsController("Airlines", "Airports", "FareClasses", "FlightSchedules");
 }
+
 
 <nav class="mt-2">
     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
@@ -123,6 +127,7 @@
                 <p>Manage Bus Schedules</p>
             </a>
         </li>
+       
 
         <!-- Manage Vehicles Dropdown -->
         @{
@@ -146,13 +151,42 @@
                         <p>Manage Bus</p>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a asp-controller="Air" asp-action="Index"
-                       class="nav-link @(IsController("Air") ? "active" : "")">
+                <li class="nav-item has-treeview @(isAirSectionActive ? "menu-open" : "")">
+                    <a href="#" class="nav-link @(isAirSectionActive ? "active" : "")">
                         <i class="fas fa-plane nav-icon text-black"></i>
-                        <p>Manage Air</p>
+                        <p>
+                            Manage Air
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
                     </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item">
+                            <a asp-controller="Airlines" asp-action="Index"
+                               class="nav-link @(IsController("Airlines") ? "active" : "")">
+                                <p>Airlines</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="Airports" asp-action="Index"
+                               class="nav-link @(IsController("Airports") ? "active" : "")">
+                                <p>Airports</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="FareClasses" asp-action="Index"
+                               class="nav-link @(IsController("FareClasses") ? "active" : "")">
+                                <p>Fare Classes</p>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a asp-controller="FlightSchedules" asp-action="Index"
+                               class="nav-link @(IsController("FlightSchedules") ? "active" : "")">
+                                <p>Flight Schedules</p>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
+
                 <li class="nav-item">
                     <a asp-controller="Train" asp-action="Index"
                        class="nav-link @(IsController("Train") ? "active" : "")">
@@ -160,13 +194,7 @@
                         <p>Manage Train</p>
                     </a>
                 </li>
-                <li class="nav-item">
-                    <a asp-controller="Launch" asp-action="Index"
-                       class="nav-link @(IsController("Launch") ? "active" : "")">
-                        <i class="fas fa-ship nav-icon text-black"></i>
-                        <p>Manage Launch</p>
-                    </a>
-                </li>
+              
             </ul>
         </li>
 

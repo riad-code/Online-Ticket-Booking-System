@@ -1,0 +1,70 @@
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.AirPassengersFormVm
+@{
+    ViewData["Title"] = "Passengers";
+    Layout = "_Layout";
+}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
+
+<div class="container my-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="mb-1">Enter Passenger Details</h4>
+            <div class="text-muted">PNR: <strong>@Model.Pnr</strong> • @Model.From → @Model.To • @Model.TravelDate • @Model.Flight</div>
+            <hr />
+
+            <form asp-action="Passengers" method="post">
+                <input type="hidden" asp-for="Pnr" />
+                <div id="paxRows">
+                    @for (int i = 0; i < Model.Passengers.Count; i++)
+                    {
+                        <div class="border rounded p-3 mb-3">
+                            <h6 class="fw-bold mb-3">Passenger @(i + 1) (@Model.Passengers[i].Type)</h6>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label">First Name</label>
+                                    <input asp-for="Passengers[i].FirstName" class="form-control" required />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Last Name</label>
+                                    <input asp-for="Passengers[i].LastName" class="form-control" required />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Date of Birth</label>
+                                    <input asp-for="Passengers[i].Dob" class="form-control dob" placeholder="yyyy-MM-dd" required />
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label">Gender</label>
+                                    <select asp-for="Passengers[i].Gender" class="form-select">
+                                        <option>Male</option>
+                                        <option>Female</option>
+                                        <option>Other</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label">Passport No (optional)</label>
+                                    <input asp-for="Passengers[i].PassportNo" class="form-control" />
+                                </div>
+                                <input type="hidden" asp-for="Passengers[i].Type" />
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="fw-bold">
+                        Total Due: <span class="text-success">@Model.Currency @Model.AmountDue</span>
+                    </div>
+                    <button type="submit" class="btn btn-success">Continue to Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script>
+        $(function(){ $('.dob').datepicker({ dateFormat:"yy-mm-dd", changeMonth:true, changeYear:true, yearRange:"-100:+0" }); });
+    </script>
+}

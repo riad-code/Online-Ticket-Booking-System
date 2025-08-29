@@ -1,0 +1,38 @@
+﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.Airport>
+@{
+    ViewData["Title"] = "Airports";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<h3 class="mb-3">Airports</h3>
+<p><a class="btn btn-success" href="/Airports/Create">Create</a></p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>IATA</th>
+            <th>Name</th>
+            <th>City</th>
+            <th>Country</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var a in Model)
+        {
+            <tr>
+                <td>@a.IataCode</td>
+                <td>@a.Name</td>
+                <td>@a.City</td>
+                <td>@a.Country</td>
+                <td>
+                    <a class="btn btn-sm btn-primary" href="/Airports/Edit/@a.Id">Edit</a>
+                    <a class="btn btn-sm btn-danger" href="/Airports/Delete/@a.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

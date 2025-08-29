@@ -1,0 +1,54 @@
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBooking
+@{
+    ViewData["Title"] = "Review & Pay";
+    Layout = "_Layout";
+}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="container my-4">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h4 class="mb-1">Review & Pay</h4>
+            <div class="text-muted">PNR: <strong>@Model.Pnr</strong> • Created: @Model.CreatedAtUtc.ToLocalTime()</div>
+            <hr />
+            @{
+                var seg = Model.Itinerary.Segments.First().FlightSchedule;
+                var travelDate = Model.Itinerary.Segments.First().TravelDate.ToString("yyyy-MM-dd");
+            }
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="border rounded p-3 mb-3">
+                        <h6 class="fw-bold">Flight</h6>
+                        <div>@seg.Airline.Name (@seg.Airline.IataCode) — @seg.FlightNumber</div>
+                        <div>@seg.FromAirport.IataCode → @seg.ToAirport.IataCode • @travelDate</div>
+                        <div>Dep @seg.DepTimeLocal | Arr @seg.ArrTimeLocal</div>
+                    </div>
+
+                    <div class="border rounded p-3 mb-3">
+                        <h6 class="fw-bold">Passengers</h6>
+                        <ul class="mb-0">
+                            @foreach (var p in Model.Passengers)
+                            {
+                                <li>@p.FirstName @p.LastName (@p.Type)</li>
+                            }
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="border rounded p-3">
+                        <h6 class="fw-bold">Payment Summary</h6>
+                        <div class="d-flex justify-content-between"><span>Amount Due</span><span>@Model.Currency @Model.AmountDue</span></div>
+                        <div class="d-flex justify-content-between"><span>Paid</span><span>@Model.Currency @Model.AmountPaid</span></div>
+                        <hr />
+                        <form asp-controller="Payment" asp-action="AirPayment" method="post">
+                            <input type="hidden" name="pnr" value="@Model.Pnr" />
+                            <button type="submit" class="btn btn-success w-100">Pay & Confirm</button>
+                        </form>
+
+                        <div class="small text-muted mt-2">Demo: click to mark paid & download ticket.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

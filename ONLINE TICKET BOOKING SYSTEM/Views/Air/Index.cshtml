@@ -1,0 +1,180 @@
+﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.Airport>
+@{
+    ViewData["Title"] = "Air Tickets";
+    Layout = "_Layout";
+}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
+<style>
+    :root {
+        --brand: #1faa00;
+        --brand6: #148a00;
+        --brand50: #e7f6e8;
+    }
+
+    .air-hero {
+        position: relative;
+        background: url('/wwwroot/Admin/images/air-hero.jpg') center/cover no-repeat;
+        height: 420px
+    }
+
+    .air-hero {
+        position: relative;
+    }
+
+        .air-hero:after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,.35);
+            z-index: 1; /* put the overlay UNDER the card */
+            pointer-events: none; /* overlay never catches clicks */
+        }
+
+    .air-card {
+        position: absolute;
+        left: 50%;
+        bottom: 24px;
+        transform: translateX(-50%);
+        width: min(1100px,92%);
+        background: #fff;
+        border-radius: 22px;
+        box-shadow: 0 10px 30px rgba(0,0,0,.15);
+        padding: 18px 18px 22px;
+        border: 1px solid #eef2ff;
+        z-index: 2; /* ensure the card is above the overlay */
+    }
+
+
+    .toggle {
+        display: flex;
+        gap: 18px;
+        margin-bottom: 10px
+    }
+
+        .toggle label {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 999px;
+            padding: 6px 14px;
+            font-weight: 600;
+            cursor: pointer
+        }
+
+        .toggle input {
+            display: none
+        }
+
+        .toggle .active {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 3px var(--brand50);
+            color: var(--brand6)
+        }
+
+    .btn-success {
+        background: var(--brand);
+        border-color: var(--brand)
+    }
+
+        .btn-success:hover {
+            background: var(--brand6)
+        }
+
+    .form-label {
+        font-weight: 600
+    }
+</style>
+
+<div class="air-hero">
+    <div class="air-card">
+        <div class="toggle">
+            <label class="active"><input type="radio" name="tripType" value="oneway" checked /> One Way</label>
+            <label><input type="radio" name="tripType" value="roundway" /> Round Way</label>
+            <label><input type="radio" name="tripType" value="multicity" /> Multi City</label>
+        </div>
+
+        <form id="airSearchForm" class="row g-3 align-items-end" method="get" action="/Air/Results">
+            <div class="col-lg-3">
+                <label class="form-label text-muted">Flying From</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt-fill text-success"></i></span>
+                    <input id="fromInput" name="from" class="form-control border-start-0" placeholder="Dhaka (DAC)" autocomplete="off" required />
+                </div>
+            </div>
+            <div class="col-lg-1 d-flex justify-content-center align-items-center">
+                <button class="btn btn-outline-success" type="button" id="swapBtn"><i class="bi bi-arrow-left-right"></i></button>
+            </div>
+            <div class="col-lg-3">
+                <label class="form-label text-muted">Flying To</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt-fill text-success"></i></span>
+                    <input id="toInput" name="to" class="form-control border-start-0" placeholder="Cox's Bazar (CXB)" autocomplete="off" required />
+                </div>
+            </div>
+            <div class="col-lg-2">
+                <label class="form-label text-muted">Journey Date</label>
+                <input id="journeyDate" name="journeyDate" class="form-control" readonly required />
+                <div class="small mt-1"><a href="#" id="addReturn" class="text-success fw-semibold">+ ADD RETURN TRIP</a></div>
+            </div>
+            <div class="col-lg-2" id="returnCol" style="display:none;">
+                <label class="form-label text-muted">Return Date</label>
+                <input id="returnDate" name="returnDate" class="form-control" readonly />
+            </div>
+            <div class="col-lg-1 d-flex align-items-end">
+                <button class="btn btn-success btn-lg w-100" type="submit">SEARCH</button>
+            </div>
+
+            <div class="col-12 d-flex gap-2">
+                <select name="travellers" id="travellers" class="form-select w-auto">
+                    @for (int i = 1; i <= 9; i++)
+                    {
+                        <option value="@i">@i Traveler(s)</option>
+                    }
+                </select>
+                <select name="cabin" id="cabin" class="form-select w-auto">
+                    <option>Economy</option>
+                    <option>Business</option>
+                </select>
+                <input type="hidden" id="tripTypeField" name="tripType" value="oneway" />
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(function(){
+          $("#journeyDate").datepicker({ dateFormat:"yy-mm-dd", minDate:0,
+            onSelect:function(d){ $("#returnDate").datepicker("option","minDate", new Date(d)); }});
+          $("#returnDate").datepicker({ dateFormat:"yy-mm-dd", minDate:0 });
+
+          const ac = { source:(req,res)=>$.getJSON('/Air/AirportSuggestions',{term:req.term},res), minLength:1 };
+          $("#fromInput").autocomplete(ac); $("#toInput").autocomplete(ac);
+
+          $(".toggle label").on("click", function(){
+            $(".toggle label").removeClass("active"); $(this).addClass("active");
+            const val = $(this).find("input").val(); $("#tripTypeField").val(val);
+            $("#returnCol").toggle(val==="roundway"); $("#addReturn").toggle(val!=="roundway");
+          });
+          $("#addReturn").on("click", e=>{ e.preventDefault(); $(".toggle label").eq(1).click(); });
+
+          $("#swapBtn").on("click", function(){ const a=$("#fromInput").val(); $("#fromInput").val($("#toInput").val()); $("#toInput").val(a); });
+
+          $("#airSearchForm").on("submit", function(e){
+            e.preventDefault();
+            const from=$("#fromInput").val().trim(), to=$("#toInput").val().trim(), jd=$("#journeyDate").val();
+            const trip=$("#tripTypeField").val(), rd=$("#returnDate").val();
+            if(!from||!to||!jd){ Swal.fire('Error','Fill From, To & Journey Date','error'); return; }
+            if(trip==="roundway" && !rd){ Swal.fire('Return date','Please pick return date','warning'); return; }
+            Swal.fire({title:'Searching...',text:'Fetching flights...',icon:'info',allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
+            setTimeout(()=>{
+              const p=new URLSearchParams({from,to,journeyDate:jd,tripType:trip,travellers:$("#travellers").val(),cabin:$("#cabin").val()});
+              if(trip==="roundway") p.set('returnDate', rd);
+              window.location='/Air/Results?'+p.toString();
+            },900);
+          });
+        });
+    </script>
+}

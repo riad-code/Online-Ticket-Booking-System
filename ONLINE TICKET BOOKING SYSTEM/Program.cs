@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
+using ONLINE_TICKET_BOOKING_SYSTEM.Models;
 using ONLINE_TICKET_BOOKING_SYSTEM.Services;
 using QuestPDF.Infrastructure;
 
@@ -43,14 +44,27 @@ builder.Services.AddSession(options =>
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailSender, EmailSender>();
 
-// ---- App Services ----
+// ---- Core App Services ----
 builder.Services.AddScoped<ITicketPdfService, TicketPdfService>();
-builder.Services.AddScoped<SSLCommerzPaymentService>();   // ⬅️ register the payment service
+builder.Services.AddScoped<SSLCommerzPaymentService>();
+
+// ---- Air Services ----
+builder.Services.AddSingleton<IPnrService, PnrService>();          // PNR generator
+builder.Services.AddScoped<IPricingService, PricingService>();     // Pricing logic
+builder.Services.AddScoped<IAirBookingService, AirBookingService>(); // Booking workflow
 
 var app = builder.Build();
 
 // ---- Seed roles & admin user ----
 await SeedRolesAndAdminAsync(app);
+
+// ---- Seed Air tables ----
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();   // apply latest migrations
+    await ONLINE_TICKET_BOOKING_SYSTEM.Data.Seed.AirSeed.EnsureAirSeedAsync(db);
+}
 
 // ---- Pipeline ----
 if (app.Environment.IsDevelopment())
@@ -59,7 +73,7 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseExceptionHandler("/Home/Error"); // make sure Views/Shared/Error.cshtml exists
+    app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
 
