@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ONLINE_TICKET_BOOKING_SYSTEM.Models;
-using ONLINE_TICKET_BOOKING_SYSTEM.Models.Air;   
+using ONLINE_TICKET_BOOKING_SYSTEM.Models.Air;
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
 {
@@ -10,7 +10,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options) { }
 
-        // ========= Bus existing DbSets (already have) =========
+        // ===== Bus (existing) =====
         public DbSet<Bus> Buses { get; set; } = default!;
         public DbSet<BusSchedule> BusSchedules { get; set; } = default!;
         public DbSet<SeatLayout> SeatLayouts { get; set; } = default!;
@@ -19,7 +19,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
         public DbSet<BookingSeat> BookingSeats { get; set; } = default!;
         public DbSet<ONLINE_TICKET_BOOKING_SYSTEM.Models.ContactMessage> ContactMessages { get; set; } = default!;
 
-        // ========= ✅ Air DbSets (ADD THESE) =========
+        // ===== Air =====
         public DbSet<Airport> Airports { get; set; } = default!;
         public DbSet<Airline> Airlines { get; set; } = default!;
         public DbSet<FlightSchedule> FlightSchedules { get; set; } = default!;
@@ -33,16 +33,22 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
         {
             base.OnModelCreating(builder);
 
-            // --- ApplicationUser default ---
+            // --- ApplicationUser defaults ---
             builder.Entity<ApplicationUser>()
                    .Property(u => u.RegisteredAtUtc)
                    .HasDefaultValueSql("SYSUTCDATETIME()");
 
-            // --- Decimal precision (bus) ---
+            // --- Bus money precision ---
             builder.Entity<Bus>().Property(b => b.Fare).HasPrecision(10, 2);
             builder.Entity<BusSchedule>().Property(s => s.Fare).HasPrecision(10, 2);
             builder.Entity<Booking>().Property(b => b.TotalFare).HasPrecision(12, 2);
             builder.Entity<BookingSeat>().Property(bs => bs.Fare).HasPrecision(10, 2);
+
+            // Often missed:
+            builder.Entity<Booking>().Property(b => b.Discount).HasPrecision(12, 2);
+            builder.Entity<Booking>().Property(b => b.GrandTotal).HasPrecision(12, 2);
+            builder.Entity<Booking>().Property(b => b.InsuranceFee).HasPrecision(12, 2);
+            builder.Entity<Booking>().Property(b => b.ProcessingFee).HasPrecision(12, 2);
 
             // --- Bus relations ---
             builder.Entity<BusSchedule>()
@@ -81,13 +87,14 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
                 .HasForeignKey(bs => bs.BookingId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            // VERY IMPORTANT: Restrict here to avoid multiple cascade paths
             builder.Entity<BookingSeat>()
                 .HasOne(bs => bs.ScheduleSeat)
                 .WithMany()
                 .HasForeignKey(bs => bs.ScheduleSeatId)
                 .OnDelete(DeleteBehavior.Restrict);
-
-            // ========= ✅ Air relations =========
+               
+            // ===== Air constraints =====
             builder.Entity<Airport>().HasIndex(a => a.IataCode).IsUnique();
             builder.Entity<Airline>().HasIndex(a => a.IataCode).IsUnique();
 
@@ -110,6 +117,17 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
                 .HasOne(f => f.FlightSchedule).WithMany()
                 .HasForeignKey(f => f.FlightScheduleId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Money precision (Air)
+            builder.Entity<FareClass>().Property(x => x.BaseFare).HasPrecision(12, 2);
+            builder.Entity<FareClass>().Property(x => x.TaxesAndFees).HasPrecision(12, 2);
+            builder.Entity<Itinerary>().Property(x => x.TotalBase).HasPrecision(12, 2);
+            builder.Entity<Itinerary>().Property(x => x.TotalTax).HasPrecision(12, 2);
+            builder.Entity<Itinerary>().Property(x => x.GrandTotal).HasPrecision(12, 2);
+            builder.Entity<FlightSegment>().Property(x => x.PaxBase).HasPrecision(12, 2);
+            builder.Entity<FlightSegment>().Property(x => x.PaxTax).HasPrecision(12, 2);
+            builder.Entity<AirBooking>().Property(x => x.AmountDue).HasPrecision(12, 2);
+            builder.Entity<AirBooking>().Property(x => x.AmountPaid).HasPrecision(12, 2);
 
             builder.Entity<Itinerary>().Property(x => x.Currency).HasMaxLength(3);
             builder.Entity<FlightSegment>().Property(x => x.Currency).HasMaxLength(3);

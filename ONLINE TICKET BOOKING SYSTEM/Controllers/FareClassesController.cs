@@ -13,12 +13,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         private readonly ApplicationDbContext _db;
         public FareClassesController(ApplicationDbContext db) => _db = db;
 
+        private static bool IsAjax(Microsoft.AspNetCore.Http.IHeaderDictionary headers) =>
+            headers.TryGetValue("X-Requested-With", out var v) && v == "XMLHttpRequest";
+
         private void LoadDropdowns()
         {
             var flights = _db.FlightSchedules
-                .Include(f => f.Airline)
-                .Include(f => f.FromAirport)
-                .Include(f => f.ToAirport)
+                .Include(f => f.Airline).Include(f => f.FromAirport).Include(f => f.ToAirport)
                 .AsNoTracking()
                 .OrderBy(f => f.Airline.Name).ThenBy(f => f.FlightNumber)
                 .Select(f => new
@@ -60,11 +61,15 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         {
             if (!ModelState.IsValid)
             {
+                if (IsAjax(Request.Headers)) return BadRequest(new { ok = false, errors = ModelState });
                 LoadDropdowns();
                 return View(model);
             }
+
             _db.FareClasses.Add(model);
             await _db.SaveChangesAsync();
+
+            if (IsAjax(Request.Headers)) return Json(new { ok = true, redirect = Url.Action(nameof(Index)) });
             return RedirectToAction(nameof(Index));
         }
 
@@ -73,7 +78,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         {
             var item = await _db.FareClasses.FindAsync(id);
             if (item == null) return NotFound();
-
             LoadDropdowns();
             return View(item);
         }
@@ -83,14 +87,18 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         public async Task<IActionResult> Edit(int id, FareClass model)
         {
             if (id != model.Id) return NotFound();
+
             if (!ModelState.IsValid)
             {
+                if (IsAjax(Request.Headers)) return BadRequest(new { ok = false, errors = ModelState });
                 LoadDropdowns();
                 return View(model);
             }
 
             _db.FareClasses.Update(model);
             await _db.SaveChangesAsync();
+
+            if (IsAjax(Request.Headers)) return Json(new { ok = true, redirect = Url.Action(nameof(Index)) });
             return RedirectToAction(nameof(Index));
         }
 
@@ -116,6 +124,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             _db.FareClasses.Remove(item);
             await _db.SaveChangesAsync();
+
+            if (IsAjax(Request.Headers)) return Json(new { ok = true, redirect = Url.Action(nameof(Index)) });
             return RedirectToAction(nameof(Index));
         }
     }

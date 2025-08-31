@@ -1,9 +1,7 @@
 ﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.FareClass>
 @{
-    ViewData["Title"] = "Fare Classes";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Fare Classes"; Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
 <h3 class="mb-3">Fare Classes</h3>
 <p><a class="btn btn-success" href="/FareClasses/Create">Create</a></p>
 
@@ -33,7 +31,7 @@
                 <td>@f.TaxesAndFees</td>
                 <td>@f.Currency</td>
                 <td>@(f.Refundable ? "Yes" : "No")</td>
-                <td>
+                <td class="text-end">
                     <a class="btn btn-sm btn-primary" href="/FareClasses/Edit/@f.Id">Edit</a>
                     <a class="btn btn-sm btn-danger" href="/FareClasses/Delete/@f.Id">Delete</a>
                 </td>

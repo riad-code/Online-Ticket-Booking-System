@@ -15,7 +15,9 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
         private void LoadDropdowns()
         {
-            ViewBag.AirlineId = new SelectList(_db.Airlines.AsNoTracking().OrderBy(x => x.Name).ToList(), "Id", "Name");
+            ViewBag.AirlineId = new SelectList(
+                _db.Airlines.AsNoTracking().OrderBy(x => x.Name).ToList(), "Id", "Name");
+
             var airports = _db.Airports.AsNoTracking().OrderBy(x => x.City).ToList();
             ViewBag.FromAirportId = new SelectList(airports, "Id", "City");
             ViewBag.ToAirportId = new SelectList(airports, "Id", "City");
@@ -31,7 +33,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 .AsNoTracking()
                 .OrderBy(f => f.Airline.Name).ThenBy(f => f.FlightNumber)
                 .ToListAsync();
-
             return View(list);
         }
 
@@ -48,12 +49,15 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         {
             if (!ModelState.IsValid)
             {
+                if (IsAjax()) return BadRequest(new { ok = false, errors = ModelState });
                 LoadDropdowns();
                 return View(model);
             }
 
             _db.FlightSchedules.Add(model);
             await _db.SaveChangesAsync();
+
+            if (IsAjax()) return Json(new { ok = true, redirect = Url.Action(nameof(Index)) });
             return RedirectToAction(nameof(Index));
         }
 
@@ -62,7 +66,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         {
             var item = await _db.FlightSchedules.FindAsync(id);
             if (item == null) return NotFound();
-
             LoadDropdowns();
             return View(item);
         }
@@ -72,14 +75,18 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         public async Task<IActionResult> Edit(int id, FlightSchedule model)
         {
             if (id != model.Id) return NotFound();
+
             if (!ModelState.IsValid)
             {
+                if (IsAjax()) return BadRequest(new { ok = false, errors = ModelState });
                 LoadDropdowns();
                 return View(model);
             }
 
             _db.FlightSchedules.Update(model);
             await _db.SaveChangesAsync();
+
+            if (IsAjax()) return Json(new { ok = true, redirect = Url.Action(nameof(Index)) });
             return RedirectToAction(nameof(Index));
         }
 
@@ -91,7 +98,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 .Include(f => f.FromAirport)
                 .Include(f => f.ToAirport)
                 .FirstOrDefaultAsync(f => f.Id == id);
-
             if (item == null) return NotFound();
             return View(item);
         }
@@ -105,7 +111,12 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             _db.FlightSchedules.Remove(item);
             await _db.SaveChangesAsync();
+
+            if (IsAjax()) return Json(new { ok = true, redirect = Url.Action(nameof(Index)) });
             return RedirectToAction(nameof(Index));
         }
+
+        private bool IsAjax() =>
+            Request.Headers.TryGetValue("X-Requested-With", out var v) && v == "XMLHttpRequest";
     }
 }

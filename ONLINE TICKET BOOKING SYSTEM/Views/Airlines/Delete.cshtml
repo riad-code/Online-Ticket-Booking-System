@@ -4,42 +4,26 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <h3>Delete Airline</h3>
-<div class="alert alert-warning mb-3">
-    Are you sure you want to delete <strong>@Model.Name</strong> (@Model.IataCode)?
+<div class="alert alert-warning">
+    Are you sure you want to delete
+    <strong>@Model.Name (@Model.IataCode)</strong>?
 </div>
 
-<form id="form" method="post" action="/Airlines/DeleteConfirmed/@Model.Id">
+<form asp-action="Delete" asp-route-id="@Model.Id" method="post">
     @Html.AntiForgeryToken()
-    <button class="btn btn-danger" type="submit">Delete</button>
-    <a class="btn btn-secondary" href="/Airlines/Index">Cancel</a>
-</form>
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
 
-<script>
-    $("#form").on("submit", function (e) {
-        e.preventDefault();
-        const $f = $(this);
-        Swal.fire({
-            icon: "warning",
-            title: "Confirm delete?",
-            showCancelButton: true,
-            confirmButtonText: "Delete"
-        }).then(res => {
-            if (!res.isConfirmed) return;
-            Swal.fire({ title: "Deleting...", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            $.ajax({
-                url: $f.attr("action"),
-                method: "POST",
-                data: $f.serialize()
-            }).done(() => {
-                Swal.fire({ icon: "success", title: "Deleted" })
-                    .then(() => window.location = "/Airlines/Index");
-            }).fail((xhr) => {
-                Swal.fire({ icon: "error", title: "Failed", text: xhr.responseText || "Error" });
-            });
-        });
-    });
-</script>
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="text-danger mt-3">
+            @foreach (var err in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <div>@err.ErrorMessage</div>
+            }
+        </div>
+    }
+</form>

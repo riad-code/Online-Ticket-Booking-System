@@ -1,1 +1,290 @@
-﻿
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.AirSearchResultViewModel
+@using Newtonsoft.Json
+
+@{
+    ViewData["Title"] = "Air Search Results";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+
+<style>
+    body { background: #f6f9f8; }
+    .search-header { background:#fff; border-radius:12px; padding:18px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin:18px 0; }
+    .filter-box, .flight-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:16px; }
+    .tag { border:1px solid #198754; color:#198754; border-radius:8px; padding:2px 8px; font-size:.8rem; display:inline-block; margin-right:6px; }
+    .airline-pill { background:#e7f6e8; color:#146c43; border-radius:999px; padding:2px 10px; font-weight:600; }
+    .price { font-size:1.1rem; font-weight:700; color:#198754; }
+    .muted { color:#6c757d; }
+    .small-muted { font-size:.85rem; color:#6c757d; }
+    .step-line { font-size:13px; color:#777; }
+    .btn-green { background-color:#00b34b; color:#fff; font-weight:600; border:0; }
+    .btn-green:hover { background:#00903a; }
+    .result-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .sort-btns .btn { margin-left:.4rem; }
+</style>
+
+<div class="container-fluid mt-3">
+    <!-- Header / Summary -->
+    <div class="search-header">
+        <div class="result-head">
+            <div>
+                <h4 class="mb-1">
+                    @Model.From <i class="fa fa-arrow-right text-success mx-2"></i> @Model.To
+                </h4>
+                <div class="small-muted">
+                    Depart: @Model.JourneyDate.ToString("ddd, dd MMM yyyy")
+                    @if (Model.ReturnDate.HasValue)
+                    {
+                        <text> • Return: @Model.ReturnDate.Value.ToString("ddd, dd MMM yyyy")</text>
+                    }
+                    • @Model.TripType • Cabin: @Model.Cabin • Pax: @Model.Travellers
+                </div>
+            </div>
+            <div>
+                <a class="btn btn-outline-secondary btn-sm" href="/Air/Index">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>New Search
+                </a>
+            </div>
+        </div>
+        <div class="step-line alert bg-success text-white fw-bold py-2 my-2">
+            Choose Flight <i class="fa fa-chevron-right mx-1"></i>
+            Passenger Details <i class="fa fa-chevron-right mx-1"></i>
+            Review & Pay
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Filters -->
+        <div class="col-lg-3">
+            <div class="filter-box">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0"><strong>Filters</strong></h6>
+                    <button class="btn btn-outline-success btn-sm" id="resetFilters">RESET</button>
+                </div>
+                <hr />
+
+                <div class="mb-3">
+                    <strong class="text-warning">AIRLINE</strong>
+                    <div id="airlineFilters" class="mt-2">
+                        @if (Model.AllAirlines?.Any() == true)
+                        {
+                            foreach (var a in Model.AllAirlines.OrderBy(x => x))
+                            {
+                                <div class="form-check">
+                                    <input class="form-check-input airline-cb" type="checkbox" value="@a" id="cb_@a.GetHashCode()" />
+                                    <label class="form-check-label" for="cb_@a.GetHashCode()">@a</label>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="small-muted">No airlines loaded</div>
+                        }
+                    </div>
+                </div>
+
+              
+
+                <div class="mb-3">
+                    <strong class="text-warning">DEPARTURE TIME</strong>
+                    <div class="form-check mt-2"><input class="form-check-input dep-range" type="checkbox" value="Early" id="depEarly" /><label class="form-check-label" for="depEarly">🌄 Before 06:00</label></div>
+                    <div class="form-check"><input class="form-check-input dep-range" type="checkbox" value="Morning" id="depMorning" /><label class="form-check-label" for="depMorning">☀️ 06:00–12:00</label></div>
+                    <div class="form-check"><input class="form-check-input dep-range" type="checkbox" value="Afternoon" id="depAfternoon" /><label class="form-check-label" for="depAfternoon">🌤️ 12:00–18:00</label></div>
+                    <div class="form-check"><input class="form-check-input dep-range" type="checkbox" value="Evening" id="depEvening" /><label class="form-check-label" for="depEvening">🌙 18:00–24:00</label></div>
+                </div>
+
+                <div class="mb-3">
+                    <strong class="text-warning">ARRIVAL TIME</strong>
+                    <div class="form-check mt-2"><input class="form-check-input arr-range" type="checkbox" value="Early" id="arrEarly" /><label class="form-check-label" for="arrEarly">🌄 Before 06:00</label></div>
+                    <div class="form-check"><input class="form-check-input arr-range" type="checkbox" value="Morning" id="arrMorning" /><label class="form-check-label" for="arrMorning">☀️ 06:00–12:00</label></div>
+                    <div class="form-check"><input class="form-check-input arr-range" type="checkbox" value="Afternoon" id="arrAfternoon" /><label class="form-check-label" for="arrAfternoon">🌤️ 12:00–18:00</label></div>
+                    <div class="form-check"><input class="form-check-input arr-range" type="checkbox" value="Evening" id="arrEvening" /><label class="form-check-label" for="arrEvening">🌙 18:00–24:00</label></div>
+                </div>
+
+                <div class="mb-3">
+                    <strong class="text-warning">SORT</strong>
+                    <select id="sortSelect" class="form-select mt-2">
+                        <option value="depAsc">Departure (Earliest)</option>
+                        <option value="priceAsc">Price (Low → High)</option>
+                        <option value="priceDesc">Price (High → Low)</option>
+                        <option value="durAsc">Duration (Shortest)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results -->
+        <div class="col-lg-9">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h5 class="mb-0">Outbound</h5>
+                <span class="small-muted" id="outboundCount"></span>
+            </div>
+            <div id="outboundContainer"></div>
+
+            @if (Model.ReturnDate.HasValue)
+            {
+                <hr class="my-4" />
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <h5 class="mb-0">Return</h5>
+                    <span class="small-muted" id="returnCount"></span>
+                </div>
+                <div id="returnContainer"></div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- ✅ JSON payloads -->
+<script type="application/json" id="outboundJson">
+    @Html.Raw(JsonConvert.SerializeObject(Model.AvailableFlights ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.FlightCardVm>()))
+</script>
+<script type="application/json" id="returnJson">
+    @Html.Raw(JsonConvert.SerializeObject(Model.ReturnFlights ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.FlightCardVm>()))
+</script>
+
+@section Scripts {
+<script>
+(function(){
+    const parseJSON = (id) => { try { return JSON.parse(document.getElementById(id).textContent); } catch { return []; } };
+    const outboundAll = parseJSON('outboundJson');
+    const returnAll = parseJSON('returnJson');
+
+    const airlineCbs = () => Array.from(document.querySelectorAll('.airline-cb:checked')).map(cb=>cb.value);
+    const cabinVal = () => document.getElementById('cabinSelect').value || '';
+    const depRanges = () => Array.from(document.querySelectorAll('.dep-range:checked')).map(cb=>cb.value);
+    const arrRanges = () => Array.from(document.querySelectorAll('.arr-range:checked')).map(cb=>cb.value);
+    const sortVal = () => document.getElementById('sortSelect').value;
+
+    const timeToMins = (hhmm) => {
+        if(!hhmm) return 0;
+        const [h,m] = String(hhmm).split(':').map(Number);
+        return (h*60 + (isNaN(m)?0:m)) % 1440;
+    };
+    const inWindow = (minutes, win) => {
+        if(win==='Early') return minutes < 360;             // 00:00–05:59
+        if(win==='Morning') return minutes >= 360 && minutes < 720;    // 06:00–11:59
+        if(win==='Afternoon') return minutes >= 720 && minutes < 1080; // 12:00–17:59
+        if(win==='Evening') return minutes >= 1080 && minutes < 1440;  // 18:00–23:59
+        return true;
+    };
+    const durToMins = (dur) => {
+        // "Xh Ym"
+        if(!dur) return 0;
+        const mH = /(\d+)\s*h/.exec(dur);
+        const mM = /(\d+)\s*m/.exec(dur);
+        const H = mH ? parseInt(mH[1],10) : 0;
+        const M = mM ? parseInt(mM[1],10) : 0;
+        return H*60 + M;
+    };
+
+    function applyFiltersOne(list){
+        const selectedAirlines = airlineCbs();
+        const selectedCabin = cabinVal();
+        const depWins = depRanges();
+        const arrWins = arrRanges();
+
+        return list.filter(f => {
+            if(selectedAirlines.length && !selectedAirlines.includes(f.AirlineName)) return false;
+            if(selectedCabin && String(f.Cabin) !== selectedCabin) return false;
+
+            const depM = timeToMins(f.DepTime);
+            const arrM = timeToMins(f.ArrTime);
+            if(depWins.length && !depWins.some(w => inWindow(depM, w))) return false;
+            if(arrWins.length && !arrWins.some(w => inWindow(arrM, w))) return false;
+
+            return true;
+        });
+    }
+
+    function sortList(list){
+        switch(sortVal()){
+            case 'priceAsc': return list.slice().sort((a,b)=>(a.Price??0)-(b.Price??0));
+            case 'priceDesc': return list.slice().sort((a,b)=>(b.Price??0)-(a.Price??0));
+            case 'durAsc': return list.slice().sort((a,b)=>durToMins(a.Duration)-durToMins(b.Duration));
+            case 'depAsc':
+            default: return list.slice().sort((a,b)=>timeToMins(a.DepTime)-timeToMins(b.DepTime));
+        }
+    }
+
+    function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+
+    function cardHtml(f){
+        // No booking endpoint yet — keep a disabled button placeholder
+        const priceText = `${esc(f.Currency||'BDT')} ${Number(f.Price||0).toFixed(2)}`;
+        return `
+        <div class="flight-card d-flex justify-content-between align-items-start flex-wrap">
+            <div class="me-3">
+                <div class="mb-1">
+                    <span class="airline-pill">${esc(f.AirlineName)} (${esc(f.AirlineCode)})</span>
+                    <span class="tag ms-2">${esc(f.FlightNumber)}</span>
+                    <span class="tag">${esc(f.Cabin||'')}</span>
+                    <span class="tag">${esc(f.SeatsAvailable)} seats</span>
+                </div>
+                <div class="small-muted mb-1">${esc(f.From)} <i class="fa fa-arrow-right text-success mx-1"></i> ${esc(f.To)}</div>
+                <div class="d-flex align-items-center">
+                    <div class="me-4 text-center">
+                        <div class="fw-semibold">${esc(f.DepTime)}</div>
+                        <div class="small-muted">Depart</div>
+                    </div>
+                    <div class="text-center mx-2">
+                        <i class="fa fa-plane text-success"></i><br/>
+                        <small class="small-muted">${esc(f.Duration)}</small>
+                    </div>
+                    <div class="ms-4 text-center">
+                        <div class="fw-semibold">${esc(f.ArrTime)}</div>
+                        <div class="small-muted">Arrive</div>
+                    </div>
+                </div>
+                <div class="small-muted mt-1">Travel Date: ${esc(f.TravelDate)}</div>
+            </div>
+            <div class="text-end">
+                <div class="price mb-2">${priceText}</div>
+                <button class="btn btn-green btn-sm" disabled title="Hook up booking endpoint to enable">
+                    SELECT
+                </button>
+            </div>
+        </div>`;
+    }
+
+    function render(list, containerSel, countSel){
+        const el = document.querySelector(containerSel);
+        const cnt = document.querySelector(countSel);
+        el.innerHTML = '';
+        const filtered = applyFiltersOne(list);
+        const sorted = sortList(filtered);
+
+        cnt.textContent = `${sorted.length} result(s)`;
+        if(sorted.length === 0){
+            el.innerHTML = `<div class="alert alert-warning">No flights match the selected filters.</div>`;
+            return;
+        }
+        sorted.forEach(f => el.insertAdjacentHTML('beforeend', cardHtml(f)));
+    }
+
+    function applyAll(){
+        render(outboundAll, '#outboundContainer', '#outboundCount');
+        if (document.getElementById('returnContainer')) {
+            render(returnAll, '#returnContainer', '#returnCount');
+        }
+    }
+
+    document.getElementById('resetFilters').addEventListener('click', function(){
+        document.querySelectorAll('.airline-cb').forEach(cb => cb.checked = false);
+        document.querySelectorAll('.dep-range, .arr-range').forEach(cb => cb.checked = false);
+        document.getElementById('cabinSelect').selectedIndex = 0;
+        document.getElementById('sortSelect').selectedIndex = 0;
+        applyAll();
+    });
+
+    document.querySelectorAll('.airline-cb, .dep-range, .arr-range').forEach(cb => cb.addEventListener('change', applyAll));
+    document.getElementById('cabinSelect').addEventListener('change', applyAll);
+    document.getElementById('sortSelect').addEventListener('change', applyAll);
+
+    // Initial paint
+    applyAll();
+})();
+</script>
+}

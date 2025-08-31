@@ -15,7 +15,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var list = await _db.Airlines.AsNoTracking().OrderBy(a => a.Name).ToListAsync();
+            var list = await _db.Airlines.AsNoTracking()
+                .OrderBy(a => a.Name).ToListAsync();
             return View(list);
         }
 
@@ -46,6 +47,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         {
             if (id != model.Id) return NotFound();
             if (!ModelState.IsValid) return View(model);
+
             _db.Airlines.Update(model);
             await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -54,20 +56,34 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         [HttpGet]
         public async Task<IActionResult> Delete(int id)
         {
-            var item = await _db.Airlines.FindAsync(id);
+            var item = await _db.Airlines
+                .AsNoTracking()
+                .FirstOrDefaultAsync(a => a.Id == id);
             if (item == null) return NotFound();
             return View(item);
         }
 
+        // Keep the route name "Delete" so your form can post to asp-action="Delete"
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var item = await _db.Airlines.FindAsync(id);
             if (item == null) return NotFound();
-            _db.Airlines.Remove(item);
-            await _db.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            try
+            {
+                _db.Airlines.Remove(item);
+                await _db.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            catch (DbUpdateException)
+            {
+                // Likely FK constraint (e.g., FlightSchedules or FareClasses referencing this Airline)
+                ModelState.AddModelError(string.Empty,
+                    "Cannot delete this airline because related records exist. Remove those first.");
+                return View("Delete", item);
+            }
         }
     }
 }
