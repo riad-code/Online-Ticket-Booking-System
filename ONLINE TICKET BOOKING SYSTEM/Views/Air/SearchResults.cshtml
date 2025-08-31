@@ -11,9 +11,9 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
 <style>
-    body { background: #f6f9f8; }
+    body { background:#f6f9f8; }
     .search-header { background:#fff; border-radius:12px; padding:18px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin:18px 0; }
-    .filter-box, .flight-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:16px; }
+    .filter-box,.flight-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:16px; }
     .tag { border:1px solid #198754; color:#198754; border-radius:8px; padding:2px 8px; font-size:.8rem; display:inline-block; margin-right:6px; }
     .airline-pill { background:#e7f6e8; color:#146c43; border-radius:999px; padding:2px 10px; font-weight:600; }
     .price { font-size:1.1rem; font-weight:700; color:#198754; }
@@ -24,6 +24,9 @@
     .btn-green:hover { background:#00903a; }
     .result-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
     .sort-btns .btn { margin-left:.4rem; }
+
+    /* pills look */
+    .btn-pill { border-radius:999px !important; padding:.25rem .9rem; }
 </style>
 
 <div class="container-fluid mt-3">
@@ -37,9 +40,7 @@
                 <div class="small-muted">
                     Depart: @Model.JourneyDate.ToString("ddd, dd MMM yyyy")
                     @if (Model.ReturnDate.HasValue)
-                    {
-                        <text> • Return: @Model.ReturnDate.Value.ToString("ddd, dd MMM yyyy")</text>
-                    }
+                    { <text> • Return: @Model.ReturnDate.Value.ToString("ddd, dd MMM yyyy")</text> }
                     • @Model.TripType • Cabin: @Model.Cabin • Pax: @Model.Travellers
                 </div>
             </div>
@@ -80,13 +81,25 @@
                             }
                         }
                         else
-                        {
-                            <div class="small-muted">No airlines loaded</div>
-                        }
+                        { <div class="small-muted">No airlines loaded</div> }
                     </div>
                 </div>
 
-              
+                <!-- CABIN (null-safe preselect) -->
+                @{
+                    var cabinRaw = (Model?.Cabin ?? "").Trim();
+                    bool isEconomy = new[] { "economy","y","0","e" }.Contains(cabinRaw, StringComparer.OrdinalIgnoreCase);
+                    bool isBusiness = new[] { "business","j","2","b" }.Contains(cabinRaw, StringComparer.OrdinalIgnoreCase);
+                }
+                <div class="mb-3">
+                    <strong class="text-warning">CABIN</strong>
+                    <select id="cabinSelect" class="form-select mt-2">
+                        <option value="">Any</option>
+                        <option value="Economy" selected="@(isEconomy)">Economy</option>
+                        <option value="Business" selected="@(isBusiness)">Business</option>
+
+                    </select>
+                </div>
 
                 <div class="mb-3">
                     <strong class="text-warning">DEPARTURE TIME</strong>
@@ -118,6 +131,15 @@
 
         <!-- Results -->
         <div class="col-lg-9">
+            <!-- sort pills like the screenshot -->
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-success btn-sm btn-pill" id="pillLowHigh">LOW TO HIGH</button>
+                    <button type="button" class="btn btn-outline-success btn-sm btn-pill" id="pillHighLow">HIGH TO LOW</button>
+                </div>
+                <div class="small-muted"><i class="bi bi-stopwatch"></i> Session will expire soon.</div>
+            </div>
+
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <h5 class="mb-0">Outbound</h5>
                 <span class="small-muted" id="outboundCount"></span>
@@ -137,12 +159,12 @@
     </div>
 </div>
 
-<!-- ✅ JSON payloads -->
+<!-- Data payloads -->
 <script type="application/json" id="outboundJson">
-    @Html.Raw(JsonConvert.SerializeObject(Model.AvailableFlights ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.FlightCardVm>()))
+@Html.Raw(JsonConvert.SerializeObject(Model.AvailableFlights ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.FlightCardVm>()))
 </script>
 <script type="application/json" id="returnJson">
-    @Html.Raw(JsonConvert.SerializeObject(Model.ReturnFlights ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.FlightCardVm>()))
+@Html.Raw(JsonConvert.SerializeObject(Model.ReturnFlights ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.FlightCardVm>()))
 </script>
 
 @section Scripts {
@@ -153,10 +175,10 @@
     const returnAll = parseJSON('returnJson');
 
     const airlineCbs = () => Array.from(document.querySelectorAll('.airline-cb:checked')).map(cb=>cb.value);
-    const cabinVal = () => document.getElementById('cabinSelect').value || '';
-    const depRanges = () => Array.from(document.querySelectorAll('.dep-range:checked')).map(cb=>cb.value);
-    const arrRanges = () => Array.from(document.querySelectorAll('.arr-range:checked')).map(cb=>cb.value);
-    const sortVal = () => document.getElementById('sortSelect').value;
+    const cabinVal   = () => (document.getElementById('cabinSelect')?.value || '');
+    const depRanges  = () => Array.from(document.querySelectorAll('.dep-range:checked')).map(cb=>cb.value);
+    const arrRanges  = () => Array.from(document.querySelectorAll('.arr-range:checked')).map(cb=>cb.value);
+    const sortVal    = () => document.getElementById('sortSelect').value;
 
     const timeToMins = (hhmm) => {
         if(!hhmm) return 0;
@@ -164,14 +186,13 @@
         return (h*60 + (isNaN(m)?0:m)) % 1440;
     };
     const inWindow = (minutes, win) => {
-        if(win==='Early') return minutes < 360;             // 00:00–05:59
-        if(win==='Morning') return minutes >= 360 && minutes < 720;    // 06:00–11:59
-        if(win==='Afternoon') return minutes >= 720 && minutes < 1080; // 12:00–17:59
-        if(win==='Evening') return minutes >= 1080 && minutes < 1440;  // 18:00–23:59
+        if(win==='Early') return minutes < 360;
+        if(win==='Morning') return minutes >= 360 && minutes < 720;
+        if(win==='Afternoon') return minutes >= 720 && minutes < 1080;
+        if(win==='Evening') return minutes >= 1080 && minutes < 1440;
         return true;
     };
     const durToMins = (dur) => {
-        // "Xh Ym"
         if(!dur) return 0;
         const mH = /(\d+)\s*h/.exec(dur);
         const mM = /(\d+)\s*m/.exec(dur);
@@ -203,16 +224,15 @@
         switch(sortVal()){
             case 'priceAsc': return list.slice().sort((a,b)=>(a.Price??0)-(b.Price??0));
             case 'priceDesc': return list.slice().sort((a,b)=>(b.Price??0)-(a.Price??0));
-            case 'durAsc': return list.slice().sort((a,b)=>durToMins(a.Duration)-durToMins(b.Duration));
+            case 'durAsc':   return list.slice().sort((a,b)=>durToMins(a.Duration)-durToMins(b.Duration));
             case 'depAsc':
-            default: return list.slice().sort((a,b)=>timeToMins(a.DepTime)-timeToMins(b.DepTime));
+            default:         return list.slice().sort((a,b)=>timeToMins(a.DepTime)-timeToMins(b.DepTime));
         }
     }
 
     function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
 
     function cardHtml(f){
-        // No booking endpoint yet — keep a disabled button placeholder
         const priceText = `${esc(f.Currency||'BDT')} ${Number(f.Price||0).toFixed(2)}`;
         return `
         <div class="flight-card d-flex justify-content-between align-items-start flex-wrap">
@@ -243,7 +263,7 @@
             <div class="text-end">
                 <div class="price mb-2">${priceText}</div>
                 <button class="btn btn-green btn-sm" disabled title="Hook up booking endpoint to enable">
-                    SELECT
+                    Booking
                 </button>
             </div>
         </div>`;
@@ -282,6 +302,14 @@
     document.querySelectorAll('.airline-cb, .dep-range, .arr-range').forEach(cb => cb.addEventListener('change', applyAll));
     document.getElementById('cabinSelect').addEventListener('change', applyAll);
     document.getElementById('sortSelect').addEventListener('change', applyAll);
+
+    // pills -> existing sorter
+    document.getElementById('pillLowHigh')?.addEventListener('click', ()=>{
+        const s=document.getElementById('sortSelect'); if(!s) return; s.value='priceAsc'; s.dispatchEvent(new Event('change'));
+    });
+    document.getElementById('pillHighLow')?.addEventListener('click', ()=>{
+        const s=document.getElementById('sortSelect'); if(!s) return; s.value='priceDesc'; s.dispatchEvent(new Event('change'));
+    });
 
     // Initial paint
     applyAll();

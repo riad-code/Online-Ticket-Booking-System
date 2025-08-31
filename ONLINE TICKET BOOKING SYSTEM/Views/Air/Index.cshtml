@@ -100,6 +100,16 @@
         .btn-success:hover {
             background-color: #157347;
         }
+   
+    .air-card .search-btn {
+        white-space: nowrap;
+        font-size: 1rem; 
+        padding: .55rem .75rem; 
+    }
+
+    .destinations-gap {
+        margin-bottom: 48px; 
+    }
 
     .reset-btn {
         background-color: #fff;
@@ -188,16 +198,79 @@
             color: #555;
         }
 
-    /* ✅ Razor safe */
-    @@keyframes slide-logos {
-        from {
-            transform: translateX(0);
+
+    /* Package cards */
+    .pkg {
+        position: relative;
+        border-radius: 18px;
+        overflow: hidden
+    }
+
+    .pkg-img {
+        height: 200px;
+        object-fit: cover
+    }
+
+    .badge-flag {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: #198754;
+        color: #fff;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: .9rem;
+        z-index: 1
+    }
+
+    .pkg-topbar {
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        gap: 10px;
+        justify-content: space-between;
+        background: rgba(0,0,0,.55);
+        color: #fff;
+        border-radius: 10px;
+        padding: 6px 10px;
+        font-size: .9rem
+    }
+
+    /* Destination tiles */
+    .dest {
+        position: relative;
+        border-radius: 24px;
+        overflow: hidden;
+        height: 300px;
+        display: flex;
+        align-items: flex-end
+    }
+
+        .dest img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform .3s ease
         }
 
-        to {
-            transform: translateX(-50%);
+        .dest:hover img {
+            transform: scale(1.05)
         }
-    }
+
+        .dest span {
+            position: relative;
+            z-index: 1;
+            margin: 12px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            text-shadow: 0 3px 10px rgba(0,0,0,.6)
+        }
 
 
     /* Make accordion background same green, remove blue border/focus */
@@ -238,6 +311,10 @@
         color: rgba(255,255,255,0.75) !important;
         font-size: 0.95rem;
     }
+
+    .faq-section {
+        margin-top: 60px !important; 
+    }
 </style>
 
 <div class="air-hero">
@@ -276,7 +353,8 @@
                 <input id="returnDate" name="returnDate" class="form-control" readonly />
             </div>
             <div class="col-lg-1 d-flex align-items-end">
-                <button class="btn btn-success btn-lg w-100" type="submit">SEARCH</button>
+                <button class="btn btn-success btn-lg w-100 search-btn" type="submit">SEARCH</button>
+
             </div>
 
             <div class="col-12 d-flex gap-2">
@@ -304,7 +382,7 @@
         <!-- Step 1 -->
         <div class="col-md-3 col-10 text-center three-step-card">
             <div class="step-icon mb-3">
-                <img src="/Admin/images/Booking a Bus Trip.png" alt="Search" class="img-fluid" style="height: 120px;" />
+                <img src="/Admin/images/plane.png" alt="Search" class="img-fluid" style="height: 120px;" />
             </div>
             <h4 class="fw-bold">Search</h4>
             <p>Choose your origin, destination, journey dates and search for buses</p>
@@ -329,114 +407,160 @@
         </div>
     </div>
 </div>
-<!-- Trending Destinations -->
+<!-- Popular Packages (like picture-1) -->
 <div class="container my-5">
-    <h2 class="fw-bold text-center mb-4">
-        Discover <span class="text-success">Trending Destinations</span>
-    </h2>
-
+    <h2 class="fw-bold mb-4 text-center">Popular Packages</h2>
     <div class="row g-4">
-        <!-- Chittagong -->
-        <div class="col-12 col-md-6">
-            <div class="card bg-dark text-white border-0 rounded-4 overflow-hidden">
-                <img src="/Admin/images/Chittagong-1440x600.jpg" class="card-img" alt="Chittagong">
-                <div class="card-img-overlay d-flex align-items-end p-3">
-                    <h5 class="card-title fw-bold">Chittagong</h5>
+
+        <!-- Card 1 -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="pkg card h-100 border-0 shadow-sm">
+                <div class="badge-flag"><i class="bi bi-geo-alt-fill me-1"></i>Nepal</div>
+                <img src="/Admin/images/nepal.jpg" class="card-img-top pkg-img" alt="Nepal" />
+                <div class="pkg-topbar">
+                    <div><i class="bi bi-alarm me-1"></i>5 Days, 4 Nights</div>
+                    <div><i class="bi bi-people me-1"></i>2 People</div>
+                </div>
+                <div class="card-body">
+                    <h6 class="mb-1">Dual City Adventure: 5 Days, 4 Nights in Kathmandu and Pokhara</h6>
+                    <div class="text-success fw-bold fs-5">BDT 25,000</div>
+                    <div class="text-muted small">Per person</div>
                 </div>
             </div>
         </div>
 
-        <!-- Dhaka -->
-        <div class="col-12 col-md-6">
-            <div class="card bg-dark text-white border-0 rounded-4 overflow-hidden">
-                <img src="/Admin/images/Dhaka-1440x600.jpg" class="card-img" alt="Dhaka">
-                <div class="card-img-overlay d-flex align-items-end p-3">
-                    <h5 class="card-title fw-bold">Dhaka</h5>
+        <!-- Card 2 -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="pkg card h-100 border-0 shadow-sm">
+                <div class="badge-flag"><i class="bi bi-geo-alt-fill me-1"></i>Indonesia</div>
+                <img src="/Admin/images/indunesia.jpg" class="card-img-top pkg-img" alt="Indonesia" />
+                <div class="pkg-topbar">
+                    <div><i class="bi bi-alarm me-1"></i>4 Days, 3 Nights</div>
+                    <div><i class="bi bi-people me-1"></i>2 People</div>
+                </div>
+                <div class="card-body">
+                    <h6 class="mb-1">4 Days, 3 Nights Paradise Gateway Bali</h6>
+                    <div class="text-success fw-bold fs-5">BDT 11,500</div>
+                    <div class="text-muted small">Per person</div>
                 </div>
             </div>
         </div>
 
-        <!-- Rajshahi -->
-        <div class="col-12 col-md-4">
-            <div class="card bg-dark text-white border-0 rounded-4 overflow-hidden">
-                <img src="/Admin/images/Rajshahi-1440x600.webp" class="card-img" alt="Rajshahi">
-                <div class="card-img-overlay d-flex align-items-end p-3">
-                    <h5 class="card-title fw-bold">Rajshahi</h5>
+        <!-- Card 3 -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="pkg card h-100 border-0 shadow-sm">
+                <div class="badge-flag"><i class="bi bi-geo-alt-fill me-1"></i>Malaysia</div>
+                <img src="/Admin/images/malaysia.jpg" class="card-img-top pkg-img" alt="Malaysia" />
+                <div class="pkg-topbar">
+                    <div><i class="bi bi-alarm me-1"></i>1 Day, 1 Night</div>
+                    <div><i class="bi bi-people me-1"></i>2–8 People</div>
+                </div>
+                <div class="card-body">
+                    <h6 class="mb-1">5 Days 4 Nights of Urban Adventure (Singapore & Kuala Lumpur)</h6>
+                    <div class="text-success fw-bold fs-5">BDT 23,500</div>
+                    <div class="text-muted small">Per person</div>
                 </div>
             </div>
         </div>
 
-        <!-- Rangpur -->
-        <div class="col-12 col-md-4">
-            <div class="card bg-dark text-white border-0 rounded-4 overflow-hidden">
-                <img src="/Admin/images/Rangpur-1440x600.webp" class="card-img" alt="Rangpur">
-                <div class="card-img-overlay d-flex align-items-end p-3">
-                    <h5 class="card-title fw-bold">Rangpur</h5>
+        <!-- Card 4 -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="pkg card h-100 border-0 shadow-sm">
+                <div class="badge-flag"><i class="bi bi-geo-alt-fill me-1"></i>Singapore</div>
+                <img src="/Admin/images/singapur.jpg" class="card-img-top pkg-img" alt="Singapore" />
+                <div class="pkg-topbar">
+                    <div><i class="bi bi-alarm me-1"></i>3 Days, 2 Nights</div>
+                    <div><i class="bi bi-people me-1"></i>2 People</div>
+                </div>
+                <div class="card-body">
+                    <h6 class="mb-1">Explore Singapore 3 Days 2 Nights Adventure</h6>
+                    <div class="text-success fw-bold fs-5">BDT 19,500</div>
+                    <div class="text-muted small">Per person</div>
                 </div>
             </div>
         </div>
 
-        <!-- Sylhet -->
-        <div class="col-12 col-md-4">
-            <div class="card bg-dark text-white border-0 rounded-4 overflow-hidden">
-                <img src="/Admin/images/Sylhet-1440x600.jpg" class="card-img" alt="Sylhet">
-                <div class="card-img-overlay d-flex align-items-end p-3">
-                    <h5 class="card-title fw-bold">Sylhet</h5>
+        <!-- Card 5 -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="pkg card h-100 border-0 shadow-sm">
+                <div class="badge-flag"><i class="bi bi-geo-alt-fill me-1"></i>Thailand</div>
+                <img src="/Admin/images/thailand.jpg" class="card-img-top pkg-img" alt="Thailand" />
+                <div class="pkg-topbar">
+                    <div><i class="bi bi-alarm me-1"></i>3 Days, 2 Nights</div>
+                    <div><i class="bi bi-people me-1"></i>1–2 People</div>
+                </div>
+                <div class="card-body">
+                    <h6 class="mb-1">Bangkok 3 Days 2 Nights Couple Package</h6>
+                    <div class="text-success fw-bold fs-5">BDT 10,500</div>
+                    <div class="text-muted small">Per person</div>
                 </div>
             </div>
         </div>
+
+        <!-- Card 6 (extra sample) -->
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="pkg card h-100 border-0 shadow-sm">
+                <div class="badge-flag"><i class="bi bi-geo-alt-fill me-1"></i>Malaysia</div>
+                <img src="/Admin/images/kualalumpur.jpg" class="card-img-top pkg-img" alt="KL & SG" />
+                <div class="pkg-topbar">
+                    <div><i class="bi bi-alarm me-1"></i>5 Days, 4 Nights</div>
+                    <div><i class="bi bi-people me-1"></i>2–6 People</div>
+                </div>
+                <div class="card-body">
+                    <h6 class="mb-1">Kuala Lumpur + Singapore Combo Tour</h6>
+                    <div class="text-success fw-bold fs-5">BDT 23,900</div>
+                    <div class="text-muted small">Per person</div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
-<
 
-<!-- RiadTrip Highlights -->
-<div class="container my-5 text-center">
-    <h2 class="fw-bold mb-5">
-        <span class="text-success">10+ Million</span> Travellers Trusted RiadTrip
-    </h2>
-
+<!-- Popular Destination (like picture-2) -->
+<div class="container my-5 destinations-gap "> 
+    <h2 class="fw-bold text-center mb-4">Popular Destination</h2>
     <div class="row g-4">
-        <!-- Feature 1 -->
-        <div class="col-md-4">
-            <div class="p-4 h-100">
-                <div class="bg-success bg-opacity-10 text-success rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width:80px; height:80px;">
-                    <i class="bi bi-bus-front fs-1"></i>
-                </div>
-                <h5 class="fw-bold">Largest Ticketing Platform</h5>
-                <div class="d-flex justify-content-center gap-3 flex-wrap mt-3">
-                    <div><span class="text-success fw-bold">250M+</span><br><small class="text-muted">tickets</small></div>
-                    <div><span class="text-success fw-bold">10M+</span><br><small class="text-muted">happy users</small></div>
-                    <div><span class="text-success fw-bold">3000+</span><br><small class="text-muted">routes</small></div>
-                    <div><span class="text-success fw-bold">1000+</span><br><small class="text-muted">partners</small></div>
-                </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="dest">
+                <img src="/Admin/images/indunesia.jpg" alt="Indonesia" />
+                <span>Indonesia</span>
             </div>
         </div>
-
-        <!-- Feature 2 -->
-        <div class="col-md-4">
-            <div class="p-4 h-100">
-                <div class="bg-success bg-opacity-10 text-success rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width:80px; height:80px;">
-                    <i class="bi bi-clock-history fs-1"></i>
-                </div>
-                <h5 class="fw-bold">Quick & Easy Booking</h5>
-                <p class="text-muted">Skip the queues with RiadTrip! Book bus tickets online from 100+ operators nationwide. Easily browse routes and reserve seats anytime.</p>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="dest">
+                <img src="/Admin/images/singapur.jpg" alt="Singapore" />
+                <span>Singapore</span>
             </div>
         </div>
-
-        <!-- Feature 3 -->
-        <div class="col-md-4">
-            <div class="p-4 h-100">
-                <div class="bg-success bg-opacity-10 text-success rounded-3 d-inline-flex align-items-center justify-content-center mb-3" style="width:80px; height:80px;">
-                    <i class="bi bi-headset fs-1"></i>
-                </div>
-                <h5 class="fw-bold">Fast Customer Support</h5>
-                <p class="text-muted">Quick and responsive assistance to resolve your issues without delay — because your time matters to us at RiadTrip.</p>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="dest">
+                <img src="/Admin/images/malaysia.jpg" alt="Malaysia" />
+                <span>Malaysia</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="dest">
+                <img src="/Admin/images/nepal.jpg" alt="Nepal" />
+                <span>Nepal</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="dest">
+                <img src="/Admin/images/thailand.jpg" alt="Thailand" />
+                <span>Thailand</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="dest">
+                <img src="/Admin/images/bali.jpg" alt="Bali" />
+                <span>Bali</span>
             </div>
         </div>
     </div>
 </div>
 <!-- RiadTrip FAQ (Bootstrap only) -->
-<section class="faq-section text-white" style="background:#1f7d5b; margin-bottom:0; padding-bottom:2rem;">
+<section class="faq-section text-white" style="background:#1f7d5b; margin-bottom: 0; margin-top: 10px; padding-bottom:2rem;">
     <div class="container">
         <div class="row g-5 align-items-start">
             <!-- Left column -->
