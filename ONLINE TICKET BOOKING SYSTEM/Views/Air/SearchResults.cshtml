@@ -1,6 +1,5 @@
 ﻿@model ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.AirSearchResultViewModel
 @using Newtonsoft.Json
-
 @{
     ViewData["Title"] = "Air Search Results";
     Layout = "_Layout";
@@ -11,54 +10,106 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
 <style>
-    body { background:#f6f9f8; }
-    .search-header { background:#fff; border-radius:12px; padding:18px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin:18px 0; }
-    .filter-box,.flight-card { background:#fff; border-radius:12px; padding:16px; box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:16px; }
-    .tag { border:1px solid #198754; color:#198754; border-radius:8px; padding:2px 8px; font-size:.8rem; display:inline-block; margin-right:6px; }
-    .airline-pill { background:#e7f6e8; color:#146c43; border-radius:999px; padding:2px 10px; font-weight:600; }
-    .price { font-size:1.1rem; font-weight:700; color:#198754; }
-    .muted { color:#6c757d; }
-    .small-muted { font-size:.85rem; color:#6c757d; }
-    .step-line { font-size:13px; color:#777; }
-    .btn-green { background-color:#00b34b; color:#fff; font-weight:600; border:0; }
-    .btn-green:hover { background:#00903a; }
-    .result-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-    .sort-btns .btn { margin-left:.4rem; }
+    body {
+        background: #f6f9f8;
+    }
 
-    /* pills look */
-    .btn-pill { border-radius:999px !important; padding:.25rem .9rem; }
+    .search-header {
+        background: #fff;
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: 0 2px 10px rgba(0,0,0,.06);
+        margin: 18px 0;
+    }
+
+    .filter-box, .flight-card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,.06);
+        margin-bottom: 16px;
+    }
+
+    .tag {
+        border: 1px solid #198754;
+        color: #198754;
+        border-radius: 8px;
+        padding: 2px 8px;
+        font-size: .8rem;
+        display: inline-block;
+        margin-right: 6px;
+    }
+
+    .airline-pill {
+        background: #e7f6e8;
+        color: #146c43;
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-weight: 600;
+    }
+
+    .price {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #198754;
+    }
+
+    .small-muted {
+        font-size: .85rem;
+        color: #6c757d;
+    }
+
+    .btn-green {
+        background-color: #00b34b;
+        color: #fff;
+        font-weight: 600;
+        border: 0;
+    }
+
+        .btn-green:hover {
+            background: #00903a;
+        }
+
+    .result-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .btn-pill {
+        border-radius: 999px !important;
+        padding: .25rem .9rem;
+    }
 </style>
 
 <div class="container-fluid mt-3">
-    <!-- Header / Summary -->
+
+    <!-- summary -->
     <div class="search-header">
         <div class="result-head">
             <div>
-                <h4 class="mb-1">
-                    @Model.From <i class="fa fa-arrow-right text-success mx-2"></i> @Model.To
-                </h4>
+                <h4 class="mb-1">@Model.From <i class="fa fa-arrow-right text-success mx-2"></i> @Model.To</h4>
                 <div class="small-muted">
-                    Depart: @Model.JourneyDate.ToString("ddd, dd MMM yyyy")
+                    Depart: @Model.JourneyDate:ddd, dd MMM yyyy
                     @if (Model.ReturnDate.HasValue)
-                    { <text> • Return: @Model.ReturnDate.Value.ToString("ddd, dd MMM yyyy")</text> }
+                    {
+                        <text> • Return: @Model.ReturnDate.Value:ddd, dd MMM yyyy</text>
+                    }
                     • @Model.TripType • Cabin: @Model.Cabin • Pax: @Model.Travellers
                 </div>
             </div>
             <div>
-                <a class="btn btn-outline-secondary btn-sm" href="/Air/Index">
-                    <i class="bi bi-arrow-counterclockwise me-1"></i>New Search
-                </a>
+                <a class="btn btn-outline-secondary btn-sm" href="/Air/Index"><i class="bi bi-arrow-counterclockwise me-1"></i>New Search</a>
             </div>
         </div>
-        <div class="step-line alert bg-success text-white fw-bold py-2 my-2">
-            Choose Flight <i class="fa fa-chevron-right mx-1"></i>
-            Passenger Details <i class="fa fa-chevron-right mx-1"></i>
-            Review & Pay
+        <div class="alert bg-success text-white fw-bold py-2 my-2">
+            Choose Flight <i class="fa fa-chevron-right mx-1"></i> Passenger Details <i class="fa fa-chevron-right mx-1"></i> Review & Pay
         </div>
     </div>
 
     <div class="row">
-        <!-- Filters -->
+        <!-- filters -->
         <div class="col-lg-3">
             <div class="filter-box">
                 <div class="d-flex align-items-center justify-content-between">
@@ -81,15 +132,17 @@
                             }
                         }
                         else
-                        { <div class="small-muted">No airlines loaded</div> }
+                        {
+
+                            <div class="small-muted">No airlines loaded</div>
+                        }
                     </div>
                 </div>
 
-                <!-- CABIN (null-safe preselect) -->
                 @{
                     var cabinRaw = (Model?.Cabin ?? "").Trim();
-                    bool isEconomy = new[] { "economy","y","0","e" }.Contains(cabinRaw, StringComparer.OrdinalIgnoreCase);
-                    bool isBusiness = new[] { "business","j","2","b" }.Contains(cabinRaw, StringComparer.OrdinalIgnoreCase);
+                    bool isEconomy = new[] { "economy", "y", "0", "e" }.Contains(cabinRaw, StringComparer.OrdinalIgnoreCase);
+                    bool isBusiness = new[] { "business", "j", "2", "b" }.Contains(cabinRaw, StringComparer.OrdinalIgnoreCase);
                 }
                 <div class="mb-3">
                     <strong class="text-warning">CABIN</strong>
@@ -97,7 +150,6 @@
                         <option value="">Any</option>
                         <option value="Economy" selected="@(isEconomy)">Economy</option>
                         <option value="Business" selected="@(isBusiness)">Business</option>
-
                     </select>
                 </div>
 
@@ -129,9 +181,8 @@
             </div>
         </div>
 
-        <!-- Results -->
+        <!-- results -->
         <div class="col-lg-9">
-            <!-- sort pills like the screenshot -->
             <div class="d-flex align-items-center justify-content-between mb-3">
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-outline-success btn-sm btn-pill" id="pillLowHigh">LOW TO HIGH</button>
@@ -159,160 +210,156 @@
     </div>
 </div>
 
-<!-- Data payloads -->
+<!-- JSON payloads -->
 <script type="application/json" id="outboundJson">
-@Html.Raw(JsonConvert.SerializeObject(Model.AvailableFlights ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.FlightCardVm>()))
+    @Html.Raw(JsonConvert.SerializeObject(Model.AvailableFlights ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.FlightCardVm>()))
 </script>
 <script type="application/json" id="returnJson">
-@Html.Raw(JsonConvert.SerializeObject(Model.ReturnFlights ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.FlightCardVm>()))
+    @Html.Raw(JsonConvert.SerializeObject(Model.ReturnFlights ?? new List<ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.FlightCardVm>()))
 </script>
 
 @section Scripts {
-<script>
-(function(){
-    const parseJSON = (id) => { try { return JSON.parse(document.getElementById(id).textContent); } catch { return []; } };
-    const outboundAll = parseJSON('outboundJson');
-    const returnAll = parseJSON('returnJson');
+    <script>
+        (function(){
+          const parseJSON = (id) => { try { return JSON.parse(document.getElementById(id).textContent); } catch { return []; } };
+          const outboundAll = parseJSON('outboundJson');
+          const returnAll   = parseJSON('returnJson');
 
-    const airlineCbs = () => Array.from(document.querySelectorAll('.airline-cb:checked')).map(cb=>cb.value);
-    const cabinVal   = () => (document.getElementById('cabinSelect')?.value || '');
-    const depRanges  = () => Array.from(document.querySelectorAll('.dep-range:checked')).map(cb=>cb.value);
-    const arrRanges  = () => Array.from(document.querySelectorAll('.arr-range:checked')).map(cb=>cb.value);
-    const sortVal    = () => document.getElementById('sortSelect').value;
+          const airlineCbs = () => Array.from(document.querySelectorAll('.airline-cb:checked')).map(cb=>cb.value);
+          const cabinVal   = () => (document.getElementById('cabinSelect')?.value || '');
+          const depRanges  = () => Array.from(document.querySelectorAll('.dep-range:checked')).map(cb=>cb.value);
+          const arrRanges  = () => Array.from(document.querySelectorAll('.arr-range:checked')).map(cb=>cb.value);
+          const sortVal    = () => document.getElementById('sortSelect').value;
 
-    const timeToMins = (hhmm) => {
-        if(!hhmm) return 0;
-        const [h,m] = String(hhmm).split(':').map(Number);
-        return (h*60 + (isNaN(m)?0:m)) % 1440;
-    };
-    const inWindow = (minutes, win) => {
-        if(win==='Early') return minutes < 360;
-        if(win==='Morning') return minutes >= 360 && minutes < 720;
-        if(win==='Afternoon') return minutes >= 720 && minutes < 1080;
-        if(win==='Evening') return minutes >= 1080 && minutes < 1440;
-        return true;
-    };
-    const durToMins = (dur) => {
-        if(!dur) return 0;
-        const mH = /(\d+)\s*h/.exec(dur);
-        const mM = /(\d+)\s*m/.exec(dur);
-        const H = mH ? parseInt(mH[1],10) : 0;
-        const M = mM ? parseInt(mM[1],10) : 0;
-        return H*60 + M;
-    };
-
-    function applyFiltersOne(list){
-        const selectedAirlines = airlineCbs();
-        const selectedCabin = cabinVal();
-        const depWins = depRanges();
-        const arrWins = arrRanges();
-
-        return list.filter(f => {
-            if(selectedAirlines.length && !selectedAirlines.includes(f.AirlineName)) return false;
-            if(selectedCabin && String(f.Cabin) !== selectedCabin) return false;
-
-            const depM = timeToMins(f.DepTime);
-            const arrM = timeToMins(f.ArrTime);
-            if(depWins.length && !depWins.some(w => inWindow(depM, w))) return false;
-            if(arrWins.length && !arrWins.some(w => inWindow(arrM, w))) return false;
-
+          const timeToMins = (hhmm) => {
+            if(!hhmm) return 0;
+            const [h,m] = String(hhmm).split(':').map(Number);
+            return (h*60 + (isNaN(m)?0:m)) % 1440;
+          };
+          const inWindow = (minutes, win) => {
+            if(win==='Early') return minutes < 360;
+            if(win==='Morning') return minutes >= 360 && minutes < 720;
+            if(win==='Afternoon') return minutes >= 720 && minutes < 1080;
+            if(win==='Evening') return minutes >= 1080 && minutes < 1440;
             return true;
-        });
-    }
+          };
+          const durToMins = (dur) => {
+            if(!dur) return 0;
+            const mH = /(\d+)\s*h/.exec(dur);
+            const mM = /(\d+)\s*m/.exec(dur);
+            const H = mH ? parseInt(mH[1],10) : 0;
+            const M = mM ? parseInt(mM[1],10) : 0;
+            return H*60 + M;
+          };
 
-    function sortList(list){
-        switch(sortVal()){
-            case 'priceAsc': return list.slice().sort((a,b)=>(a.Price??0)-(b.Price??0));
-            case 'priceDesc': return list.slice().sort((a,b)=>(b.Price??0)-(a.Price??0));
-            case 'durAsc':   return list.slice().sort((a,b)=>durToMins(a.Duration)-durToMins(b.Duration));
-            case 'depAsc':
-            default:         return list.slice().sort((a,b)=>timeToMins(a.DepTime)-timeToMins(b.DepTime));
-        }
-    }
+          function applyFiltersOne(list){
+            const selectedAirlines = airlineCbs();
+            const selectedCabin = cabinVal();
+            const depWins = depRanges();
+            const arrWins = arrRanges();
 
-    function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+            return list.filter(f => {
+              if(selectedAirlines.length && !selectedAirlines.includes(f.AirlineName)) return false;
+              if(selectedCabin && String(f.Cabin) !== selectedCabin) return false;
+              const depM = timeToMins(f.DepTime);
+              const arrM = timeToMins(f.ArrTime);
+              if(depWins.length && !depWins.some(w => inWindow(depM, w))) return false;
+              if(arrWins.length && !arrWins.some(w => inWindow(arrM, w))) return false;
+              return true;
+            });
+          }
 
-    function cardHtml(f){
-        const priceText = `${esc(f.Currency||'BDT')} ${Number(f.Price||0).toFixed(2)}`;
-        return `
-        <div class="flight-card d-flex justify-content-between align-items-start flex-wrap">
-            <div class="me-3">
-                <div class="mb-1">
+          function sortList(list){
+            switch(sortVal()){
+              case 'priceAsc': return list.slice().sort((a,b)=>(a.Price??0)-(b.Price??0));
+              case 'priceDesc':return list.slice().sort((a,b)=>(b.Price??0)-(a.Price??0));
+              case 'durAsc':   return list.slice().sort((a,b)=>durToMins(a.Duration)-durToMins(b.Duration));
+              case 'depAsc':
+              default:         return list.slice().sort((a,b)=>timeToMins(a.DepTime)-timeToMins(b.DepTime));
+            }
+          }
+
+          function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+
+          function cardHtml(f){
+            const id = f.ScheduleId || 0;
+            const canBook = Number(id) > 0;
+            const priceText = `${esc(f.Currency||'BDT')} ${Number(f.Price||0).toFixed(2)}`;
+            return `
+              <div class="flight-card d-flex justify-content-between align-items-start flex-wrap">
+                <div class="me-3">
+                  <div class="mb-1">
                     <span class="airline-pill">${esc(f.AirlineName)} (${esc(f.AirlineCode)})</span>
                     <span class="tag ms-2">${esc(f.FlightNumber)}</span>
                     <span class="tag">${esc(f.Cabin||'')}</span>
                     <span class="tag">${esc(f.SeatsAvailable)} seats</span>
-                </div>
-                <div class="small-muted mb-1">${esc(f.From)} <i class="fa fa-arrow-right text-success mx-1"></i> ${esc(f.To)}</div>
-                <div class="d-flex align-items-center">
+                  </div>
+                  <div class="small-muted mb-1">${esc(f.From)} <i class="fa fa-arrow-right text-success mx-1"></i> ${esc(f.To)}</div>
+                  <div class="d-flex align-items-center">
                     <div class="me-4 text-center">
-                        <div class="fw-semibold">${esc(f.DepTime)}</div>
-                        <div class="small-muted">Depart</div>
+                      <div class="fw-semibold">${esc(f.DepTime)}</div>
+                      <div class="small-muted">Depart</div>
                     </div>
                     <div class="text-center mx-2">
-                        <i class="fa fa-plane text-success"></i><br/>
-                        <small class="small-muted">${esc(f.Duration)}</small>
+                      <i class="fa fa-plane text-success"></i><br/>
+                      <small class="small-muted">${esc(f.Duration)}</small>
                     </div>
                     <div class="ms-4 text-center">
-                        <div class="fw-semibold">${esc(f.ArrTime)}</div>
-                        <div class="small-muted">Arrive</div>
+                      <div class="fw-semibold">${esc(f.ArrTime)}</div>
+                      <div class="small-muted">Arrive</div>
                     </div>
+                  </div>
+                  <div class="small-muted mt-1">Travel Date: ${esc(f.TravelDate)}</div>
                 </div>
-                <div class="small-muted mt-1">Travel Date: ${esc(f.TravelDate)}</div>
-            </div>
-            <div class="text-end">
-                <div class="price mb-2">${priceText}</div>
-                <button class="btn btn-green btn-sm" disabled title="Hook up booking endpoint to enable">
-                    Booking
-                </button>
-            </div>
-        </div>`;
-    }
+                <div class="text-end">
+                  <div class="price mb-2">${priceText}</div>
+                  ${ canBook
+                      ? `<a class="btn btn-green btn-sm" href="/AirBooking/Passengers?flightId=${encodeURIComponent(id)}">BOOK Ticket</a>`
+                      : `<button class="btn btn-green btn-sm" disabled title="Missing flight id">BOOKING</button>` }
+                </div>
+              </div>`;
+          }
 
-    function render(list, containerSel, countSel){
-        const el = document.querySelector(containerSel);
-        const cnt = document.querySelector(countSel);
-        el.innerHTML = '';
-        const filtered = applyFiltersOne(list);
-        const sorted = sortList(filtered);
+          function render(list, containerSel, countSel){
+            const el = document.querySelector(containerSel);
+            const cnt = document.querySelector(countSel);
+            el.innerHTML = '';
+            const filtered = applyFiltersOne(list);
+            const sorted   = sortList(filtered);
+            cnt.textContent = `${sorted.length} result(s)`;
+            if(sorted.length === 0){
+              el.innerHTML = `<div class="alert alert-warning">No flights match the selected filters.</div>`;
+              return;
+            }
+            sorted.forEach(f => el.insertAdjacentHTML('beforeend', cardHtml(f)));
+          }
 
-        cnt.textContent = `${sorted.length} result(s)`;
-        if(sorted.length === 0){
-            el.innerHTML = `<div class="alert alert-warning">No flights match the selected filters.</div>`;
-            return;
-        }
-        sorted.forEach(f => el.insertAdjacentHTML('beforeend', cardHtml(f)));
-    }
+          function applyAll(){
+            render(outboundAll, '#outboundContainer', '#outboundCount');
+            const returnBox = document.getElementById('returnContainer');
+            if (returnBox) render(returnAll, '#returnContainer', '#returnCount');
+          }
 
-    function applyAll(){
-        render(outboundAll, '#outboundContainer', '#outboundCount');
-        if (document.getElementById('returnContainer')) {
-            render(returnAll, '#returnContainer', '#returnCount');
-        }
-    }
+          document.getElementById('resetFilters').addEventListener('click', function(){
+            document.querySelectorAll('.airline-cb').forEach(cb => cb.checked = false);
+            document.querySelectorAll('.dep-range, .arr-range').forEach(cb => cb.checked = false);
+            document.getElementById('cabinSelect').selectedIndex = 0;
+            document.getElementById('sortSelect').selectedIndex = 0;
+            applyAll();
+          });
 
-    document.getElementById('resetFilters').addEventListener('click', function(){
-        document.querySelectorAll('.airline-cb').forEach(cb => cb.checked = false);
-        document.querySelectorAll('.dep-range, .arr-range').forEach(cb => cb.checked = false);
-        document.getElementById('cabinSelect').selectedIndex = 0;
-        document.getElementById('sortSelect').selectedIndex = 0;
-        applyAll();
-    });
+          document.querySelectorAll('.airline-cb, .dep-range, .arr-range').forEach(cb => cb.addEventListener('change', applyAll));
+          document.getElementById('cabinSelect').addEventListener('change', applyAll);
+          document.getElementById('sortSelect').addEventListener('change', applyAll);
 
-    document.querySelectorAll('.airline-cb, .dep-range, .arr-range').forEach(cb => cb.addEventListener('change', applyAll));
-    document.getElementById('cabinSelect').addEventListener('change', applyAll);
-    document.getElementById('sortSelect').addEventListener('change', applyAll);
+          document.getElementById('pillLowHigh')?.addEventListener('click', ()=>{
+            const s=document.getElementById('sortSelect'); if(!s) return; s.value='priceAsc'; s.dispatchEvent(new Event('change'));
+          });
+          document.getElementById('pillHighLow')?.addEventListener('click', ()=>{
+            const s=document.getElementById('sortSelect'); if(!s) return; s.value='priceDesc'; s.dispatchEvent(new Event('change'));
+          });
 
-    // pills -> existing sorter
-    document.getElementById('pillLowHigh')?.addEventListener('click', ()=>{
-        const s=document.getElementById('sortSelect'); if(!s) return; s.value='priceAsc'; s.dispatchEvent(new Event('change'));
-    });
-    document.getElementById('pillHighLow')?.addEventListener('click', ()=>{
-        const s=document.getElementById('sortSelect'); if(!s) return; s.value='priceDesc'; s.dispatchEvent(new Event('change'));
-    });
-
-    // Initial paint
-    applyAll();
-})();
-</script>
+          applyAll();
+        })();
+    </script>
 }

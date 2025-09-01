@@ -3,8 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 using ONLINE_TICKET_BOOKING_SYSTEM.Models.Air;
 using ONLINE_TICKET_BOOKING_SYSTEM.ViewModels;
-using ONLINE_TICKET_BOOKING_SYSTEM.Services;
-
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +15,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         private readonly ApplicationDbContext _db;
         public AirController(ApplicationDbContext db) => _db = db;
 
-        // ========== Index ==========
+        // Home search page
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -27,7 +25,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return View(airports);
         }
 
-        // ========== Results ==========
+        // Results page (outbound + optional return)
         [HttpGet]
         public async Task<IActionResult> Results(
             string from,
@@ -38,14 +36,14 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             int travellers = 1,
             string cabin = "Economy")
         {
-            // normalize + parse IATA like "Dhaka (DAC)"
+            // Parse "City (IATA)" to IATA only
             static string ExtractIata(string s)
             {
                 if (string.IsNullOrWhiteSpace(s)) return "";
                 var i1 = s.IndexOf('(');
                 var i2 = s.IndexOf(')');
-                if (i1 >= 0 && i2 > i1) return s.Substring(i1 + 1, i2 - i1 - 1).Trim().ToUpper();
-                return s.Trim().ToUpper();
+                if (i1 >= 0 && i2 > i1) return s.Substring(i1 + 1, i2 - i1 - 1).Trim().ToUpperInvariant();
+                return s.Trim().ToUpperInvariant();
             }
 
             var fromIata = ExtractIata(from);
@@ -55,10 +53,9 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             {
                 var emptyVm = new AirSearchResultViewModel
                 {
-                    AvailableFlights = new List<FlightCardVm>(),
-                    TripType = tripType,
                     From = from ?? "",
                     To = to ?? "",
+                    TripType = tripType,
                     JourneyDate = journeyDate.Date
                 };
                 await FillSidebarAsync(emptyVm);
@@ -72,20 +69,18 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             {
                 var emptyVm = new AirSearchResultViewModel
                 {
-                    AvailableFlights = new List<FlightCardVm>(),
+                    From = from ?? "",
+                    To = to ?? "",
                     TripType = tripType,
-                    From = from,
-                    To = to,
                     JourneyDate = journeyDate.Date
                 };
                 await FillSidebarAsync(emptyVm);
                 return View("SearchResults", emptyVm);
             }
 
-            var depDOW = (int)journeyDate.DayOfWeek; // Sun=0 .. Sat=6
+            // Day-of-week mask
+            var depDOW = (int)journeyDate.DayOfWeek; // Sun=0..Sat=6
 
-            // ❌ local function বাদ
-            // ✅ inline bitmask check ব্যবহার করা হলো
             var outboundSchedules = await _db.FlightSchedules
                 .AsNoTracking()
                 .Include(s => s.Airline)
@@ -95,15 +90,15 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                     s.FromAirport.IataCode == fromIata &&
                     s.ToAirport.IataCode == toIata &&
                     ((s.OperatingDaysMask & (1 << depDOW)) != 0 || s.OperatingDaysMask == 127)
-                 )
+                )
                 .OrderBy(s => s.Airline.Name).ThenBy(s => s.DepTimeLocal)
                 .ToListAsync();
 
             var availableOutbound = await MapToCardsAsync(outboundSchedules, cabin, travellers, journeyDate);
 
-            // Return (if applicable)
-            List<FlightCardVm>? availableReturn = null;
-            var trip = (tripType ?? "oneway").ToLower().Replace(" ", "");
+            // Optional return
+            List<FlightCardVm> availableReturn = new();
+            var trip = (tripType ?? "oneway").ToLowerInvariant().Replace(" ", "");
             if (trip == "roundway" && !string.IsNullOrWhiteSpace(returnDate))
             {
                 var rdate = DateTime.Parse(returnDate).Date;
@@ -118,7 +113,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                         s.FromAirport.IataCode == toIata &&
                         s.ToAirport.IataCode == fromIata &&
                         ((s.OperatingDaysMask & (1 << retDOW)) != 0 || s.OperatingDaysMask == 127)
-                     )
+                    )
                     .OrderBy(s => s.Airline.Name).ThenBy(s => s.DepTimeLocal)
                     .ToListAsync();
 
@@ -130,7 +125,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 From = $"{fromAirport.City} ({fromAirport.IataCode})",
                 To = $"{toAirport.City} ({toAirport.IataCode})",
                 JourneyDate = journeyDate.Date,
-                ReturnDate = string.IsNullOrEmpty(returnDate) ? (DateTime?)null : DateTime.Parse(returnDate).Date,
+                ReturnDate = string.IsNullOrWhiteSpace(returnDate) ? null : DateTime.Parse(returnDate).Date,
                 TripType = tripType,
                 Cabin = cabin,
                 Travellers = travellers,
@@ -142,7 +137,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return View("SearchResults", vm);
         }
 
-        // ========== Autocomplete ==========
+        // Autocomplete for From/To
         [HttpGet]
         [Produces("application/json")]
         public async Task<IActionResult> AirportSuggestions(string term)
@@ -160,37 +155,34 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return Ok(list);
         }
 
-        // ===== helpers =====
-        private async Task<List<FlightCardVm>> MapToCardsAsync(List<FlightSchedule> schedules, string cabin, int travellers, DateTime date)
+        // Helpers
+        private async Task<List<FlightCardVm>> MapToCardsAsync(
+            List<FlightSchedule> schedules, string cabin, int travellers, DateTime date)
         {
             var cards = new List<FlightCardVm>();
+            var wantedCabin = Enum.TryParse<CabinClass>(cabin, true, out var c) ? c : CabinClass.Economy;
 
             foreach (var s in schedules)
             {
-                // pick cheapest fare in desired cabin (fallback: any cabin)
                 var fares = await _db.FareClasses.AsNoTracking()
                     .Where(f => f.FlightScheduleId == s.Id)
                     .ToListAsync();
 
-                var wantedCabin = Enum.TryParse<CabinClass>(cabin, true, out var c) ? c : CabinClass.Economy;
-
                 var pick = fares.Where(f => f.Cabin == wantedCabin && f.SeatsAvailable >= travellers)
                                 .OrderBy(f => f.BaseFare + f.TaxesAndFees)
                                 .FirstOrDefault()
-                          ?? fares.OrderBy(f => f.BaseFare + f.TaxesAndFees)
-                                  .FirstOrDefault();
+                          ?? fares.OrderBy(f => f.BaseFare + f.TaxesAndFees).FirstOrDefault();
 
                 if (pick == null) continue;
 
-                var dep = s.DepTimeLocal;   // TimeOnly
-                var arr = s.ArrTimeLocal;   // TimeOnly
-
-                // ✅ Duration calc (no ToTimeSpan on TimeSpan!)
+                // duration
+                var dep = s.DepTimeLocal;
+                var arr = s.ArrTimeLocal;
                 var diff = arr.ToTimeSpan() - dep.ToTimeSpan();
                 if (diff.TotalMinutes < 0) diff += TimeSpan.FromDays(1);
                 var durMin = s.DurationMinutes > 0 ? s.DurationMinutes : (int)diff.TotalMinutes;
 
-                var vm = new FlightCardVm
+                cards.Add(new FlightCardVm
                 {
                     ScheduleId = s.Id,
                     AirlineCode = s.Airline.IataCode,
@@ -206,8 +198,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                     Price = (pick.BaseFare + pick.TaxesAndFees) * travellers,
                     SeatsAvailable = pick.SeatsAvailable,
                     TravelDate = date.ToString("yyyy-MM-dd")
-                };
-                cards.Add(vm);
+                });
             }
 
             return cards.OrderBy(v => v.DepTime).ToList();
@@ -216,9 +207,9 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         private async Task FillSidebarAsync(AirSearchResultViewModel vm)
         {
             vm.AllAirlines = await _db.Airlines.AsNoTracking()
-                .Select(a => a.Name)
-                .OrderBy(n => n)
-                .ToListAsync();
+                                .Select(a => a.Name)
+                                .OrderBy(n => n)
+                                .ToListAsync();
         }
     }
 }
