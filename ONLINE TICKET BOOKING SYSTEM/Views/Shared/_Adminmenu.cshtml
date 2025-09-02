@@ -207,14 +207,33 @@
             </a>
         </li>
 
-        <!-- Booked Tickets -->
-        <li class="nav-item">
-            <a asp-controller="AdminTickets" asp-action="Index"
-               class="nav-link @(IsController("AdminTickets") ? "active" : "")">
+        <!-- Manage Tickets Dropdown -->
+        <li class="nav-item has-treeview @(IsController("AdminTickets") || IsController("AdminAirTickets") ? "menu-open" : "")">
+            <a href="#" class="nav-link @(IsController("AdminTickets") || IsController("AdminAirTickets") ? "active" : "")">
                 <i class="nav-icon fas fa-ticket-alt"></i>
-                <p>Manage Tickets</p>
+                <p>
+                    Manage Tickets
+                    <i class="right fas fa-angle-left"></i>
+                </p>
             </a>
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    <a asp-controller="AdminTickets" asp-action="Index"
+                       class="nav-link @(IsController("AdminTickets") ? "active" : "")">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Bus Tickets</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a asp-controller="AdminAirTickets" asp-action="Index"
+                       class="nav-link @(IsController("AdminAirTickets") ? "active" : "")">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Air Tickets</p>
+                    </a>
+                </li>
+            </ul>
         </li>
+
 
         <!-- Customers -->
         <li class="nav-item">
@@ -226,13 +245,32 @@
         </li>
 
         <!-- Reports -->
-        <li class="nav-item">
-            <a asp-controller="Report" asp-action="Index"
-               class="nav-link @(IsController("Report") ? "active" : "")">
+        <li class="nav-item has-treeview @(IsController("Report") ? "menu-open" : "")">
+            <a href="#" class="nav-link @(IsController("Report") ? "active" : "")">
                 <i class="nav-icon fas fa-chart-bar"></i>
-                <p>Reports</p>
+                <p>
+                    Reports
+                    <i class="right fas fa-angle-left"></i>
+                </p>
             </a>
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    <a asp-controller="Report" asp-action="Index"
+                       class="nav-link @(IsController("Report") && currentAction.StartsWith("index") ? "active" : "")">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Bus Reports</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a asp-controller="Report" asp-action="Air"
+                       class="nav-link @(IsController("Report") && currentAction.StartsWith("Air") ? "active" : "")">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Air Reports</p>
+                    </a>
+                </li>
+            </ul>
         </li>
+
 
         <!-- Send Notifications -->
         <li class="nav-item">

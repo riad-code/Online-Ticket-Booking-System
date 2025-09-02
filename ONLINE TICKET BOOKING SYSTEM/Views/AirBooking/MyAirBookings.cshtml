@@ -1,0 +1,87 @@
+﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBooking>
+
+@{
+    Layout = "~/Views/Shared/_UserLayout.cshtml";
+    ViewData["Title"] = "My Air Bookings";
+    string Safe(string? x) => string.IsNullOrWhiteSpace(x) ? "" : x.Trim();
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <h4 class="mb-3 text-success"><i class="fas fa-ticket-alt"></i> My Air Bookings</h4>
+    </div>
+</section>
+
+<section class="content">
+    <div class="container-fluid">
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="alert alert-info">
+                You have no air bookings yet.
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                @foreach (var b in Model)
+                {
+                    var seg = b.Itinerary?.Segments?.FirstOrDefault()?.FlightSchedule;
+                    var from = Safe(seg?.FromAirport?.IataCode);
+                    var to = Safe(seg?.ToAirport?.IataCode);
+                    var d = b.Itinerary?.Segments?.FirstOrDefault()?.TravelDate.ToString("dd MMM yyyy") ?? "";
+
+                    <div class="col-lg-6 col-xl-4 mb-3">
+                        <div class="card shadow-sm h-100">
+                            <div class="card-body">
+
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <div class="fw-bold">@from → @to</div>
+                                        <div class="text-muted small">
+                                            @d
+                                        </div>
+                                    </div>
+                                    <span class="badge @(b.BookingStatus == ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBookingStatus.Approved ? "bg-success" :
+                                                                                                  b.BookingStatus == ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBookingStatus.PendingApproval ? "bg-info" :
+                                                                                                  b.BookingStatus == ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBookingStatus.PendingPayment ? "bg-warning text-dark" :
+                                                                                                  "bg-secondary")">
+                                @b.BookingStatus
+                            </span>
+                        </div>
+
+                                <div class="mb-1"><strong>PNR:</strong> @b.Pnr</div>
+                                <div class="mb-1"><strong>Total Payable:</strong> @b.Currency @b.AmountDue</div>
+
+                                <div class="mb-1">
+                                    <strong>Payment:</strong>
+                                    <span class="badge @(b.PaymentStatus == ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirPaymentStatus.Paid ? "bg-success" : "bg-secondary")">
+                                        @b.PaymentStatus
+                                    </span>
+                                </div>
+
+                                <hr />
+
+                                <div class="d-grid gap-2">
+                                    <a class="btn btn-outline-success"
+                                       asp-action="ThankYou"
+                                       asp-route-pnr="@b.Pnr">
+                                        View
+                                    </a>
+
+                            @if (b.BookingStatus == ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBookingStatus.Approved
+                                                        && !string.IsNullOrWhiteSpace(b.TicketPdfPath))
+                                    {
+                                        <a class="btn btn-primary" href="@b.TicketPdfPath" target="_blank">
+                                            <i class="fas fa-file-pdf"></i> Download Ticket (PDF)
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>

@@ -1,0 +1,107 @@
+﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBooking>
+
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Air Reports";
+
+    var from = (string)(ViewBag.From ?? DateTime.Today.ToString("yyyy-MM-dd"));
+    var to = (string)(ViewBag.To ?? DateTime.Today.ToString("yyyy-MM-dd"));
+
+    int ticketsSold = ViewBag.TicketsSold ?? 0;
+    decimal revenue = ViewBag.Revenue ?? 0m;
+}
+
+<div class="container py-4">
+    <h3 class="mb-3">
+        <i class="fas fa-plane text-success"></i> Air Reports
+    </h3>
+
+    <form method="get" class="card p-3 mb-3 shadow-sm border-0">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">From</label>
+                <input type="date" name="from" class="form-control" value="@from" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To</label>
+                <input type="date" name="to" class="form-control" value="@to" />
+            </div>
+            <div class="col-md-6 d-flex gap-2">
+                <button class="btn btn-success">
+                    <i class="fas fa-search"></i> Filter
+                </button>
+                <a class="btn btn-outline-success"
+                   asp-action="DownloadAir"
+                   asp-route-from="@from"
+                   asp-route-to="@to">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="card bg-success border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-white fw-bold">Tickets Sold (pax)</div>
+                    <div class="h4 mb-0">@ticketsSold</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-white fw-bold">Revenue</div>
+                    <div class="h4 mb-0">৳@revenue.ToString("0.##")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>PNR</th>
+                        <th>Route</th>
+                        <th>Flight</th>
+                        <th>Pax</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var b in Model)
+                        {
+                            var seg = b.Itinerary?.Segments?.FirstOrDefault()?.FlightSchedule;
+                            var route = $"{seg?.FromAirport?.IataCode ?? "-"} → {seg?.ToAirport?.IataCode ?? "-"}";
+                            var flight = $"{seg?.Airline?.IataCode ?? "-"} {seg?.FlightNumber ?? "-"}";
+                            var dt = (b.PaymentAtUtc ?? b.CreatedAtUtc).ToLocalTime().ToString("dd MMM yyyy");
+                            var pax = b.Passengers?.Count ?? (b.Adults + b.Children + b.Infants);
+                            var total = b.AmountPaid > 0 ? b.AmountPaid : b.AmountDue;
+
+                            <tr>
+                                <td>@dt</td>
+                                <td>@b.Pnr</td>
+                                <td>@route</td>
+                                <td>@flight</td>
+                                <td>@pax</td>
+                                <td>৳@total.ToString("0.##")</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">No data for this period.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

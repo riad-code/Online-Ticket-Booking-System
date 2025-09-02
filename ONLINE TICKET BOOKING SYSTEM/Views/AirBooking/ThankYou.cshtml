@@ -1,0 +1,65 @@
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBooking
+@{
+    ViewData["Title"] = "Thank You";
+    Layout = "_Layout";
+}
+
+<div class="container my-5">
+    <div class="text-center">
+        @if (Model.BookingStatus == ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBookingStatus.Approved)
+        {
+            <div class="display-6 text-success mb-3">Thank you!</div>
+            <p class="lead">Your payment for PNR <strong>@Model.Pnr</strong> is approved.</p>
+            <p>You can now download your e-ticket.</p>
+
+            <div class="mt-4">
+                <a class="btn btn-success" href="@Url.Action("Ticket", "AirBooking", new { pnr = Model.Pnr })">
+                    Download Ticket (PDF)
+                </a>
+                <a class="btn btn-outline-secondary ms-2" href="@Url.Action("MyAirBookings", "AirBooking")">My Air Bookings</a>
+            </div>
+        }
+        else
+        {
+            <div class="display-6 text-success mb-3">Payment Received</div>
+            <p class="lead">
+                Your booking (PNR <strong>@Model.Pnr</strong>) is now
+                <strong>pending approval</strong> by admin.
+            </p>
+            <p>You will receive the PDF ticket via email after approval.</p>
+
+            <div class="mt-4">
+                <a class="btn btn-outline-success" href="@Url.Action("MyAirBookings", "AirBooking")">
+                    View My Air Bookings
+                </a>
+                <a class="btn btn-outline-secondary ms-2" href="/">Go Home</a>
+            </div>
+        }
+    </div>
+
+    <div class="card mt-5">
+        <div class="card-body">
+            @{
+                var segItem = Model?.Itinerary?.Segments?.FirstOrDefault();
+                var seg = segItem?.FlightSchedule;
+
+                var travelDate = segItem?.TravelDate.ToString("yyyy-MM-dd") ?? "-";
+                var airlineName = seg?.Airline?.Name ?? "-";
+                var airlineCode = seg?.Airline?.IataCode ?? "-";
+                var flightNumber = seg?.FlightNumber ?? "-";
+                var fromIata = seg?.FromAirport?.IataCode ?? "-";
+                var toIata = seg?.ToAirport?.IataCode ?? "-";
+                var depTime = seg != null ? seg.DepTimeLocal.ToString("HH\\:mm") : "-";
+                var arrTime = seg != null ? seg.ArrTimeLocal.ToString("HH\\:mm") : "-";
+            }
+
+            <h5 class="mb-3">Booking Summary</h5>
+            <div><strong>Status:</strong> @Model.BookingStatus</div>
+            <div><strong>Flight:</strong> @airlineName (@airlineCode) — @flightNumber</div>
+            <div><strong>Route:</strong> @fromIata → @toIata</div>
+            <div><strong>Date:</strong> @travelDate</div>
+            <div><strong>Times:</strong> Dep @depTime | Arr @arrTime</div>
+            <div class="mt-2"><strong>Paid:</strong> @Model.Currency @((Model.AmountPaid > 0 ? Model.AmountPaid : Model.AmountDue).ToString("0.##"))</div>
+        </div>
+    </div>
+</div>

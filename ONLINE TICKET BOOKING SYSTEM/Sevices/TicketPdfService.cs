@@ -13,7 +13,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Services
 {
     public class TicketPdfService : ITicketPdfService
     {
-        // ---------------- BUS TICKET (তোমার কোড + ছোটখাটো util গুলো ভিতরে রাখা) ----------------
+        
         public Task<byte[]> GenerateAsync(Booking b)
         {
             var s = b.BusSchedule ?? new BusSchedule();
@@ -322,78 +322,300 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Services
         {
             var seg = b.Itinerary.Segments.First().FlightSchedule;
             var travelDate = b.Itinerary.Segments.First().TravelDate;
+            var issuedOn = DateTime.Now;
 
-            var doc = Document.Create(container =>
+            // Money (aligning to bus layout semantics)
+            decimal ticketPrice = b.AmountDue;          // if you later split base/taxes, adjust here
+            decimal fee = 0m;                           // set any service fee here if you have it
+            decimal discount = 0m;                      // set any discount here if you have it
+            decimal grandTotal = b.AmountDue;
+            decimal gatewayFee = Math.Max(0, b.AmountPaid - grandTotal); // typically 0 unless you track it
+
+            // Airline name / initials
+            var airName = seg?.Airline?.Name ?? "Airline";
+            var opInitials = new string(airName.Where(char.IsLetter).Take(2).DefaultIfEmpty('A').ToArray())
+                                .ToUpperInvariant();
+
+            // ---------- small helpers (scoped like in bus ticket) ----------
+            static object? GetProp(object source, params string[] names)
             {
-                container.Page(page =>
+                foreach (var n in names)
                 {
-                    page.Margin(30);
+                    var pi = source.GetType().GetProperty(n);
+                    if (pi != null)
+                    {
+                        var val = pi.GetValue(source);
+                        if (val != null) return val;
+                    }
+                }
+                return null;
+            }
+
+            static string WebToPhysical(string path)
+            {
+                var root = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+                var p = path.Replace("\\", "/").Trim();
+                if (p.StartsWith("~/")) p = p[2..];
+                if (p.StartsWith("/")) p = p[1..];
+                return Path.Combine(root, p);
+            }
+
+            static object? NormalizeLogo(object? src)
+            {
+                if (src == null) return null;
+                if (src is Stream) return src;
+                if (src is byte[] bytes) return new MemoryStream(bytes);
+
+                if (src is string s)
+                {
+                    if (string.IsNullOrWhiteSpace(s)) return null;
+                    var m = Regex.Match(s, @"^data:image\/[a-zA-Z0-9.+-]+;base64,(.*)$");
+                    if (m.Success)
+                        return new MemoryStream(Convert.FromBase64String(m.Groups[1].Value));
+
+                    var tryPath = File.Exists(s) ? s : WebToPhysical(s);
+                    return File.Exists(tryPath) ? tryPath : null;
+                }
+                return null;
+            }
+            // ---------- end helpers ----------
+
+            // Optional airline logo (tries common property names you might have)
+            var rawLogo =
+                GetProp(seg?.Airline ?? new object(), "LogoPath", "LogoUrl", "Logo") ??
+                GetProp(b, "OperatorLogoPath", "OperatorLogo", "Logo", "LogoPath");
+            var filePathOrStream = NormalizeLogo(rawLogo);
+
+            // Route & time labels (with null-safety)
+            string from = seg?.FromAirport?.IataCode ?? seg?.FromAirport?.Name ?? "-";
+            string to = seg?.ToAirport?.IataCode ?? seg?.ToAirport?.Name ?? "-";
+            string dep = seg?.DepTimeLocal.ToString(@"hh\:mm") ?? "-";
+            string arr = seg?.ArrTimeLocal.ToString(@"hh\:mm") ?? "-";
+            string flightNo = $"{(seg?.Airline?.IataCode ?? "XX")} {seg?.FlightNumber ?? ""}".Trim();
+            string airlineName = seg?.Airline?.Name ?? "Airline";
+
+
+            // Passenger names (primary display)
+            var paxNames = (b.Passengers ?? Enumerable.Empty<Passenger>())
+                           .Select(p => $"{p.FirstName} {p.LastName}".Trim())
+                           .Where(s => !string.IsNullOrWhiteSpace(s))
+                           .DefaultIfEmpty("-")
+                           .ToList();
+
+            var bytes = Document.Create(doc =>
+            {
+                doc.Page(page =>
+                {
                     page.Size(PageSizes.A4);
-                    page.DefaultTextStyle(x => x.FontSize(11));
-                    page.Header().Row(row =>
-                    {
-                        row.RelativeItem().Text("RiadTrip • Air E-Ticket").SemiBold().FontSize(18).FontColor(Colors.Green.Darken2);
-                        row.ConstantItem(120).AlignRight().Text($"PNR: {b.Pnr}").SemiBold();
-                    });
-                    page.Content().Column(col =>
-                    {
-                        col.Item().PaddingBottom(10).Text("Booking Details").SemiBold().FontSize(14);
-                        col.Item().Table(t =>
-                        {
-                            t.ColumnsDefinition(c => { c.RelativeColumn(); c.RelativeColumn(); });
-                            t.Cell().Text($"Route: {seg.FromAirport.IataCode} → {seg.ToAirport.IataCode}");
-                            t.Cell().Text($"Flight: {seg.Airline.IataCode} {seg.FlightNumber}");
-                            t.Cell().Text($"Date: {travelDate:yyyy-MM-dd}");
-                            t.Cell().Text($"Times: {seg.DepTimeLocal:hh\\:mm} → {seg.ArrTimeLocal:hh\\:mm}");
-                            t.Cell().Text($"Cabin: {b.Itinerary.Cabin}");
-                            t.Cell().Text($"Status: {b.Status}");
-                        });
+                    page.Margin(25);
+                    page.DefaultTextStyle(t => t.FontSize(10).FontColor(Colors.Grey.Darken3));
 
-                        col.Item().PaddingTop(12).Text("Passengers").SemiBold().FontSize(14);
-                        col.Item().Table(t =>
-                        {
-                            t.ColumnsDefinition(c => { c.ConstantColumn(28); c.RelativeColumn(); c.ConstantColumn(80); c.ConstantColumn(100); });
-                            t.Header(h =>
+                    page.Content().Column(root =>
+                    {
+                        // ===== MAIN TICKET CARD =====
+                        root.Item().Padding(10).Border(1).BorderColor(Colors.Grey.Lighten1)
+                            .Background(Colors.White)
+                            .Column(main =>
                             {
-                                h.Cell().Text("#").Bold();
-                                h.Cell().Text("Name").Bold();
-                                h.Cell().Text("Type").Bold();
-                                h.Cell().Text("Passport").Bold();
+                                // Header (airline + payment)
+                                main.Item().Padding(6).Row(row =>
+                                {
+                                    // Left side
+                                    row.RelativeItem().Column(left =>
+                                    {
+                                        left.Item().Row(r =>
+                                        {
+                                            if (filePathOrStream is string logoPath && !string.IsNullOrWhiteSpace(logoPath))
+                                                r.ConstantItem(56).Height(56).Image(logoPath).FitArea();
+                                            else if (filePathOrStream is Stream logoStream)
+                                                r.ConstantItem(56).Height(56).Image(logoStream).FitArea();
+                                            else
+                                                r.ConstantItem(56).Height(56).Border(1).BorderColor(Colors.Grey.Lighten2)
+                                                 .Background(Colors.Grey.Lighten4).AlignCenter().AlignMiddle()
+                                                 .Text(opInitials).SemiBold().FontSize(16).FontColor(Colors.Blue.Darken2);
+
+                                            r.Spacing(10);
+                                            r.RelativeItem().Column(op =>
+                                            {
+                                                op.Item().Text(airName).SemiBold().FontSize(14).FontColor(Colors.Blue.Darken2);
+                                                op.Item().Text($"Flight: {flightNo}").FontSize(9).FontColor(Colors.Grey.Darken1);
+                                            });
+                                        });
+
+                                        left.Item().PaddingTop(6).Row(g1 =>
+                                        {
+                                            g1.RelativeItem().Text(t => { t.Span("PNR: ").SemiBold(); t.Span($"{b.Pnr}"); });
+                                            g1.RelativeItem().Text(t => { t.Span("Travel Date: ").SemiBold(); t.Span($"{travelDate:dd MMM yyyy}"); });
+                                        });
+
+                                        left.Item().PaddingTop(2).Row(g2 =>
+                                        {
+                                            g2.RelativeItem().Text(t => { t.Span("From: ").SemiBold(); t.Span(from); });
+                                            g2.RelativeItem().Text(t => { t.Span("To: ").SemiBold(); t.Span(to); });
+                                        });
+
+                                        left.Item().PaddingTop(2).Row(g3 =>
+                                        {
+                                            g3.RelativeItem().Text(t => { t.Span("Departure: ").SemiBold(); t.Span(dep); });
+                                            g3.RelativeItem().Text(t => { t.Span("Arrival: ").SemiBold(); t.Span(arr); });
+                                        });
+
+                                        left.Item().PaddingTop(2).Row(g4 =>
+                                        {
+                                            g4.RelativeItem().Text(t => { t.Span("Booked On: ").SemiBold(); t.Span($"{issuedOn:dd MMM yyyy}"); });
+                                            g4.RelativeItem().Text(t => { t.Span("Cabin: ").SemiBold(); t.Span($"{b.Itinerary.Cabin}"); });
+                                        });
+                                    });
+
+                                    // Right payment panel (styled like bus)
+                                    row.ConstantItem(170).Column(pay =>
+                                    {
+                                        pay.Item().Border(1).BorderColor(Colors.Grey.Lighten1).Padding(8).Column(p =>
+                                        {
+                                            p.Item().Text("Payment Details").SemiBold().FontSize(11);
+                                            p.Item().PaddingTop(4).Row(x => { x.RelativeItem().Text("Ticket Price"); x.AutoItem().Text($"BDT {ticketPrice:0}"); });
+                                            p.Item().Row(x => { x.RelativeItem().Text("+ Fee Charged"); x.AutoItem().Text($"BDT {fee:0}"); });
+                                            if (discount > 0)
+                                                p.Item().Row(x => { x.RelativeItem().Text("- Discount"); x.AutoItem().Text($"BDT {discount:0}"); });
+                                            if (gatewayFee > 0)
+                                                p.Item().Row(x => { x.RelativeItem().Text("+ Gateway Fee"); x.AutoItem().Text($"BDT {gatewayFee:0}"); });
+                                            p.Item().PaddingTop(4).LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten1);
+                                            p.Item().PaddingTop(4).Row(x => { x.RelativeItem().Text("Total Due").SemiBold(); x.AutoItem().Text($"BDT {grandTotal:0}").SemiBold(); });
+                                            p.Item().Row(x => { x.RelativeItem().Text("Paid"); x.AutoItem().Text($"BDT {b.AmountPaid:0}"); });
+                                            p.Item().Row(x => { x.RelativeItem().Text("Balance"); x.AutoItem().Text($"BDT {(grandTotal - b.AmountPaid):0}"); });
+                                        });
+                                    });
+                                });
+
+                                main.Item().PaddingVertical(6).LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten1);
+
+                                // Passenger panel
+                                main.Item().Container().Background(Colors.Grey.Lighten5).Padding(10)
+                                    .Border(0.5f).BorderColor(Colors.Grey.Lighten2)
+                                    .Column(pan =>
+                                    {
+                                        pan.Item().Text("Passenger Details").SemiBold().FontSize(11);
+                                        // Contact + first passenger name quick view
+                                        pan.Item().PaddingTop(6).Row(r =>
+                                        {
+                                            r.RelativeItem().Text(t => { t.Span("Contact: ").SemiBold(); t.Span(b.ContactName ?? "-"); });
+                                            r.RelativeItem().Text(t => { t.Span("Phone: ").SemiBold(); t.Span(b.ContactPhone ?? "-"); });
+                                        });
+                                        pan.Item().PaddingTop(2).Row(r =>
+                                        {
+                                            r.RelativeItem().Text(t => { t.Span("Email: ").SemiBold(); t.Span(b.ContactEmail ?? "-"); });
+                                            r.RelativeItem().Text(t => { t.Span("PNR: ").SemiBold(); t.Span(b.Pnr); });
+                                        });
+
+                                        // List all passengers like a compact table
+                                        pan.Item().PaddingTop(6).Column(list =>
+                                        {
+                                            int i = 1;
+                                            foreach (var p in b.Passengers ?? Enumerable.Empty<Passenger>())
+                                            {
+                                                var nm = $"{p.FirstName} {p.LastName}".Trim();
+                                                list.Item().Row(r =>
+                                                {
+                                                    r.ConstantItem(22).Text($"{i++}.");
+                                                    r.RelativeItem().Text(nm.Length == 0 ? "-" : nm);
+                                                    r.ConstantItem(90).AlignRight().Text(p.Type.ToString());
+                                                });
+                                            }
+                                        });
+                                    });
+
+                                // Compact row similar to bus (key facts)
+                                main.Item().PaddingTop(8).PaddingHorizontal(6).Row(r =>
+                                {
+                                    r.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(6)
+                                        .Column(p => { p.Item().Text("Flight").SemiBold(); p.Item().Text($"{flightNo}"); });
+                                    r.Spacing(8);
+                                    r.RelativeItem().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(6)
+                                        .Column(p => { p.Item().Text("Route").SemiBold(); p.Item().Text($"{from} → {to}"); });
+                                });
+
+                                main.Item().PaddingTop(8).AlignCenter()
+                                    .Text("ঘরে বসে এয়ার টিকিট কিনুন সহজে, কল করুন ১৬৩৭৪")
+                                    .FontSize(12).SemiBold().FontColor(Colors.Green.Darken2);
+
+                                // Terms (Air)
+                                main.Item().PaddingTop(6).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(8)
+                                    .Column(t =>
+                                    {
+                                        t.Item().Text("Terms & Conditions").SemiBold().FontSize(11);
+                                        t.Item().PaddingTop(4).Text("1. Please carry a valid photo ID for check-in.").FontSize(9);
+                                        t.Item().Text("2. Rebooking / refund is subject to airline policy and fare rules.").FontSize(9);
+                                        t.Item().Text("3. Report at the airport at least 2 hours prior to departure for domestic flights.").FontSize(9);
+                                        t.Item().Text("4. For international flights, ensure passport & visa validity as required.").FontSize(9);
+                                        t.Item().Text("5. This e-ticket is issued by RiadTrip.com as an authorized agent.").FontSize(9);
+                                    });
                             });
-                            int i = 1;
-                            foreach (var p in b.Passengers)
+
+                        // Stubs (two compact copies like bus)
+                        root.Item().PaddingTop(8).Border(1).BorderColor(Colors.Grey.Lighten1).Padding(8)
+                            .Column(stub =>
                             {
-                                t.Cell().Text(i++.ToString());
-                                t.Cell().Text($"{p.FirstName} {p.LastName}");
-                                t.Cell().Text(p.Type.ToString());
-                                t.Cell().Text(p.PassportNo ?? "-");
-                            }
-                        });
+                                stub.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Column(c =>
+                                    {
+                                        c.Item().Text("Payment Details").SemiBold();
+                                        c.Item().Text($"Ticket Price :  BDT {ticketPrice:0}");
+                                        c.Item().Text($"+ Fee Charged:  BDT {fee:0}");
+                                        if (discount > 0) c.Item().Text($"- Discount   :  BDT {discount:0}");
+                                        if (gatewayFee > 0) c.Item().Text($"+ Gateway Fee:  BDT {gatewayFee:0}");
+                                        c.Item().Text($"Total Paid   :  BDT {b.AmountPaid:0}");
+                                    });
 
-                        col.Item().PaddingTop(12).Text("Payment").SemiBold().FontSize(14);
-                        col.Item().Table(t =>
-                        {
-                            t.ColumnsDefinition(c => { c.RelativeColumn(); c.ConstantColumn(150); });
-                            t.Cell().Text("Grand Total");
-                            t.Cell().Text($"{b.Currency} {b.AmountDue:0.##}").AlignRight();
-                            t.Cell().Text("Paid");
-                            t.Cell().Text($"{b.Currency} {b.AmountPaid:0.##}").AlignRight();
-                            t.Cell().Text("Balance");
-                            t.Cell().Text($"{b.Currency} {(b.AmountDue - b.AmountPaid):0.##}").AlignRight();
-                        });
+                                    r.RelativeItem().Column(c =>
+                                    {
+                                        c.Item().Text($"PNR :  {b.Pnr}  ({airName})");
+                                        c.Item().Text($"Issued On :  {issuedOn:dd MMM yyyy}");
+                                        c.Item().Text($"Travel Date :  {travelDate:dd MMM yyyy}");
+                                        c.Item().Text($"Flight :  {flightNo}");
+                                        c.Item().Text($"Route :  {from} → {to}  ({dep} → {arr})");
+                                        if (!string.IsNullOrWhiteSpace(b.ContactPhone))
+                                            c.Item().Text($"Mobile #:  {b.ContactPhone}");
+                                    });
+                                });
+                            });
 
-                        col.Item().PaddingTop(16).Text("Note: Please present a valid photo ID at check-in.").FontColor(Colors.Grey.Darken2);
+                        root.Item().PaddingTop(6).Border(1).BorderColor(Colors.Grey.Lighten1).Padding(8)
+                            .Column(stub =>
+                            {
+                                stub.Item().Row(r =>
+                                {
+                                    r.RelativeItem().Column(c =>
+                                    {
+                                        c.Item().Text("Payment Details").SemiBold();
+                                        c.Item().Text($"Ticket Price :  BDT {ticketPrice:0}");
+                                        c.Item().Text($"+ Fee Charged:  BDT {fee:0}");
+                                        if (discount > 0) c.Item().Text($"- Discount   :  BDT {discount:0}");
+                                        if (gatewayFee > 0) c.Item().Text($"+ Gateway Fee:  BDT {gatewayFee:0}");
+                                        c.Item().Text($"Total Paid   :  BDT {b.AmountPaid:0}");
+                                    });
+
+                                    r.RelativeItem().Column(c =>
+                                    {
+                                        c.Item().Text($"PNR :  {b.Pnr}  ({airName})");
+                                        c.Item().Text($"Issued On :  {issuedOn:dd MMM yyyy}");
+                                        c.Item().Text($"Travel Date :  {travelDate:dd MMM yyyy}");
+                                        c.Item().Text($"Flight :  {flightNo}");
+                                        c.Item().Text($"Route :  {from} → {to}  ({dep} → {arr})");
+                                        if (!string.IsNullOrWhiteSpace(b.ContactPhone))
+                                            c.Item().Text($"Mobile #:  {b.ContactPhone}");
+                                    });
+                                });
+                            });
                     });
-                    page.Footer().AlignCenter().Text(txt =>
-                    {
-                        txt.Span("Generated by RiadTrip • ").Light();
-                        txt.Span($"{System.DateTime.Now:dd MMM yyyy HH:mm}");
-                    });
+
+                    page.Footer().AlignCenter().Text("Thank you for choosing RiadTrip")
+                        .FontSize(9).FontColor(Colors.Grey.Darken1);
                 });
-            });
+            }).GeneratePdf();
 
-            var bytes = doc.GeneratePdf();
             return Task.FromResult(bytes);
         }
+
     }
 }

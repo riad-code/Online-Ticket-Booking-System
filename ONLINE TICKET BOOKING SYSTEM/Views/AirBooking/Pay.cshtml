@@ -3,7 +3,6 @@
     ViewData["Title"] = "Review & Pay";
     Layout = "_Layout";
 }
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <div class="container my-4">
     <div class="card shadow-sm">
@@ -33,19 +32,30 @@
                             }
                         </ul>
                     </div>
+
+                    <div class="border rounded p-3 mb-3">
+                        <h6 class="fw-bold">Contact</h6>
+                        <div><strong>Name:</strong> @Model.ContactName</div>
+                        <div><strong>Email:</strong> @Model.ContactEmail</div>
+                        <div><strong>Phone:</strong> @Model.ContactPhone</div>
+                    </div>
                 </div>
+
                 <div class="col-md-4">
                     <div class="border rounded p-3">
                         <h6 class="fw-bold">Payment Summary</h6>
-                        <div class="d-flex justify-content-between"><span>Amount Due</span><span>@Model.Currency @Model.AmountDue</span></div>
-                        <div class="d-flex justify-content-between"><span>Paid</span><span>@Model.Currency @Model.AmountPaid</span></div>
+                        <div class="d-flex justify-content-between">
+                            <span>Amount Due</span><span>@Model.Currency @Model.AmountDue</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Paid</span><span>@Model.Currency @Model.AmountPaid</span>
+                        </div>
                         <hr />
                         <form asp-controller="Payment" asp-action="AirPayment" method="post">
                             <input type="hidden" name="pnr" value="@Model.Pnr" />
-                            <button type="submit" class="btn btn-success w-100">Pay & Confirm</button>
+                            <button type="submit" class="btn btn-success w-100">Proceed to SSLCommerz</button>
                         </form>
-
-                        <div class="small text-muted mt-2">Demo: click to mark paid & download ticket.</div>
+                        <div class="small text-muted mt-2">You’ll be redirected to the secure payment page.</div>
                     </div>
                 </div>
             </div>

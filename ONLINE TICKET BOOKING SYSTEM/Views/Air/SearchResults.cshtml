@@ -91,10 +91,10 @@
             <div>
                 <h4 class="mb-1">@Model.From <i class="fa fa-arrow-right text-success mx-2"></i> @Model.To</h4>
                 <div class="small-muted">
-                    Depart: @Model.JourneyDate:ddd, dd MMM yyyy
+                    Depart: @Model.JourneyDate:
                     @if (Model.ReturnDate.HasValue)
                     {
-                        <text> • Return: @Model.ReturnDate.Value:ddd, dd MMM yyyy</text>
+                        <text> • Return: @Model.ReturnDate.Value:y</text>
                     }
                     • @Model.TripType • Cabin: @Model.Cabin • Pax: @Model.Travellers
                 </div>
@@ -281,44 +281,56 @@
 
           function esc(s){ return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
 
-          function cardHtml(f){
-            const id = f.ScheduleId || 0;
-            const canBook = Number(id) > 0;
-            const priceText = `${esc(f.Currency||'BDT')} ${Number(f.Price||0).toFixed(2)}`;
-            return `
-              <div class="flight-card d-flex justify-content-between align-items-start flex-wrap">
-                <div class="me-3">
-                  <div class="mb-1">
-                    <span class="airline-pill">${esc(f.AirlineName)} (${esc(f.AirlineCode)})</span>
-                    <span class="tag ms-2">${esc(f.FlightNumber)}</span>
-                    <span class="tag">${esc(f.Cabin||'')}</span>
-                    <span class="tag">${esc(f.SeatsAvailable)} seats</span>
-                  </div>
-                  <div class="small-muted mb-1">${esc(f.From)} <i class="fa fa-arrow-right text-success mx-1"></i> ${esc(f.To)}</div>
-                  <div class="d-flex align-items-center">
-                    <div class="me-4 text-center">
-                      <div class="fw-semibold">${esc(f.DepTime)}</div>
-                      <div class="small-muted">Depart</div>
-                    </div>
-                    <div class="text-center mx-2">
-                      <i class="fa fa-plane text-success"></i><br/>
-                      <small class="small-muted">${esc(f.Duration)}</small>
-                    </div>
-                    <div class="ms-4 text-center">
-                      <div class="fw-semibold">${esc(f.ArrTime)}</div>
-                      <div class="small-muted">Arrive</div>
-                    </div>
-                  </div>
-                  <div class="small-muted mt-1">Travel Date: ${esc(f.TravelDate)}</div>
+                    function cardHtml(f){
+          const id = f.ScheduleId || f.FlightScheduleId || f.Id || 0;
+          const canBook = Number(id) > 0;
+
+          const priceText = `${esc(f.Currency||'BDT')} ${Number(f.Price||0).toFixed(2)}`;
+          const travelDate = (f.TravelDate && String(f.TravelDate).trim().length > 0)
+            ? f.TravelDate
+            : '@Model.JourneyDate.ToString("yyyy-MM-dd")';
+          const cabin = f.Cabin || 'Economy';
+
+          return `
+            <div class="flight-card d-flex justify-content-between align-items-start flex-wrap">
+              <div class="me-3">
+                <div class="mb-1">
+                  <span class="airline-pill">${esc(f.AirlineName)} (${esc(f.AirlineCode)})</span>
+                  <span class="tag ms-2">${esc(f.FlightNumber)}</span>
+                  <span class="tag">${esc(f.Cabin||'')}</span>
+                  <span class="tag">${esc(f.SeatsAvailable)} seats</span>
                 </div>
-                <div class="text-end">
-                  <div class="price mb-2">${priceText}</div>
-                  ${ canBook
-                      ? `<a class="btn btn-green btn-sm" href="/AirBooking/Passengers?flightId=${encodeURIComponent(id)}">BOOK Ticket</a>`
-                      : `<button class="btn btn-green btn-sm" disabled title="Missing flight id">BOOKING</button>` }
+                <div class="small-muted mb-1">${esc(f.From)} <i class="fa fa-arrow-right text-success mx-1"></i> ${esc(f.To)}</div>
+                <div class="d-flex align-items-center">
+                  <div class="me-4 text-center">
+                    <div class="fw-semibold">${esc(f.DepTime)}</div>
+                    <div class="small-muted">Depart</div>
+                  </div>
+                  <div class="text-center mx-2">
+                    <i class="fa fa-plane text-success"></i><br/>
+                    <small class="small-muted">${esc(f.Duration)}</small>
+                  </div>
+                  <div class="ms-4 text-center">
+                    <div class="fw-semibold">${esc(f.ArrTime)}</div>
+                    <div class="small-muted">Arrive</div>
+                  </div>
                 </div>
-              </div>`;
-          }
+                <div class="small-muted mt-1">Travel Date: ${esc(travelDate)}</div>
+              </div>
+
+              <div class="text-end">
+                <div class="price mb-2">${priceText}</div>
+                ${
+                  canBook
+                    ? `<a class="btn btn-green btn-sm"
+                          href="/AirBooking/Hold?sid=${id}&date=${encodeURIComponent(travelDate)}&cabin=${encodeURIComponent(cabin)}&pax=1">
+                          BOOK Ticket
+                       </a>`
+                    : `<button class="btn btn-green btn-sm" disabled title="Missing flight id">BOOK TICKET</button>`
+                }
+              </div>
+            </div>`;
+        }
 
           function render(list, containerSel, countSel){
             const el = document.querySelector(containerSel);

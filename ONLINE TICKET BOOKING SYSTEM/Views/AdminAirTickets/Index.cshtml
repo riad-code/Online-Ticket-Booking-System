@@ -1,0 +1,45 @@
+﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBooking>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Air – Pending Approvals";
+}
+<div class="container py-4">
+    <h4 class="mb-3">Air Tickets – Pending Approval (@Model.Count())</h4>
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>PNR</th>
+                        <th>Route</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var b in Model)
+                    {
+                        var seg = b.Itinerary?.Segments?.FirstOrDefault()?.FlightSchedule;
+                        var from = seg?.FromAirport?.IataCode ?? "-";
+                        var to = seg?.ToAirport?.IataCode ?? "-";
+                        var d = b.Itinerary?.Segments?.FirstOrDefault()?.TravelDate.ToString("yyyy-MM-dd") ?? "-";
+                        <tr>
+                            <td>@b.Id</td>
+                            <td>@b.Pnr</td>
+                            <td>@from → @to</td>
+                            <td>@d</td>
+                            <td>@b.Currency @b.AmountDue</td>
+                            <td>@b.BookingStatus</td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-success" asp-action="Details" asp-route-id="@b.Id">Review</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -11,6 +11,7 @@ using Newtonsoft.Json;
 using ONLINE_TICKET_BOOKING_SYSTEM.Data;
 using ONLINE_TICKET_BOOKING_SYSTEM.Models;
 using ONLINE_TICKET_BOOKING_SYSTEM.Services;
+using ONLINE_TICKET_BOOKING_SYSTEM.Models.Air;
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 {
@@ -33,12 +34,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             _paymentService = paymentService;
         }
 
-        // Build base URL from config if provided, otherwise from the current request.
         private string GetBaseUrl() =>
             (_configuration["App:BaseUrl"]?.TrimEnd('/')) ??
             $"{Request.Scheme}://{Request.Host}";
 
-        // Allow both GET (from "Proceed to payment" button/link) and POST.
+        // ---------------- BUS ----------------
+
+        // Create SSLCommerz session for Bus booking
         [HttpGet, HttpPost]
         public async Task<IActionResult> Payment(int id)
         {
@@ -58,7 +60,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return Redirect(redirectUrl);
         }
 
-        // SUCCESS callback – SSLCommerz often POSTs form fields; accept both GET and POST.
+        // BUS: SUCCESS callback
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
         [HttpGet("payment/success"), HttpPost("payment/success")]
@@ -77,7 +79,6 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             if (booking == null)
                 return View("Error", Error("Booking not found."));
 
-            // Validate against SSLCommerz Validator API
             var valid = await ValidateWithSslCommerz(valId);
             if (valid == null)
                 return View("Error", Error("Unable to validate payment."));
@@ -94,13 +95,11 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             if (!string.Equals(valid.currency, "BDT", StringComparison.OrdinalIgnoreCase))
                 return View("Error", Error("Validation mismatch (currency)."));
 
-            // Mark booking paid
             booking.PaymentStatus = PaymentStatus.Paid;
-            booking.Status = BookingStatus.PendingApproval; // or Approved if you auto-approve
+            booking.Status = BookingStatus.PendingApproval;
             booking.PaymentAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            // Best-effort email
             if (!string.IsNullOrWhiteSpace(booking.CustomerEmail))
             {
                 try
@@ -111,13 +110,13 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                         $"Your payment for booking #{booking.Id} was successful."
                     );
                 }
-                catch { /* ignore email errors */ }
+                catch { }
             }
 
             return RedirectToAction("ThankYou", "Booking", new { id = booking.Id });
         }
 
-        // FAIL callback
+        // BUS: FAIL callback
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
         [HttpGet("payment/fail"), HttpPost("payment/fail")]
@@ -143,19 +142,126 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             return View("PaymentFailure");
         }
 
-        // CANCEL callback
+        // BUS: CANCEL callback
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
         [HttpGet("payment/cancel"), HttpPost("payment/cancel")]
         public IActionResult PaymentCancel() => View("PaymentCancelled");
 
-        // Optional IPN endpoint (can be expanded later)
+        // ---------------- AIR ----------------
+
+        // Create SSLCommerz session for Air booking (via PNR)
+        [HttpPost]
+        public async Task<IActionResult> AirPayment(string pnr)
+        {
+            var b = await _context.AirBookings
+                .Include(x => x.Itinerary).ThenInclude(i => i.Segments)
+                .FirstOrDefaultAsync(x => x.Pnr == pnr);
+
+            if (b == null)
+                return View("Error", Error("Air booking not found."));
+
+            if (b.AmountDue <= 0)
+                return View("Error", Error("Amount must be greater than zero."));
+
+            var baseUrl = GetBaseUrl();
+            var redirectUrl = await _paymentService.InitiateAirPaymentAsync(b, baseUrl);
+            if (string.IsNullOrWhiteSpace(redirectUrl))
+                return View("Error", Error("Payment initiation failed. Please try again."));
+
+            return Redirect(redirectUrl);
+        }
+
+        // ---------- AIR: SUCCESS callback (uses tran_id as PNR) ----------
         [AllowAnonymous]
         [IgnoreAntiforgeryToken]
-        [HttpPost("payment/ipn")]
-        public IActionResult Ipn() => Ok();
+        [HttpGet("airpayment/success"), HttpPost("airpayment/success")]
+        public async Task<IActionResult> AirPaymentSuccess()
+        {
+            var form = Request.HasFormContentType ? Request.Form : null;
+            var query = Request.Query;
 
-        // ---------- Helpers ----------
+            // SSLCommerz posts back tran_id + val_id. tran_id == your PNR
+            var tranId = form?["tran_id"].ToString() ?? query["tran_id"].ToString();
+            var valId = form?["val_id"].ToString() ?? query["val_id"].ToString();
+
+            if (string.IsNullOrWhiteSpace(tranId) || string.IsNullOrWhiteSpace(valId))
+                return View("Error", Error("Missing tran_id (PNR) or val_id."));
+
+            var b = await _context.AirBookings.FirstOrDefaultAsync(x => x.Pnr == tranId);
+            if (b == null)
+                return View("Error", Error("Air booking not found."));
+
+            var valid = await ValidateWithSslCommerz(valId);
+            if (valid == null)
+                return View("Error", Error("Unable to validate payment."));
+
+            var ok = string.Equals(valid.status, "VALID", StringComparison.OrdinalIgnoreCase)
+                  || string.Equals(valid.status, "VALIDATED", StringComparison.OrdinalIgnoreCase);
+            if (!ok)
+                return View("Error", Error($"Validation failed: {valid.status}"));
+
+            // sanity checks
+            if (!string.Equals(valid.tran_id, tranId, StringComparison.Ordinal))
+                return View("Error", Error("Validation mismatch (tran_id)."));
+            if (!string.Equals(valid.currency, "BDT", StringComparison.OrdinalIgnoreCase))
+                return View("Error", Error("Validation mismatch (currency)."));
+
+            b.PaymentStatus = AirPaymentStatus.Paid;
+            b.BookingStatus = AirBookingStatus.PendingApproval;
+            b.PaymentAtUtc = DateTime.UtcNow;
+            b.AmountPaid = b.AmountDue;
+            await _context.SaveChangesAsync();
+
+            if (!string.IsNullOrWhiteSpace(b.ContactEmail))
+            {
+                try
+                {
+                    await _emailSender.SendEmailAsync(
+                        b.ContactEmail,
+                        "Payment Successful",
+                        $"Your payment for PNR {b.Pnr} was successful. You'll receive your e-ticket after admin approval."
+                    );
+                }
+                catch { /* ignore */ }
+            }
+
+            return RedirectToAction("ThankYou", "AirBooking", new { pnr = b.Pnr });
+        }
+
+        // ---------- AIR: FAIL callback (uses tran_id as PNR) ----------
+        [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
+        [HttpGet("airpayment/fail"), HttpPost("airpayment/fail")]
+        public async Task<IActionResult> AirPaymentFail()
+        {
+            var form = Request.HasFormContentType ? Request.Form : null;
+            var query = Request.Query;
+
+            var tranId = form?["tran_id"].ToString() ?? query["tran_id"].ToString(); // equals PNR
+
+            if (!string.IsNullOrWhiteSpace(tranId))
+            {
+                var b = await _context.AirBookings.FirstOrDefaultAsync(x => x.Pnr == tranId);
+                if (b != null)
+                {
+                    b.PaymentStatus = AirPaymentStatus.Unpaid;
+                    b.BookingStatus = AirBookingStatus.PendingPayment;
+                    await _context.SaveChangesAsync();
+                }
+            }
+
+            return View("PaymentFailure");
+        }
+
+
+        // AIR: CANCEL callback
+        [AllowAnonymous]
+        [IgnoreAntiforgeryToken]
+        [HttpGet("airpayment/cancel"), HttpPost("airpayment/cancel")]
+        public IActionResult AirPaymentCancel() => View("PaymentCancelled");
+
+        // ---------------- Shared Helpers ----------------
 
         private async Task<SslValidateRes?> ValidateWithSslCommerz(string valId)
         {
@@ -175,10 +281,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             {
                 ErrorMessage = message,
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
-                // ShowRequestId is read-only in the model (computed).
             };
 
-        // Minimal DTO for validator response
         private sealed class SslValidateRes
         {
             public string status { get; set; }

@@ -3,14 +3,18 @@
 @{
     Layout = "~/Views/Shared/_UserLayout.cshtml";
     ViewData["Title"] = "User Dashboard";
+
+    // Pull Air list from ViewBag
+    var air = ViewBag.AirBookings as List<ONLINE_TICKET_BOOKING_SYSTEM.ViewModels.AirBookingSummaryVm> ?? new();
 }
 
 <div class="container-fluid py-3">
+    <!-- BUS KPIs -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
             <div class="card bg-success text-white shadow">
                 <div class="card-body">
-                    <div class="small">My Bookings</div>
+                    <div class="small">My Bus Bookings</div>
                     <div class="fs-3 fw-bold">@ViewData["MyBookingsCount"]</div>
                 </div>
             </div>
@@ -18,7 +22,7 @@
         <div class="col-md-3">
             <div class="card bg-info text-white shadow">
                 <div class="card-body">
-                    <div class="small">Upcoming Trips</div>
+                    <div class="small">Upcoming Bus Trips</div>
                     <div class="fs-3 fw-bold">@ViewData["UpcomingTrips"]</div>
                 </div>
             </div>
@@ -41,9 +45,46 @@
         </div>
     </div>
 
-    <div class="card shadow-sm">
+    <!-- AIR KPIs -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    <div class="small">My Air Bookings</div>
+                    <div class="fs-3 fw-bold">@ViewData["MyAirBookingsCount"]</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white shadow">
+                <div class="card-body">
+                    <div class="small">Upcoming Air Trips</div>
+                    <div class="fs-3 fw-bold">@ViewData["UpcomingAirTrips"]</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white shadow">
+                <div class="card-body">
+                    <div class="small">Air Pending Payments</div>
+                    <div class="fs-3 fw-bold">@ViewData["PendingAirPayments"]</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger text-white shadow">
+                <div class="card-body">
+                    <div class="small">Air Cancelled</div>
+                    <div class="fs-3 fw-bold">@ViewData["CancelledAirTrips"]</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BUS TABLE (unchanged) -->
+    <div class="card shadow-sm mb-4">
         <div class="card-header bg-white">
-            <h5 class="mb-0">Recent Bookings</h5>
+            <h5 class="mb-0">Recent Bus Bookings</h5>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -87,6 +128,60 @@
                         else
                         {
                             <tr><td colspan="9" class="text-center text-muted py-4">No bookings yet.</td></tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- AIR TABLE -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Recent Air Bookings</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>PNR</th>
+                            <th>Route</th>
+                            <th>Airline</th>
+                            <th>Journey</th>
+                            <th>Pax</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Payment</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (air.Any())
+                        {
+                            foreach (var a in air)
+                            {
+                                <tr>
+                                    <td>@a.Pnr</td>
+                                    <td>@a.Route</td>
+                                    <td>@a.Airline</td>
+                                    <td>@a.JourneyDate.ToString("dd MMM yyyy")</td>
+                                    <td>@a.Pax</td>
+                                    <td>৳@a.TotalFare</td>
+                                    <td>@a.Status</td>
+                                    <td>@a.PaymentStatus</td>
+                                    <td>
+                                        <a class="btn btn-sm btn-outline-success"
+                                           asp-controller="AirBooking" asp-action="ThankYou" asp-route-pnr="@a.Pnr">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr><td colspan="9" class="text-center text-muted py-4">No air bookings yet.</td></tr>
                         }
                     </tbody>
                 </table>

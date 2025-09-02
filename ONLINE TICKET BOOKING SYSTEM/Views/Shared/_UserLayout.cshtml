@@ -23,6 +23,13 @@
         }
     }
 }
+@functions {
+    bool IsController(string name)
+    {
+        var current = ViewContext?.RouteData?.Values?["controller"]?.ToString() ?? "";
+        return string.Equals(current, name, StringComparison.OrdinalIgnoreCase);
+    }
+}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -97,6 +104,37 @@
         .input-group .btn-sidebar {
             box-shadow: none !important;
         }
+        /* ===== Green hover for dropdown (treeview) items ===== */
+        .main-sidebar .nav-treeview > .nav-item > .nav-link {
+            color: #4a4a4a !important; /* default text */
+            background-color: transparent !important;
+            transition: background-color .15s ease, color .15s ease;
+        }
+
+            .main-sidebar .nav-treeview > .nav-item > .nav-link:hover {
+                background-color: #e6f7f0 !important; /* light green bg */
+                color: #1DBF73 !important; /* green text */
+            }
+
+            .main-sidebar .nav-treeview > .nav-item > .nav-link i.nav-icon,
+            .main-sidebar .nav-treeview > .nav-item > .nav-link .fa,
+            .main-sidebar .nav-treeview > .nav-item > .nav-link .far,
+            .main-sidebar .nav-treeview > .nav-item > .nav-link .fas {
+                color: inherit !important; /* icons follow text color */
+            }
+
+            /* Active highlight for current dropdown item */
+            .main-sidebar .nav-treeview > .nav-item > .nav-link.active {
+                background-color: #e6f7f0 !important;
+                color: #1DBF73 !important;
+                font-weight: 600;
+            }
+
+        /* Optional: green caret when parent is active/open */
+        .main-sidebar .nav-item.has-treeview.menu-open > a .right,
+        .main-sidebar .nav-item.has-treeview > a:hover .right {
+            color: #1DBF73 !important;
+        }
     </style>
 </head>
 <body class="hold-transition sidebar-mini">
@@ -149,13 +187,33 @@
                             </div>
                         </div>
 
-                        <!-- My Bookings -->
-                        <li class="nav-item">
-                            <a asp-controller="Booking" asp-action="MyBookings" class="nav-link">
+                        <!-- My Bookings Dropdown -->
+                        <li class="nav-item has-treeview @(IsController("Booking") || IsController("AirBooking") ? "menu-open" : "")">
+                            <a href="#" class="nav-link @(IsController("Booking") || IsController("AirBooking") ? "active" : "")">
                                 <i class="nav-icon fas fa-ticket-alt"></i>
-                                <p>My Bookings</p>
+                                <p>
+                                    My Bookings
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
                             </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a asp-controller="Booking" asp-action="MyBookings"
+                                       class="nav-link @(IsController("Booking") ? "active" : "")">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Bus Bookings</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a asp-controller="AirBooking" asp-action="MyAirBookings"
+                                       class="nav-link @(IsController("AirBooking") ? "active" : "")">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Air Bookings</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
+
 
                         <!-- Profile -->
                         <li class="nav-item">

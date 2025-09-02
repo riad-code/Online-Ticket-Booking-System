@@ -56,6 +56,32 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 .CountAsync();
 
             ViewData["TicketsSoldToday"] = ticketsSoldToday;
+            // ==== AIR KPIs (fixed) ====
+
+            // Total Airlines (shows 5 in your screenshot)
+            ViewData["TotalAir"] = await _context.Airlines
+                .AsNoTracking()
+                .CountAsync();
+
+            // Distinct Air Routes (origin–destination pairs)
+            ViewData["TotalAirRoutes"] = await _context.FlightSchedules
+                .AsNoTracking()
+                .Select(fs => new { fs.FromAirportId, fs.ToAirportId })
+                .Distinct()
+                .CountAsync();
+
+            // Air tickets sold today (approved + paid)
+            var airTicketsSoldToday = await _context.AirBookings
+                .AsNoTracking()
+                .Where(b =>
+                    b.PaymentStatus == ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirPaymentStatus.Paid &&
+                    b.BookingStatus == ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBookingStatus.Approved &&
+                    b.CreatedAtUtc >= startUtc &&
+                    b.CreatedAtUtc < endUtc)
+                .CountAsync();
+
+            ViewData["AirTicketsSoldToday"] = airTicketsSoldToday;
+
 
             return View();
         }

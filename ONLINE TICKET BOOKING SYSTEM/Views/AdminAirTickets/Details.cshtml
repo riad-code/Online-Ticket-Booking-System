@@ -1,0 +1,53 @@
+﻿@model ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBooking
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Air – Review";
+    var seg = Model.Itinerary?.Segments?.FirstOrDefault()?.FlightSchedule;
+}
+<div class="container py-4">
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between">
+            <h5 class="mb-0">PNR @Model.Pnr</h5>
+            <span class="badge bg-warning text-dark">@Model.BookingStatus</span>
+        </div>
+        <div class="card-body">
+            <h6 class="fw-bold">Flight</h6>
+            <div>@seg?.Airline?.Name (@seg?.Airline?.IataCode) — @seg?.FlightNumber</div>
+            <div>@seg?.FromAirport?.IataCode → @seg?.ToAirport?.IataCode</div>
+            <div>Amount: @Model.Currency @Model.AmountDue</div>
+            <hr />
+            <h6 class="fw-bold">Passengers</h6>
+            <ul>
+                @foreach (var p in Model.Passengers)
+                {
+                    <li>@p.FirstName @p.LastName (@p.Type)</li>
+                }
+            </ul>
+
+            @if (TempData["err"] != null)
+            {
+                <div class="alert alert-danger">@TempData["err"]</div>
+            }
+            @if (TempData["ok"] != null)
+            {
+                <div class="alert alert-success">@TempData["ok"]</div>
+            }
+
+            <div class="mt-3 d-flex gap-2">
+                @if (Model.BookingStatus == ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBookingStatus.PendingApproval)
+                {
+                    <form asp-action="Approve" method="post" class="d-inline">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <button class="btn btn-success">Approve & Send Ticket</button>
+                    </form>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.TicketPdfPath))
+                {
+                    <a class="btn btn-outline-primary" href="@Model.TicketPdfPath" target="_blank">View Ticket</a>
+                }
+                <a asp-action="Index" class="btn btn-secondary">Back</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -49,6 +49,7 @@
                 </div>
             </div>
         </div>
+       
         <div class="col-md-3">
             <div class="card bg-warning text-white shadow">
                 <div class="card-body">
@@ -57,16 +58,50 @@
                 </div>
             </div>
         </div>
-
+       
         <div class="col-md-3">
             <div class="card bg-primary text-white shadow">
                 <div class="card-body">
-                    🎟️ Tickets Sold Today
+                    🎟️ Bus Tickets Sold Today
                     <h4 class="mt-2">@ViewData["TicketsSoldToday"]</h4>
                 </div>
             </div>
         </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white shadow">
+                <div class="card-body">
+                    ✈️ Total Air
+                    <h4 class="mt-2">@ViewData["TotalAir"]</h4>
+                </div>
+            </div>
+        </div>
 
+        <div class="col-md-3">
+            <div class="card bg-warning text-white shadow">
+                <div class="card-body">
+                    🛫 Total Air Routes
+                    <h4 class="mt-2">@ViewData["TotalAirRoutes"]</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-primary text-white shadow">
+                <div class="card-body">
+                    🎟️ Air Tickets Sold Today
+                    <h4 class="mt-2">@ViewData["AirTicketsSoldToday"]</h4>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card bg-secondary text-white shadow">
+                <div class="card-body">
+                    🚆 Total Trains
+                    <h4 class="mt-2">@ViewData["TotalBuses"]</h4>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Quick Access Cards -->
@@ -142,17 +177,18 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-3 ">
-            <a asp-controller="Report" asp-action="Index" class="text-decoration-none">
-                <div class="card text-white bg-success shadow">
+        <div class="col-md-3">
+            <a asp-controller="AdminAirTickets" asp-action="Index" class="text-decoration-none">
+                <div class="card text-white bg-gradient-info shadow">
                     <div class="card-body text-center">
-                        <i class="fas fa-chart-bar fa-2x"></i><br />
-                        Sales Report
+                        <i class="fas fa-plane-ticket fa-2x"></i><br />
+                        Manage Air Tickets
                     </div>
                 </div>
             </a>
         </div>
-    </div>
+
+       
 
     <!-- Chart Section -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">

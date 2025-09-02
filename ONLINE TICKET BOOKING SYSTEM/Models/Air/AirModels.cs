@@ -8,7 +8,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Models.Air
     // ----- Enums -----
     public enum CabinClass { Economy, PremiumEconomy, Business, First }
     public enum PaxType { Adult, Child, Infant }
-
+    public enum AirPaymentStatus { Unpaid = 0, Paid = 1, Refunded = 2 }
+    public enum AirBookingStatus { PendingPayment = 0, PendingApproval = 1, Approved = 2, Cancelled = 3 }
     // ----- Master Data -----
     public class Airport
     {
@@ -163,8 +164,12 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Models.Air
     public class AirBooking
     {
         public int Id { get; set; }
+        // Models/Air/AirModels.cs (inside class AirBooking)
+        public string? UserId { get; set; }             // link to AspNetUsers
+        public string? TicketPdfPath { get; set; }      // saved PDF public URL
 
-        [Required, StringLength(6)] public string Pnr { get; set; } = default!;
+        [Required, StringLength(6)]
+        public string Pnr { get; set; } = default!;
 
         public int ItineraryId { get; set; }
         [ValidateNever] public Itinerary Itinerary { get; set; } = default!;
@@ -178,13 +183,22 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Models.Air
         public decimal AmountDue { get; set; }
         public decimal AmountPaid { get; set; }
 
-        // ✅ reference the GLOBAL BookingStatus (no ambiguity)
-        public ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus Status { get; set; }
-            = ONLINE_TICKET_BOOKING_SYSTEM.Models.BookingStatus.PendingPayment;
-
         [StringLength(3)] public string Currency { get; set; } = "BDT";
 
-        public DateTime CreatedAtUtc { get; set; }
+        // 🔹 NEW: Payment & Booking status tracking
+        public AirPaymentStatus PaymentStatus { get; set; } = AirPaymentStatus.Unpaid;
+        public AirBookingStatus BookingStatus { get; set; } = AirBookingStatus.PendingPayment;
+       
         public DateTime? PaidAtUtc { get; set; }
+
+        // 🔹 NEW: Payment timestamp
+        public DateTime? PaymentAtUtc { get; set; }
+
+        // 🔹 NEW: Contact info
+        [StringLength(60)] public string? ContactName { get; set; }
+        [StringLength(120)] public string? ContactEmail { get; set; }
+        [StringLength(20)] public string? ContactPhone { get; set; }
+
+        public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
     }
 }

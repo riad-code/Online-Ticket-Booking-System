@@ -38,7 +38,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Services
                 Infants = infants,
                 AmountDue = priced.grand,
                 AmountPaid = 0,
-                Status = BookingStatus.PendingPayment,
+                BookingStatus = AirBookingStatus.PendingPayment, // <-- updated
                 Currency = itin.Currency,
                 CreatedAtUtc = DateTime.UtcNow
             };
@@ -62,7 +62,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Services
             booking.AmountPaid += amountPaid;
             if (booking.AmountPaid >= booking.AmountDue)
             {
-                booking.Status = BookingStatus.Approved;   // তোমার central enum অনুযায়ী "paid/confirmed"
+                booking.BookingStatus = AirBookingStatus.Approved; // <-- updated
                 booking.PaidAtUtc = DateTime.UtcNow;
             }
             await _db.SaveChangesAsync();
