@@ -63,18 +63,21 @@
                                 </a>
                             </li>
 
-                          
+
 
                             <li class="nav-item me-3">
-                                <a href="#"
-                                   class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg @(currentPath.Contains("/event") ? "active-page" : "")">
+                                <a asp-controller="Events" asp-action="Index"
+                                   class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg @(currentPath.Contains("/events", StringComparison.OrdinalIgnoreCase) ? "active-page" : "")">
                                     <i class="fa-solid fa-calendar-days fs-5 me-1"></i>
-                                    <span>Event</span>
+                                    <span>Events</span>
                                 </a>
                             </li>
 
+
+
+
                             <li class="nav-item me-3 position-relative">
-                                <a href="#"
+                                <a asp-controller="Park" asp-action="Index"
                                    class="nav-link d-flex align-items-center text-dark rounded-3 px-3 py-1 hover-green-bg @(currentPath.Contains("/park") ? "active-page" : "")">
                                     <i class="bi bi-tree-fill fs-5 me-1"></i>
                                     <span>Park</span>

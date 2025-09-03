@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using ONLINE_TICKET_BOOKING_SYSTEM.Models;
 using ONLINE_TICKET_BOOKING_SYSTEM.Models.Air;
+using ONLINE_TICKET_BOOKING_SYSTEM.Models.Event;
 
 namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
 {
@@ -28,6 +29,9 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
         public DbSet<FlightSegment> FlightSegments { get; set; } = default!;
         public DbSet<AirBooking> AirBookings { get; set; } = default!;
         public DbSet<Passenger> Passengers { get; set; } = default!;
+
+        //event
+        public DbSet<EventItem> EventItems { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -153,6 +157,14 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
                 .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<Passenger>().Property(p => p.Gender).HasMaxLength(10);
+            //event
+            builder.Entity<EventItem>(e =>
+            {
+                e.HasIndex(x => x.StartDateUtc);
+                e.HasIndex(x => x.City);
+                e.HasIndex(x => x.Category);
+                e.HasIndex(x => x.IsFeatured);
+            });
         }
     }
 }

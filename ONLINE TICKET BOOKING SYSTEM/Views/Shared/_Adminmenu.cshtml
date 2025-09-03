@@ -1,61 +1,61 @@
 ﻿<style>
-   
+
     .nav-sidebar .nav-link.active {
-        background-color: #28a745 !important; 
+        background-color: #28a745 !important;
         color: #ffffff !important;
         font-weight: 500;
     }
 
-       
+
         .nav-sidebar .nav-link.active i,
         .nav-sidebar .nav-link.active p {
             color: #ffffff !important;
         }
 
-       
+
         .nav-sidebar .nav-link.active:focus,
         .nav-sidebar .nav-link.active:active {
-            background-color: #e6f7f0 !important; 
+            background-color: #e6f7f0 !important;
             color: #1DBF73 !important;
         }
 
-     
+
         .nav-sidebar .nav-link.active:hover {
-            background-color: #e6f7f0 !important; 
+            background-color: #e6f7f0 !important;
             color: #1DBF73 !important;
         }
 
-           
+
             .nav-sidebar .nav-link.active:hover i,
             .nav-sidebar .nav-link.active:hover p {
                 color: #1DBF73 !important;
             }
 
-  
+
     .nav-sidebar .nav-treeview .nav-link {
-        color: #ffffff; 
-        background-color: transparent; 
+        color: #ffffff;
+        background-color: transparent;
         transition: background-color 0.3s, color 0.3s;
     }
 
-       
-        .nav-sidebar .nav-treeview .nav-link:hover {
-            background-color: #28a745 !important; 
-            color: #ffffff !important; 
-        }
 
-       
-        .nav-sidebar .nav-treeview .nav-link.active {
-            background-color: #198754 !important; 
+        .nav-sidebar .nav-treeview .nav-link:hover {
+            background-color: #28a745 !important;
             color: #ffffff !important;
         }
 
-       
+
+        .nav-sidebar .nav-treeview .nav-link.active {
+            background-color: #198754 !important;
+            color: #ffffff !important;
+        }
+
+
         .nav-sidebar .nav-treeview .nav-link .nav-icon {
             color: #ffffff !important;
         }
 
-      
+
         .nav-sidebar .nav-treeview .nav-link:focus,
         .nav-sidebar .nav-treeview .nav-link:active {
             background-color: #28a745 !important;
@@ -68,11 +68,11 @@
     }
 
         .nav-sidebar .nav-treeview .nav-link .nav-icon {
-            color: #000000 !important; 
+            color: #000000 !important;
         }
 
         .nav-sidebar .nav-treeview .nav-link:hover .nav-icon {
-            color: #ffffff !important; 
+            color: #ffffff !important;
         }
 </style>
 
@@ -86,7 +86,11 @@
     bool IsControllerActionStartsWith(string controller, string actionPrefix) =>
         string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
         && currentAction?.StartsWith(actionPrefix, StringComparison.OrdinalIgnoreCase) == true;
+
     bool isAirSectionActive = IsController("Airlines", "Airports", "FareClasses", "FlightSchedules");
+
+    // ✅ Events controller active check (added)
+    bool isEventsActive = IsController("Events");
 }
 
 
@@ -111,14 +115,6 @@
             </a>
         </li>
 
-        <!-- Manage Routes -->
-        <!-- <li class="nav-item">
-            <a asp-controller="Route" asp-action="Index"
-               class="nav-link @(IsController("Route") ? "active" : "")">
-                <i class="nav-icon fas fa-route"></i>
-                <p>Manage Bus Routes</p>
-            </a>
-        </li> -->
         <!-- Manage Schedules -->
         <li class="nav-item">
             <a asp-controller="Schedule" asp-action="Index"
@@ -127,7 +123,7 @@
                 <p>Manage Bus Schedules</p>
             </a>
         </li>
-       
+
 
         <!-- Manage Vehicles Dropdown -->
         @{
@@ -194,7 +190,7 @@
                         <p>Manage Train</p>
                     </a>
                 </li>
-              
+
             </ul>
         </li>
 
@@ -234,6 +230,14 @@
             </ul>
         </li>
 
+        <!-- ✅ Events (admin link) -->
+        <li class="nav-item">
+            <a asp-controller="Events" asp-action="Index"
+               class="nav-link @(IsController("Events") ? "active" : "")">
+                <i class="nav-icon fas fa-calendar-check"></i>
+                <p>Events</p>
+            </a>
+        </li>
 
         <!-- Customers -->
         <li class="nav-item">
@@ -270,7 +274,6 @@
                 </li>
             </ul>
         </li>
-
 
         <!-- Send Notifications -->
         <li class="nav-item">
