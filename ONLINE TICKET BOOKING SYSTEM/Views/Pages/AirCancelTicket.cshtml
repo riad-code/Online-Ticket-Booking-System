@@ -1,0 +1,49 @@
+﻿@{
+    ViewData["Title"] = "Cancel Air Ticket";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container py-5">
+    <h1 class="fw-bold mb-4" style="color:#198754;">Cancel Air Ticket</h1>
+
+    @if (TempData["ok"] != null)
+    {
+        <div class="alert alert-success">@TempData["ok"]</div>
+    }
+    @if (TempData["err"] != null)
+    {
+        <div class="alert alert-danger">@TempData["err"]</div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <form method="post" asp-action="AirCancelTicket" asp-controller="Pages" class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">PNR</label>
+                    <input name="pnr" type="text" class="form-control" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Phone or Email</label>
+                    <input name="phoneOrEmail" type="text" class="form-control" required />
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Reason (optional)</label>
+                    <textarea name="reason" rows="4" class="form-control"></textarea>
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-danger px-4">Request Cancellation</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="p-4 bg-light rounded-3 h-100">
+                <h5 class="fw-semibold mb-2">Policy</h5>
+                <ul class="text-muted mb-0">
+                    <li>Cancellation depends on airline policy and time remaining.</li>
+                    <li>Service / gateway fees may be non-refundable.</li>
+                    <li>Refund is processed to the original payment method.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

@@ -9,7 +9,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Models.Air
     public enum CabinClass { Economy, PremiumEconomy, Business, First }
     public enum PaxType { Adult, Child, Infant }
     public enum AirPaymentStatus { Unpaid = 0, Paid = 1, Refunded = 2 }
-    public enum AirBookingStatus { PendingPayment = 0, PendingApproval = 1, Approved = 2, Cancelled = 3 }
+    public enum AirBookingStatus { PendingPayment = 0, PendingApproval = 1, Approved = 2, Cancelled = 3 , CancelRequested = 4 }
     // ----- Master Data -----
     public class Airport
     {

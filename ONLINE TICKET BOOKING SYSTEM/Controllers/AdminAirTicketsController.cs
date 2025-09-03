@@ -1,5 +1,4 @@
-﻿// Controllers/AdminAirTicketsController.cs
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +19,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
         public AdminAirTicketsController(ApplicationDbContext ctx, ITicketPdfService pdf, IWebHostEnvironment env, IEmailSender email)
         { _ctx = ctx; _pdf = pdf; _env = env; _email = email; }
 
-        // List only those waiting for approval
+        // List those waiting for approval OR cancel requested (same as bus)
         public async Task<IActionResult> Index()
         {
             var rows = await _ctx.AirBookings
@@ -30,7 +29,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                     .ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.FromAirport)
                 .Include(b => b.Itinerary).ThenInclude(i => i.Segments)
                     .ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.ToAirport)
-                .Where(b => b.BookingStatus == AirBookingStatus.PendingApproval)
+                .Where(b => b.BookingStatus == AirBookingStatus.PendingApproval
+                         || b.BookingStatus == AirBookingStatus.CancelRequested)
                 .OrderByDescending(b => b.Id)
                 .ToListAsync();
 
@@ -73,7 +73,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            // PDF
+            // Generate Air ticket PDF
             var pdfBytes = await _pdf.GenerateAirTicketAsync(b);
             var dir = Path.Combine(_env.WebRootPath, "airtickets");
             Directory.CreateDirectory(dir);
@@ -85,7 +85,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             b.BookingStatus = AirBookingStatus.Approved;
             await _ctx.SaveChangesAsync();
 
-            // Email user (ContactEmail preferred)
+            // Email user
             var to = !string.IsNullOrWhiteSpace(b.ContactEmail)
                         ? b.ContactEmail
                         : await _ctx.Users.Where(u => u.Id == b.UserId).Select(u => u.Email).FirstOrDefaultAsync();
@@ -114,6 +114,71 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             TempData["ok"] = "Approved & ticket emailed.";
             return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // ---- Approve Cancellation (like bus) ----
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> ApproveCancellation(int id)
+        {
+            var b = await _ctx.AirBookings
+                .Include(x => x.Itinerary).ThenInclude(i => i.Segments)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (b == null)
+            {
+                TempData["err"] = "Air booking not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            b.BookingStatus = AirBookingStatus.Cancelled;
+            await _ctx.SaveChangesAsync();
+
+            try
+            {
+                var to = !string.IsNullOrWhiteSpace(b.ContactEmail)
+                            ? b.ContactEmail
+                            : await _ctx.Users.Where(u => u.Id == b.UserId).Select(u => u.Email).FirstOrDefaultAsync();
+
+                if (!string.IsNullOrWhiteSpace(to))
+                    await _email.SendEmailAsync(to!,
+                        $"Cancellation approved – PNR {b.Pnr}",
+                        "Your air booking has been cancelled. If a refund applies, it will be processed as per policy.");
+            }
+            catch { }
+
+            TempData["ok"] = "Cancellation approved.";
+            return RedirectToAction(nameof(Details), new { id = b.Id });
+        }
+
+        // ---- Reject Cancellation (like bus) ----
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectCancellation(int id)
+        {
+            var b = await _ctx.AirBookings.FirstOrDefaultAsync(x => x.Id == id);
+            if (b == null)
+            {
+                TempData["err"] = "Air booking not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            b.BookingStatus = AirBookingStatus.Approved; // back to normal confirmed/approved
+            await _ctx.SaveChangesAsync();
+
+            try
+            {
+                var to = !string.IsNullOrWhiteSpace(b.ContactEmail)
+                            ? b.ContactEmail
+                            : await _ctx.Users.Where(u => u.Id == b.UserId).Select(u => u.Email).FirstOrDefaultAsync();
+
+                if (!string.IsNullOrWhiteSpace(to))
+                    await _email.SendEmailAsync(to!,
+                        $"Cancellation rejected – PNR {b.Pnr}",
+                        "Your cancellation request was rejected. Please contact support if you have questions.");
+            }
+            catch { }
+
+            TempData["ok"] = "Cancellation request rejected.";
+            return RedirectToAction(nameof(Details), new { id = b.Id });
         }
     }
 }

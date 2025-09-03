@@ -3,36 +3,91 @@
     ViewData["Title"] = "Airports";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<h3 class="mb-3">Airports</h3>
-<p><a class="btn btn-success" href="/Airports/Create">Create</a></p>
+<h2 class="mb-4 text-success fw-bold">Manage Airports</h2>
 
-<table class="table table-striped">
-    <thead>
+<p>
+    <a class="btn btn-success" asp-action="Create">
+        <i class="bi bi-plus-circle me-1"></i> Create Airport
+    </a>
+</p>
+
+<table id="airportsTable" class="table table-bordered table-striped align-middle" style="width:100%">
+    <thead class="table-success text-success">
         <tr>
-            <th>IATA</th>
+            <th style="width:120px;">IATA</th>
             <th>Name</th>
             <th>City</th>
             <th>Country</th>
-            <th></th>
+            <th style="width:180px;">Actions</th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var a in Model)
+        @foreach (var a in Model ?? Enumerable.Empty<ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.Airport>())
         {
             <tr>
-                <td>@a.IataCode</td>
+                <td class="fw-semibold">@a.IataCode</td>
                 <td>@a.Name</td>
                 <td>@a.City</td>
                 <td>@a.Country</td>
-                <td>
-                    <a class="btn btn-sm btn-primary" href="/Airports/Edit/@a.Id">Edit</a>
-                    <a class="btn btn-sm btn-danger" href="/Airports/Delete/@a.Id">Delete</a>
+                <td class="text-end">
+                    <a class="btn btn-sm btn-primary" href="/Airports/Edit/@a.Id">
+                        <i class="bi bi-pencil-square"></i> Edit
+                    </a>
+                    <a class="btn btn-sm btn-danger ms-1" href="/Airports/Delete/@a.Id">
+                        <i class="bi bi-trash"></i> Delete
+                    </a>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+<style>
+    .table-success {
+        background-color: #d1e7dd !important;
+        color: #0f5132 !important;
+    }
+
+    tbody tr:hover {
+        background-color: #e6f4ea;
+        cursor: default;
+    }
+
+    th, td {
+        vertical-align: middle !important;
+        text-align: center;
+    }
+</style>
+
+@section Styles {
+    <link href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#airportsTable').DataTable({
+                paging: true,
+                searching: true,
+                ordering: true,
+                lengthChange: true,
+                pageLength: 10,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search airports..."
+                },
+                columnDefs: [
+                    { orderable: false, targets: 4 } // Disable sorting on Actions column
+                ]
+            });
+        });
+    </script>
+}
