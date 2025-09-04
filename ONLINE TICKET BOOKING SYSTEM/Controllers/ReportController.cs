@@ -32,6 +32,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             var startUtc = DateTime.SpecifyKind(fromLocal, DateTimeKind.Local).ToUniversalTime();
             var endUtc = DateTime.SpecifyKind(toLocalEnd, DateTimeKind.Local).ToUniversalTime();
 
+            // Approved & Paid (list + tickets & revenue)
             var bookings = await _ctx.Bookings
                 .Include(b => b.BusSchedule)
                 .Include(b => b.Seats).ThenInclude(bs => bs.ScheduleSeat)
@@ -42,6 +43,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 .OrderByDescending(b => b.CreatedAtUtc)
                 .ToListAsync();
 
+            // Tickets sold (approved+paid)
             var ticketsSold = await _ctx.BookingSeats
                 .Include(bs => bs.Booking)
                 .Where(bs =>
@@ -50,18 +52,35 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                     bs.Booking.CreatedAtUtc >= startUtc && bs.Booking.CreatedAtUtc <= endUtc)
                 .CountAsync();
 
+            // Revenue (approved+paid)
             decimal revenue = bookings.Sum(b => b.GrandTotal);
+
+            // 🔴 Cancelled count
+            var cancelledCount = await _ctx.Bookings
+                .Where(b =>
+                    b.Status == BookingStatus.Cancelled &&
+                    b.CreatedAtUtc >= startUtc && b.CreatedAtUtc <= endUtc)
+                .CountAsync();
+
+            // 🟡 Cancel Requested count
+            var cancelReqCount = await _ctx.Bookings
+                .Where(b =>
+                    b.Status == BookingStatus.CancelRequested &&
+                    b.CreatedAtUtc >= startUtc && b.CreatedAtUtc <= endUtc)
+                .CountAsync();
 
             ViewBag.From = fromLocal.ToString("yyyy-MM-dd");
             ViewBag.To = toLocalEnd.ToString("yyyy-MM-dd");
             ViewBag.TicketsSold = ticketsSold;
             ViewBag.Revenue = revenue;
+            ViewBag.CancelledCount = cancelledCount;
+            ViewBag.CancelRequestCount = cancelReqCount;
 
             return View(bookings);
         }
 
         // =========================
-        // BUS: PDF download
+        // BUS: PDF download  (includes cancelled section)
         // =========================
         [HttpGet]
         public async Task<IActionResult> Download(DateTime? from = null, DateTime? to = null)
@@ -72,7 +91,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             var startUtc = DateTime.SpecifyKind(fromLocal, DateTimeKind.Local).ToUniversalTime();
             var endUtc = DateTime.SpecifyKind(toLocalEnd, DateTimeKind.Local).ToUniversalTime();
 
-            var bookings = await _ctx.Bookings
+            // Approved & Paid
+            var approvedPaid = await _ctx.Bookings
                 .Include(b => b.BusSchedule)
                 .Include(b => b.Seats).ThenInclude(bs => bs.ScheduleSeat)
                 .Where(b =>
@@ -82,6 +102,17 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 .OrderBy(b => b.CreatedAtUtc)
                 .ToListAsync();
 
+            // Cancelled / Cancel Requested
+            var cancelled = await _ctx.Bookings
+                .Include(b => b.BusSchedule)
+                .Include(b => b.Seats).ThenInclude(bs => bs.ScheduleSeat)
+                .Where(b =>
+                    (b.Status == BookingStatus.Cancelled || b.Status == BookingStatus.CancelRequested) &&
+                    b.CreatedAtUtc >= startUtc && b.CreatedAtUtc <= endUtc)
+                .OrderBy(b => b.CreatedAtUtc)
+                .ToListAsync();
+
+            // Totals
             var ticketsSold = await _ctx.BookingSeats
                 .Include(bs => bs.Booking)
                 .Where(bs =>
@@ -90,7 +121,12 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                     bs.Booking.CreatedAtUtc >= startUtc && bs.Booking.CreatedAtUtc <= endUtc)
                 .CountAsync();
 
-            decimal revenue = bookings.Sum(b => b.GrandTotal);
+            decimal revenue = approvedPaid.Sum(b => b.GrandTotal);
+            int cancelledCount = cancelled.Count;
+            decimal cancelledValue = cancelled.Sum(b => b.GrandTotal);
+            decimal refundedAmount = cancelled
+                .Where(b => b.PaymentStatus == PaymentStatus.Refunded)
+                .Sum(b => b.GrandTotal);
 
             QuestPDF.Settings.License = LicenseType.Community;
             using var stream = new MemoryStream();
@@ -103,12 +139,12 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                     page.Size(PageSizes.A4);
                     page.DefaultTextStyle(t => t.FontSize(10));
 
-                    // ===== Header (Title + Company Box) =====
+                    // Header
                     page.Header().PaddingBottom(8).Row(row =>
                     {
                         row.RelativeItem().AlignLeft().Column(c =>
                         {
-                            c.Item().Text("Sale Report").FontSize(20).SemiBold();
+                            c.Item().Text("Sale Report (Bus)").FontSize(20).SemiBold();
                             c.Item().Text("RiadTrip").SemiBold().FontSize(11);
                             c.Item().Text("Street Address\nCity, State, Zip\nPhone • Website • Email")
                                 .FontColor(Colors.Grey.Darken2).FontSize(9);
@@ -135,54 +171,56 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                         });
                     });
 
-                    // ===== Content =====
+                    // Content
                     page.Content().Column(col =>
                     {
                         // Summary band
                         col.Item().PaddingBottom(6).Border(1).BorderColor(Colors.Grey.Lighten1)
-                           .Background(Colors.Grey.Lighten5).Padding(8).Row(r =>
+                           .Background(Colors.Grey.Lighten5).Padding(8)
+                           .Column(sum =>
                            {
-                               r.ConstantItem(160).Text(t => { t.Span("Tickets Sold: ").SemiBold(); t.Span(ticketsSold.ToString()); });
-                               r.ConstantItem(220).Text(t => { t.Span("Revenue: ").SemiBold(); t.Span($"৳{revenue:0.##}"); });
-
+                               sum.Item().Row(r =>
+                               {
+                                   r.ConstantItem(160).Text(t => { t.Span("Tickets Sold: ").SemiBold(); t.Span(ticketsSold.ToString()); });
+                                   r.ConstantItem(220).Text(t => { t.Span("Revenue (Approved Paid): ").SemiBold(); t.Span($"৳{revenue:0.##}"); });
+                               });
+                               sum.Item().Row(r =>
+                               {
+                                   r.ConstantItem(160).Text(t => { t.Span("Cancelled / Requests: ").SemiBold(); t.Span(cancelledCount.ToString()); });
+                                   r.ConstantItem(220).Text(t => { t.Span("Cancelled Value: ").SemiBold(); t.Span($"৳{cancelledValue:0.##}"); });
+                               });
+                               sum.Item().Row(r =>
+                               {
+                                   r.ConstantItem(160).Text(t => { t.Span("Refunded: ").SemiBold(); t.Span($"৳{refundedAmount:0.##}"); });
+                                   r.RelativeItem();
+                               });
                            });
 
-                        // Table
+                        // Approved & Paid table
+                        col.Item().PaddingTop(6).Text("Approved & Paid Bookings").SemiBold().FontSize(12);
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn(1); // Month
-                                columns.RelativeColumn(1); // Date
-                                columns.RelativeColumn(3); // Route
-                                columns.RelativeColumn(3); // Customer
-                                columns.RelativeColumn(2); // Seats
-                                columns.RelativeColumn(1); // Total
-                                columns.RelativeColumn(1); // Paid
-                                columns.RelativeColumn(1); // Balance
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(2);
+                                columns.RelativeColumn(1);
                             });
 
-                            // Header
                             table.Header(h =>
                             {
                                 void H(string s) => h.Cell().Border(1).BorderColor(Colors.Grey.Lighten1)
                                     .Background(Colors.Grey.Lighten3).PaddingVertical(4).PaddingHorizontal(6)
                                     .Text(s).SemiBold();
-                                H("Month");
-                                H("Date");
-                                H("Route");
-                                H("Customer");
-                                H("Seats");
-                                H("Total");
-                                H("Paid");
-                                H("Balance Due");
+                                H("Month"); H("Date"); H("Route"); H("Customer"); H("Seats"); H("Total");
                             });
 
-                            foreach (var b in bookings)
+                            foreach (var b in approvedPaid)
                             {
                                 var createdLocal = b.CreatedAtUtc.ToLocalTime();
-                                var monthLabel = createdLocal.ToString("M/yyyy");
-                                var dateLabel = createdLocal.ToString("d/M/yyyy");
                                 var route = $"{b.BusSchedule?.From} → {b.BusSchedule?.To}";
                                 var seatsCsv = string.Join(", ", b.Seats.Select(s => s.ScheduleSeat.SeatNo));
 
@@ -190,46 +228,89 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                                     .BorderLeft(1).BorderRight(1).BorderColor(Colors.Grey.Lighten1)
                                     .PaddingVertical(4).PaddingHorizontal(6).Text(txt);
 
-                                Cell(monthLabel);
-                                Cell(dateLabel);
+                                Cell(createdLocal.ToString("M/yyyy"));
+                                Cell(createdLocal.ToString("d/M/yyyy"));
                                 Cell(route);
                                 Cell($"{b.CustomerName} ({b.CustomerPhone})");
                                 Cell(seatsCsv);
                                 Cell($"৳{b.GrandTotal:0.##}");
-                                Cell(b.PaymentStatus == PaymentStatus.Paid ? $"৳{b.GrandTotal:0.##}" : "৳0");
-                                Cell(b.PaymentStatus == PaymentStatus.Paid ? "৳0" : $"৳{b.GrandTotal:0.##}");
                             }
 
-                            // bottom line
-                            table.Cell().ColumnSpan(8).BorderTop(1).BorderColor(Colors.Grey.Lighten1).Padding(0).Text("");
+                            table.Cell().ColumnSpan(6).BorderTop(1).BorderColor(Colors.Grey.Lighten1).Padding(0).Text("");
                         });
 
-                        // Totals band
+                        // Cancelled section
+                        if (cancelled.Any())
+                        {
+                            col.Item().PaddingTop(10).Text("Cancelled / Cancel Requested").SemiBold().FontSize(12);
+                            col.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(3);
+                                    columns.RelativeColumn(3);
+                                    columns.RelativeColumn(2);
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(1);
+                                });
+
+                                table.Header(h =>
+                                {
+                                    void H(string s) => h.Cell().Border(1).BorderColor(Colors.Grey.Lighten1)
+                                        .Background(Colors.Grey.Lighten3).PaddingVertical(4).PaddingHorizontal(6)
+                                        .Text(s).SemiBold();
+                                    H("Date"); H("Route"); H("Customer"); H("Seats"); H("Status"); H("Value");
+                                });
+
+                                foreach (var b in cancelled)
+                                {
+                                    var dateLabel = b.CreatedAtUtc.ToLocalTime().ToString("d/M/yyyy");
+                                    var route = $"{b.BusSchedule?.From} → {b.BusSchedule?.To}";
+                                    var seatsCsv = string.Join(", ", b.Seats.Select(s => s.ScheduleSeat.SeatNo));
+                                    var status = b.Status.ToString();
+
+                                    void Cell(string txt) => table.Cell()
+                                        .BorderLeft(1).BorderRight(1).BorderColor(Colors.Grey.Lighten1)
+                                        .PaddingVertical(4).PaddingHorizontal(6).Text(txt);
+
+                                    Cell(dateLabel);
+                                    Cell(route);
+                                    Cell($"{b.CustomerName} ({b.CustomerPhone})");
+                                    Cell(seatsCsv);
+                                    Cell(status);
+                                    Cell($"৳{b.GrandTotal:0.##}");
+                                }
+
+                                table.Cell().ColumnSpan(6).BorderTop(1).BorderColor(Colors.Grey.Lighten1).Padding(0).Text("");
+                            });
+                        }
+
+                        // Totals
                         col.Item().AlignRight().PaddingTop(6).Row(r =>
                         {
                             r.RelativeItem();
-                            r.ConstantItem(220).Border(1).BorderColor(Colors.Grey.Lighten1).Padding(6).Row(rr =>
+                            r.ConstantItem(260).Border(1).BorderColor(Colors.Grey.Lighten1).Padding(6).Column(cc =>
                             {
-                                rr.RelativeItem().Text("Total").SemiBold();
-                                rr.AutoItem().Text($"৳{revenue:0.##}").SemiBold();
+                                cc.Item().Row(rr => { rr.RelativeItem().Text("Revenue (Approved Paid)").SemiBold(); rr.AutoItem().Text($"৳{revenue:0.##}").SemiBold(); });
+                                cc.Item().Row(rr => { rr.RelativeItem().Text("Cancelled Value"); rr.AutoItem().Text($"৳{cancelledValue:0.##}"); });
+                                cc.Item().Row(rr => { rr.RelativeItem().Text("Refunded"); rr.AutoItem().Text($"৳{refundedAmount:0.##}"); });
                             });
                         });
                     });
 
-                    // ===== Footer: signatures =====
+                    // Footer
                     page.Footer().PaddingTop(16).Row(r =>
                     {
                         r.RelativeItem().PaddingTop(10).Row(x =>
                         {
                             x.RelativeItem().Text("Signed By:").SemiBold();
-                            x.RelativeItem().PaddingLeft(6).PaddingRight(40)
-                                .BorderBottom(1).BorderColor(Colors.Grey.Darken1);
+                            x.RelativeItem().PaddingLeft(6).PaddingRight(40).BorderBottom(1).BorderColor(Colors.Grey.Darken1);
                         });
                         r.RelativeItem().PaddingTop(10).Row(x =>
                         {
                             x.RelativeItem().Text("Submitted By:").SemiBold();
-                            x.RelativeItem().PaddingLeft(6).PaddingRight(40)
-                                .BorderBottom(1).BorderColor(Colors.Grey.Darken1);
+                            x.RelativeItem().PaddingLeft(6).PaddingRight(40).BorderBottom(1).BorderColor(Colors.Grey.Darken1);
                         });
                     });
                 });
@@ -253,12 +334,9 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             var airBookings = await _ctx.AirBookings
                 .Include(b => b.Passengers)
-                .Include(b => b.Itinerary).ThenInclude(i => i.Segments)
-                    .ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.Airline)
-                .Include(b => b.Itinerary).ThenInclude(i => i.Segments)
-                    .ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.FromAirport)
-                .Include(b => b.Itinerary).ThenInclude(i => i.Segments)
-                    .ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.ToAirport)
+                .Include(b => b.Itinerary).ThenInclude(i => i.Segments).ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.Airline)
+                .Include(b => b.Itinerary).ThenInclude(i => i.Segments).ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.FromAirport)
+                .Include(b => b.Itinerary).ThenInclude(i => i.Segments).ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.ToAirport)
                 .Where(b =>
                     b.PaymentStatus == AirPaymentStatus.Paid &&
                     b.BookingStatus == AirBookingStatus.Approved &&
@@ -270,16 +348,33 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             var ticketsSold = airBookings.Sum(b => b.Passengers?.Count ?? (b.Adults + b.Children + b.Infants));
             decimal revenue = airBookings.Sum(b => (decimal)(b.AmountPaid > 0 ? b.AmountPaid : b.AmountDue));
 
+            // counts for cards
+            var airCancelled = await _ctx.AirBookings
+                .Where(b =>
+                    b.BookingStatus == AirBookingStatus.Cancelled &&
+                    ((b.PaymentAtUtc != null && b.PaymentAtUtc >= startUtc && b.PaymentAtUtc <= endUtc)
+                     || (b.PaymentAtUtc == null && b.CreatedAtUtc >= startUtc && b.CreatedAtUtc <= endUtc)))
+                .CountAsync();
+
+            var airCancelReq = await _ctx.AirBookings
+                .Where(b =>
+                    b.BookingStatus == AirBookingStatus.CancelRequested &&
+                    ((b.PaymentAtUtc != null && b.PaymentAtUtc >= startUtc && b.PaymentAtUtc <= endUtc)
+                     || (b.PaymentAtUtc == null && b.CreatedAtUtc >= startUtc && b.CreatedAtUtc <= endUtc)))
+                .CountAsync();
+
             ViewBag.From = fromLocal.ToString("yyyy-MM-dd");
             ViewBag.To = toLocalEnd.ToString("yyyy-MM-dd");
             ViewBag.TicketsSold = ticketsSold;
             ViewBag.Revenue = revenue;
+            ViewBag.CancelledCount = airCancelled;
+            ViewBag.CancelRequestCount = airCancelReq;
 
             return View(airBookings);
         }
 
         // ===============================
-        // AIR: PDF download
+        // AIR: PDF download (includes cancelled section)
         // ===============================
         [HttpGet]
         public async Task<IActionResult> DownloadAir(DateTime? from = null, DateTime? to = null)
@@ -290,14 +385,12 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             var startUtc = DateTime.SpecifyKind(fromLocal, DateTimeKind.Local).ToUniversalTime();
             var endUtc = DateTime.SpecifyKind(toLocalEnd, DateTimeKind.Local).ToUniversalTime();
 
-            var airBookings = await _ctx.AirBookings
+            // Approved & Paid
+            var approvedPaid = await _ctx.AirBookings
                 .Include(b => b.Passengers)
-                .Include(b => b.Itinerary).ThenInclude(i => i.Segments)
-                    .ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.Airline)
-                .Include(b => b.Itinerary).ThenInclude(i => i.Segments)
-                    .ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.FromAirport)
-                .Include(b => b.Itinerary).ThenInclude(i => i.Segments)
-                    .ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.ToAirport)
+                .Include(b => b.Itinerary).ThenInclude(i => i.Segments).ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.Airline)
+                .Include(b => b.Itinerary).ThenInclude(i => i.Segments).ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.FromAirport)
+                .Include(b => b.Itinerary).ThenInclude(i => i.Segments).ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.ToAirport)
                 .Where(b =>
                     b.PaymentStatus == AirPaymentStatus.Paid &&
                     b.BookingStatus == AirBookingStatus.Approved &&
@@ -306,8 +399,27 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                 .OrderBy(b => b.PaymentAtUtc ?? b.CreatedAtUtc)
                 .ToListAsync();
 
-            var ticketsSold = airBookings.Sum(b => b.Passengers?.Count ?? (b.Adults + b.Children + b.Infants));
-            decimal revenue = airBookings.Sum(b => (decimal)(b.AmountPaid > 0 ? b.AmountPaid : b.AmountDue));
+            // Cancelled / Cancel Requested
+            var cancelled = await _ctx.AirBookings
+                .Include(b => b.Passengers)
+                .Include(b => b.Itinerary).ThenInclude(i => i.Segments).ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.Airline)
+                .Include(b => b.Itinerary).ThenInclude(i => i.Segments).ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.FromAirport)
+                .Include(b => b.Itinerary).ThenInclude(i => i.Segments).ThenInclude(s => s.FlightSchedule).ThenInclude(fs => fs.ToAirport)
+                .Where(b =>
+                    (b.BookingStatus == AirBookingStatus.Cancelled || b.BookingStatus == AirBookingStatus.CancelRequested) &&
+                    ((b.PaymentAtUtc != null && b.PaymentAtUtc >= startUtc && b.PaymentAtUtc <= endUtc)
+                     || (b.PaymentAtUtc == null && b.CreatedAtUtc >= startUtc && b.CreatedAtUtc <= endUtc)))
+                .OrderBy(b => b.PaymentAtUtc ?? b.CreatedAtUtc)
+                .ToListAsync();
+
+            var ticketsSold = approvedPaid.Sum(b => b.Passengers?.Count ?? (b.Adults + b.Children + b.Infants));
+            decimal revenue = approvedPaid.Sum(b => (decimal)(b.AmountPaid > 0 ? b.AmountPaid : b.AmountDue));
+
+            int cancelledCount = cancelled.Count;
+            decimal cancelledValue = cancelled.Sum(b => (decimal)(b.AmountPaid > 0 ? b.AmountPaid : b.AmountDue));
+            decimal refundedAmount = cancelled
+                .Where(b => b.PaymentStatus == AirPaymentStatus.Refunded)
+                .Sum(b => (decimal)(b.AmountPaid > 0 ? b.AmountPaid : b.AmountDue));
 
             QuestPDF.Settings.License = LicenseType.Community;
             using var stream = new MemoryStream();
@@ -320,7 +432,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                     page.Size(PageSizes.A4);
                     page.DefaultTextStyle(t => t.FontSize(10));
 
-                    // ===== Header (Title + Company Box) =====
+                    // Header
                     page.Header().PaddingBottom(8).Row(row =>
                     {
                         row.RelativeItem().AlignLeft().Column(c =>
@@ -352,110 +464,155 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
                         });
                     });
 
-                    // ===== Content =====
+                    // Content
                     page.Content().Column(col =>
                     {
-                        // Summary band
+                        // Summary
                         col.Item().PaddingBottom(6).Border(1).BorderColor(Colors.Grey.Lighten1)
-                           .Background(Colors.Grey.Lighten5).Padding(8).Row(r =>
+                           .Background(Colors.Grey.Lighten5).Padding(8)
+                           .Column(sum =>
                            {
-                               r.ConstantItem(200).Text(t => { t.Span("Tickets Sold (pax): ").SemiBold(); t.Span(ticketsSold.ToString()); });
-                               r.ConstantItem(220).Text(t => { t.Span("Revenue: ").SemiBold(); t.Span($"৳{revenue:0.##}"); });
-
-
+                               sum.Item().Row(r =>
+                               {
+                                   r.ConstantItem(200).Text(t => { t.Span("Tickets Sold (pax): ").SemiBold(); t.Span(ticketsSold.ToString()); });
+                                   r.ConstantItem(220).Text(t => { t.Span("Revenue (Approved Paid): ").SemiBold(); t.Span($"৳{revenue:0.##}"); });
+                               });
+                               sum.Item().Row(r =>
+                               {
+                                   r.ConstantItem(200).Text(t => { t.Span("Cancelled / Requests: ").SemiBold(); t.Span(cancelledCount.ToString()); });
+                                   r.ConstantItem(220).Text(t => { t.Span("Cancelled Value: ").SemiBold(); t.Span($"৳{cancelledValue:0.##}"); });
+                               });
+                               sum.Item().Row(r =>
+                               {
+                                   r.ConstantItem(200).Text(t => { t.Span("Refunded: ").SemiBold(); t.Span($"৳{refundedAmount:0.##}"); });
+                                   r.RelativeItem();
+                               });
                            });
 
-                        // Table
+                        // Approved & Paid table
+                        col.Item().PaddingTop(6).Text("Approved & Paid Bookings").SemiBold().FontSize(12);
                         col.Item().Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn(1); // Month
-                                columns.RelativeColumn(1); // Date
-                                columns.RelativeColumn(1); // PNR
-                                columns.RelativeColumn(2); // Route
-                                columns.RelativeColumn(2); // Flight
-                                columns.RelativeColumn(1); // Pax
-                                columns.RelativeColumn(1); // Total
-                                columns.RelativeColumn(1); // Paid
-                                columns.RelativeColumn(1); // Balance
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(2);
+                                columns.RelativeColumn(2);
+                                columns.RelativeColumn(1);
+                                columns.RelativeColumn(1);
                             });
 
-                            // Header
                             table.Header(h =>
                             {
                                 void H(string s) => h.Cell().Border(1).BorderColor(Colors.Grey.Lighten1)
                                     .Background(Colors.Grey.Lighten3).PaddingVertical(4).PaddingHorizontal(6)
                                     .Text(s).SemiBold();
-                                H("Month");
-                                H("Date");
-                                H("PNR");
-                                H("Route");
-                                H("Flight");
-                                H("Pax");
-                                H("Total");
-                                H("Paid");
-                                H("Balance Due");
+                                H("Month"); H("Date"); H("PNR"); H("Route"); H("Flight"); H("Pax"); H("Total");
                             });
 
-                            foreach (var b in airBookings)
+                            foreach (var b in approvedPaid)
                             {
                                 var when = (b.PaymentAtUtc ?? b.CreatedAtUtc).ToLocalTime();
-                                var monthLabel = when.ToString("M/yyyy");
-                                var dateLabel = when.ToString("d/M/yyyy");
                                 var seg = b.Itinerary?.Segments?.FirstOrDefault()?.FlightSchedule;
                                 var route = $"{seg?.FromAirport?.IataCode ?? "-"} → {seg?.ToAirport?.IataCode ?? "-"}";
                                 var flight = $"{seg?.Airline?.IataCode ?? "-"} {seg?.FlightNumber ?? "-"}";
                                 var pax = b.Passengers?.Count ?? (b.Adults + b.Children + b.Infants);
                                 var total = (decimal)(b.AmountPaid > 0 ? b.AmountPaid : b.AmountDue);
-                                var paid = b.PaymentStatus == AirPaymentStatus.Paid ? total : 0m;
-                                var bal = total - paid;
 
                                 void Cell(string txt) => table.Cell()
                                     .BorderLeft(1).BorderRight(1).BorderColor(Colors.Grey.Lighten1)
                                     .PaddingVertical(4).PaddingHorizontal(6).Text(txt);
 
-                                Cell(monthLabel);
-                                Cell(dateLabel);
+                                Cell(when.ToString("M/yyyy"));
+                                Cell(when.ToString("d/M/yyyy"));
                                 Cell(b.Pnr ?? "-");
                                 Cell(route);
                                 Cell(flight);
                                 Cell(pax.ToString());
                                 Cell($"৳{total:0.##}");
-                                Cell($"৳{paid:0.##}");
-                                Cell($"৳{bal:0.##}");
                             }
 
-                            // bottom line
-                            table.Cell().ColumnSpan(9).BorderTop(1).BorderColor(Colors.Grey.Lighten1).Padding(0).Text("");
+                            table.Cell().ColumnSpan(7).BorderTop(1).BorderColor(Colors.Grey.Lighten1).Padding(0).Text("");
                         });
 
-                        // Totals band
+                        // Cancelled section
+                        if (cancelled.Any())
+                        {
+                            col.Item().PaddingTop(10).Text("Cancelled / Cancel Requested").SemiBold().FontSize(12);
+                            col.Item().Table(table =>
+                            {
+                                table.ColumnsDefinition(columns =>
+                                {
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(2);
+                                    columns.RelativeColumn(2);
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(1);
+                                    columns.RelativeColumn(1);
+                                });
+
+                                table.Header(h =>
+                                {
+                                    void H(string s) => h.Cell().Border(1).BorderColor(Colors.Grey.Lighten1)
+                                        .Background(Colors.Grey.Lighten3).PaddingVertical(4).PaddingHorizontal(6)
+                                        .Text(s).SemiBold();
+                                    H("Date"); H("PNR"); H("Route"); H("Flight"); H("Pax"); H("Status"); H("Value");
+                                });
+
+                                foreach (var b in cancelled)
+                                {
+                                    var when = (b.PaymentAtUtc ?? b.CreatedAtUtc).ToLocalTime();
+                                    var seg = b.Itinerary?.Segments?.FirstOrDefault()?.FlightSchedule;
+                                    var route = $"{seg?.FromAirport?.IataCode ?? "-"} → {seg?.ToAirport?.IataCode ?? "-"}";
+                                    var flight = $"{seg?.Airline?.IataCode ?? "-"} {seg?.FlightNumber ?? "-"}";
+                                    var pax = b.Passengers?.Count ?? (b.Adults + b.Children + b.Infants);
+                                    var val = (decimal)(b.AmountPaid > 0 ? b.AmountPaid : b.AmountDue);
+
+                                    void Cell(string txt) => table.Cell()
+                                        .BorderLeft(1).BorderRight(1).BorderColor(Colors.Grey.Lighten1)
+                                        .PaddingVertical(4).PaddingHorizontal(6).Text(txt);
+
+                                    Cell(when.ToString("d/M/yyyy"));
+                                    Cell(b.Pnr ?? "-");
+                                    Cell(route);
+                                    Cell(flight);
+                                    Cell(pax.ToString());
+                                    Cell(b.BookingStatus.ToString());
+                                    Cell($"৳{val:0.##}");
+                                }
+
+                                table.Cell().ColumnSpan(7).BorderTop(1).BorderColor(Colors.Grey.Lighten1).Padding(0).Text("");
+                            });
+                        }
+
+                        // Totals
                         col.Item().AlignRight().PaddingTop(6).Row(r =>
                         {
                             r.RelativeItem();
-                            r.ConstantItem(220).Border(1).BorderColor(Colors.Grey.Lighten1).Padding(6).Row(rr =>
+                            r.ConstantItem(260).Border(1).BorderColor(Colors.Grey.Lighten1).Padding(6).Column(cc =>
                             {
-                                rr.RelativeItem().Text("Total").SemiBold();
-                                rr.AutoItem().Text($"৳{revenue:0.##}").SemiBold();
+                                cc.Item().Row(rr => { rr.RelativeItem().Text("Revenue (Approved Paid)").SemiBold(); rr.AutoItem().Text($"৳{revenue:0.##}").SemiBold(); });
+                                cc.Item().Row(rr => { rr.RelativeItem().Text("Cancelled Value"); rr.AutoItem().Text($"৳{cancelledValue:0.##}"); });
+                                cc.Item().Row(rr => { rr.RelativeItem().Text("Refunded"); rr.AutoItem().Text($"৳{refundedAmount:0.##}"); });
                             });
                         });
                     });
 
-                    // ===== Footer: signatures =====
+                    // Footer
                     page.Footer().PaddingTop(16).Row(r =>
                     {
                         r.RelativeItem().PaddingTop(10).Row(x =>
                         {
                             x.RelativeItem().Text("Signed By:").SemiBold();
-                            x.RelativeItem().PaddingLeft(6).PaddingRight(40)
-                                .BorderBottom(1).BorderColor(Colors.Grey.Darken1);
+                            x.RelativeItem().PaddingLeft(6).PaddingRight(40).BorderBottom(1).BorderColor(Colors.Grey.Darken1);
                         });
                         r.RelativeItem().PaddingTop(10).Row(x =>
                         {
                             x.RelativeItem().Text("Submitted By:").SemiBold();
-                            x.RelativeItem().PaddingLeft(6).PaddingRight(40)
-                                .BorderBottom(1).BorderColor(Colors.Grey.Darken1);
+                            x.RelativeItem().PaddingLeft(6).PaddingRight(40).BorderBottom(1).BorderColor(Colors.Grey.Darken1);
                         });
                     });
                 });

@@ -1,5 +1,4 @@
 ﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Air.AirBooking>
-
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Air Reports";
@@ -9,12 +8,11 @@
 
     int ticketsSold = ViewBag.TicketsSold ?? 0;
     decimal revenue = ViewBag.Revenue ?? 0m;
+    int cancelled = ViewBag.CancelledCount ?? 0;
+    int cancelReq = ViewBag.CancelRequestCount ?? 0;
 }
-
 <div class="container py-4">
-    <h3 class="mb-3">
-        <i class="fas fa-plane text-success"></i> Air Reports
-    </h3>
+    <h3 class="mb-3"><i class="fas fa-plane text-success"></i> Air Reports</h3>
 
     <form method="get" class="card p-3 mb-3 shadow-sm border-0">
         <div class="row g-3 align-items-end">
@@ -27,9 +25,7 @@
                 <input type="date" name="to" class="form-control" value="@to" />
             </div>
             <div class="col-md-6 d-flex gap-2">
-                <button class="btn btn-success">
-                    <i class="fas fa-search"></i> Filter
-                </button>
+                <button class="btn btn-success"><i class="fas fa-search"></i> Filter</button>
                 <a class="btn btn-outline-success"
                    asp-action="DownloadAir"
                    asp-route-from="@from"
@@ -41,7 +37,7 @@
     </form>
 
     <div class="row g-3 mb-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card bg-success border-0 shadow-sm">
                 <div class="card-body">
                     <div class="text-white fw-bold">Tickets Sold (pax)</div>
@@ -49,11 +45,27 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card bg-success border-0 shadow-sm">
                 <div class="card-body">
                     <div class="text-white fw-bold">Revenue</div>
                     <div class="h4 mb-0">৳@revenue.ToString("0.##")</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-danger border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-white fw-bold">Cancelled</div>
+                    <div class="h4 mb-0">@cancelled</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="fw-bold">Cancel Requested</div>
+                    <div class="h4 mb-0">@cancelReq</div>
                 </div>
             </div>
         </div>
