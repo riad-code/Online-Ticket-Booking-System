@@ -179,14 +179,24 @@
                         </ul>
                     </div>
 
+                  
                     <!-- Information -->
                     <div class="col-md-3 mb-4">
                         <h6 class="fw-bold">Information</h6>
                         <ul class="list-unstyled mt-3">
-                            <li><a href="#" class="text-white text-decoration-none">Privacy Policy</a></li>
-                            <li><a href="#" class="text-white text-decoration-none">Terms & Conditions</a></li>
+                            <li>
+                                <a asp-controller="Info" asp-action="PrivacyPolicy" class="text-white text-decoration-none">
+                                    Privacy Policy
+                                </a>
+                            </li>
+                            <li>
+                                <a asp-controller="Info" asp-action="Terms" class="text-white text-decoration-none">
+                                    Terms & Conditions
+                                </a>
+                            </li>
                         </ul>
                     </div>
+
                 </div>
 
                 <!-- Bottom -->
