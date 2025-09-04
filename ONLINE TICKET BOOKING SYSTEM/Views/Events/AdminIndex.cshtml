@@ -1,0 +1,115 @@
+﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Event.EventItem>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Manage Events";
+    Func<DateTime?, string> fmt = d => d.HasValue ? d.Value.ToLocalTime().ToString("dd MMM yyyy h:mm tt") : "-";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+<link href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+
+<div class="container py-4">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h3 class="mb-0 text-success fw-bold">Manage Events</h3>
+        <a class="btn btn-success" asp-action="Create">
+            <i class="bi bi-plus-circle me-1"></i> Create Event
+        </a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body">
+            <table id="eventsTable" class="table table-bordered table-striped align-middle w-100">
+                <thead class="table-success text-success">
+                    <tr>
+                        <th style="width:28%;">Title</th>
+                        <th style="width:15%;">City</th>
+                        <th style="width:22%;">Date(s)</th>
+                        <th style="width:13%;">Price From</th>
+                        <th style="width:10%;">Tickets</th>
+                        <th style="width:7%;">Featured</th>
+                        <th style="width:15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in Model ?? Enumerable.Empty<ONLINE_TICKET_BOOKING_SYSTEM.Models.Event.EventItem>())
+                    {
+                        <tr>
+                            <td class="fw-semibold">
+                                <div>@e.Title</div>
+                                <div class="small text-muted">@e.Category</div>
+                            </td>
+                            <td>@e.City</td>
+                            <td>
+                                <div><i class="bi bi-calendar-event me-1"></i><strong>Start:</strong> @fmt(e.StartDateUtc)</div>
+                                @if (e.EndDateUtc.HasValue)
+                                {
+                                    <div class="small text-muted"><strong>End:</strong> @fmt(e.EndDateUtc)</div>
+                                }
+                            </td>
+                            <td>
+                                @((e.Currency ?? "৳")) @((e.PriceFrom ?? 0m).ToString("0.##"))
+                            </td>
+                            <td>@(e.AvailableTickets ?? 0)</td>
+                            <td>
+                                @if (e.IsFeatured)
+                                {
+                                    <span class="badge bg-success">Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">No</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                               
+                                <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@e.Id"><i class="bi bi-pencil-square"></i> Edit</a>
+                    <a class="btn btn-sm btn-danger ms-1" asp-action="Delete" asp-route-id="@e.Id"><i class="bi bi-trash"></i> Delete</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .table-success {
+            background-color: #d1e7dd !important;
+            color: #0f5132 !important;
+        }
+
+        tbody tr:hover {
+            background-color: #e6f4ea;
+        }
+
+        th, td {
+            vertical-align: middle !important;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js"></script>
+    <script>
+        $(function () {
+            $('#eventsTable').DataTable({
+                paging: true,
+                searching: true,
+                ordering: true,
+                lengthChange: true,
+                pageLength: 10,
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search events..."
+                },
+                columnDefs: [
+                    { orderable: false, targets: 6 } // Actions
+                ]
+            });
+        });
+    </script>
+}

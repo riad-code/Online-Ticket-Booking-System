@@ -41,6 +41,17 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             if (item == null) return NotFound();
             return View(item);
         }
+        // ---------- ADMIN LIST (like Parks AdminIndex) ----------
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AdminIndex()
+        {
+            var list = await _db.EventItems
+                .AsNoTracking()
+                .OrderBy(e => e.StartDateUtc)
+                .ToListAsync();
+
+            return View(list);
+        }
 
         // ---------- ADMIN ----------
         [Authorize(Roles = "Admin")]
@@ -84,7 +95,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             var oldUrl = existing.CoverImageUrl;
 
-            // যদি নতুন ফাইল দেয়া হয়, সেভ করবো এবং পুরোনোটা ডিলিট করবো
+          
             bool replaced = await SaveCoverImageAsync(model, oldUrl);
 
             existing.Title = model.Title;
@@ -101,7 +112,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             existing.UpdatedAtUtc = DateTime.UtcNow;
 
             if (replaced)
-                existing.CoverImageUrl = model.CoverImageUrl; // নতুন path সেট
+                existing.CoverImageUrl = model.CoverImageUrl; 
 
             await _db.SaveChangesAsync();
             return RedirectToAction(nameof(Index));

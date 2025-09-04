@@ -59,8 +59,7 @@
                     </div>
                 </div>
             }
-            @* (Optional) Not logged-in users get a gentle nudge
-               চাইলে এই ব্লকটা মুছেও দিতে পারো *@
+           
             else
             {
                 <div class="alert alert-light border mt-3 d-flex align-items-center" role="alert">
@@ -71,17 +70,8 @@
                 </div>
             }
 
-            @if (User.IsInRole("Admin"))
-            {
-                <div class="d-flex gap-2 mt-4">
-                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-primary">
-                        <i class="bi bi-pencil-square me-1"></i>Edit
-                    </a>
-                    <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-outline-danger">
-                        <i class="bi bi-trash me-1"></i>Delete
-                    </a>
-                </div>
-            }
+           
+            
         </div>
     </div>
 </div>

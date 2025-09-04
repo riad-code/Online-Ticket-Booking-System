@@ -73,13 +73,19 @@
         string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase)
         && currentAction?.StartsWith(actionPrefix, StringComparison.OrdinalIgnoreCase) == true;
 
+    // Sections
     bool isAirSectionActive = IsController("Airlines", "Airports", "FareClasses", "FlightSchedules");
-
-    // ✅ Events controller active check
     bool isEventsActive = IsController("Events");
-
-    // ✅ Parks controller active check (NEW)
     bool isParksActive = IsController("Parks");
+
+    // ✅ NEW: Events tree active (to open/highlight the submenu)
+    bool isEventsTreeActive =
+        string.Equals(currentController, "Events", StringComparison.OrdinalIgnoreCase) &&
+        (string.Equals(currentAction, "AdminIndex", StringComparison.OrdinalIgnoreCase)
+         || string.Equals(currentAction, "Create", StringComparison.OrdinalIgnoreCase)
+         || string.Equals(currentAction, "Edit", StringComparison.OrdinalIgnoreCase)
+         || string.Equals(currentAction, "Delete", StringComparison.OrdinalIgnoreCase)
+         || string.Equals(currentAction, "Details", StringComparison.OrdinalIgnoreCase));
 }
 
 <nav class="mt-2">
@@ -88,7 +94,7 @@
         <!-- Admin Dashboard -->
         <li class="nav-item">
             <a asp-controller="Admin" asp-action="Dashboard"
-               class="nav-link @(IsController("Admin") && currentAction.StartsWith("Dashboard") ? "active" : "")">
+               class="nav-link @(IsController("Admin") && currentAction?.StartsWith("Dashboard", StringComparison.OrdinalIgnoreCase) == true ? "active" : "")">
                 <i class="nav-icon fas fa-tachometer-alt"></i>
                 <p>Dashboard</p>
             </a>
@@ -97,7 +103,7 @@
         <!-- Manage Users -->
         <li class="nav-item">
             <a asp-controller="Admin" asp-action="ManageUsers"
-               class="nav-link @(IsController("Admin") && currentAction.StartsWith("ManageUsers") ? "active" : "")">
+               class="nav-link @(IsController("Admin") && currentAction?.StartsWith("ManageUsers", StringComparison.OrdinalIgnoreCase) == true ? "active" : "")">
                 <i class="nav-icon fas fa-users-cog"></i>
                 <p>Manage Users</p>
             </a>
@@ -134,6 +140,7 @@
                         <p>Manage Bus</p>
                     </a>
                 </li>
+
                 <li class="nav-item has-treeview @(isAirSectionActive ? "menu-open" : "")">
                     <a href="#" class="nav-link @(isAirSectionActive ? "active" : "")">
                         <i class="fas fa-plane nav-icon text-black"></i>
@@ -183,7 +190,7 @@
         <!-- Manage Operators -->
         <li class="nav-item">
             <a asp-controller="UserManagement" asp-action="Operator"
-               class="nav-link @(IsController("UserManagement") && currentAction.StartsWith("Operator") ? "active" : "")">
+               class="nav-link @(IsController("UserManagement") && currentAction?.StartsWith("Operator", StringComparison.OrdinalIgnoreCase) == true ? "active" : "")">
                 <i class="nav-icon fas fa-user-tie"></i>
                 <p>Manage Operators</p>
             </a>
@@ -216,16 +223,38 @@
             </ul>
         </li>
 
-        <!-- ✅ Events -->
-        <li class="nav-item">
-            <a asp-controller="Events" asp-action="Index"
-               class="nav-link @(isEventsActive ? "active" : "")">
+        <!-- ✅ Events (treeview like Parks) -->
+        <li class="nav-item has-treeview @(isEventsTreeActive ? "menu-open" : "")">
+            <a href="#" class="nav-link @(isEventsTreeActive ? "active" : "")">
                 <i class="nav-icon fas fa-calendar-check"></i>
-                <p>Events</p>
+                <p>
+                    Events
+                    <i class="right fas fa-angle-left"></i>
+                </p>
             </a>
+            <ul class="nav nav-treeview">
+                <li class="nav-item">
+                    <!-- Admin list -->
+                    <a asp-controller="Events" asp-action="AdminIndex"
+                       class="nav-link @(string.Equals(currentController,"Events",StringComparison.OrdinalIgnoreCase)
+                                                               && string.Equals(currentAction, "AdminIndex", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Manage Events</p>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <!-- Quick create -->
+                    <a asp-controller="Events" asp-action="Create"
+                       class="nav-link @(string.Equals(currentController,"Events",StringComparison.OrdinalIgnoreCase)
+                                                               && string.Equals(currentAction, "Create", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                        <i class="far fa-circle nav-icon"></i>
+                        <p>Create Event</p>
+                    </a>
+                </li>
+            </ul>
         </li>
 
-        <!-- ✅ Parks (NEW) -->
+        <!-- ✅ Parks -->
         <li class="nav-item has-treeview @(isParksActive ? "menu-open" : "")">
             <a href="#" class="nav-link @(isParksActive ? "active" : "")">
                 <i class="nav-icon fas fa-tree"></i>
@@ -236,7 +265,6 @@
             </a>
             <ul class="nav nav-treeview">
                 <li class="nav-item">
-                    <!-- Admin list -->
                     <a asp-controller="Parks" asp-action="AdminIndex"
                        class="nav-link @(IsController("Parks") && string.Equals(currentAction, "AdminIndex", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                         <i class="far fa-circle nav-icon"></i>
@@ -244,21 +272,19 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <!-- Quick create -->
                     <a asp-controller="Parks" asp-action="Create"
                        class="nav-link @(IsController("Parks") && string.Equals(currentAction, "Create", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
                         <i class="far fa-circle nav-icon"></i>
                         <p>Create Park</p>
                     </a>
                 </li>
-               
             </ul>
         </li>
 
         <!-- Customers -->
         <li class="nav-item">
             <a asp-controller="UserManagement" asp-action="Index"
-               class="nav-link @(IsController("UserManagement") && currentAction.StartsWith("Index") ? "active" : "")">
+               class="nav-link @(IsController("UserManagement") && currentAction?.StartsWith("Index", StringComparison.OrdinalIgnoreCase) == true ? "active" : "")">
                 <i class="nav-icon fas fa-users"></i>
                 <p>Customers</p>
             </a>
@@ -276,14 +302,14 @@
             <ul class="nav nav-treeview">
                 <li class="nav-item">
                     <a asp-controller="Report" asp-action="Index"
-                       class="nav-link @(IsController("Report") && currentAction.StartsWith("index", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                       class="nav-link @(IsController("Report") && currentAction?.StartsWith("index", StringComparison.OrdinalIgnoreCase) == true ? "active" : "")">
                         <i class="far fa-circle nav-icon"></i>
                         <p>Bus Reports</p>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a asp-controller="Report" asp-action="Air"
-                       class="nav-link @(IsController("Report") && currentAction.StartsWith("Air", StringComparison.OrdinalIgnoreCase) ? "active" : "")">
+                       class="nav-link @(IsController("Report") && currentAction?.StartsWith("Air", StringComparison.OrdinalIgnoreCase) == true ? "active" : "")">
                         <i class="far fa-circle nav-icon"></i>
                         <p>Air Reports</p>
                     </a>
@@ -294,14 +320,14 @@
         <!-- Send Notifications -->
         <li class="nav-item">
             <a asp-controller="Admin" asp-action="SendEmail"
-               class="nav-link @(IsController("Admin") && currentAction.StartsWith("SendEmail") ? "active" : "")">
+               class="nav-link @(IsController("Admin") && currentAction?.StartsWith("SendEmail", StringComparison.OrdinalIgnoreCase) == true ? "active" : "")">
                 <i class="nav-icon fas fa-envelope"></i>
                 <p>Send Messages</p>
             </a>
         </li>
         <li class="nav-item">
             <a asp-controller="AdminMessages" asp-action="Index"
-               class="nav-link @(IsController("AdminMessages") && currentAction.StartsWith("Index") ? "active" : "")">
+               class="nav-link @(IsController("AdminMessages") && currentAction?.StartsWith("Index", StringComparison.OrdinalIgnoreCase) == true ? "active" : "")">
                 <i class="nav-icon fas fa-inbox"></i>
                 <p>Get Messages</p>
             </a>
