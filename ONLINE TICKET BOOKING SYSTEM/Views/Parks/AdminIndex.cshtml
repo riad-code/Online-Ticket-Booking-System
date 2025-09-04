@@ -42,7 +42,7 @@
                 <td>@(p.Currency ?? "৳") @((p.PriceFrom ?? 0m).ToString("0.##"))</td>
                 <td>@(p.AvailableTickets ?? 0)</td>
                 <td class="text-end">
-                    <a class="btn btn-sm btn-primary" asp-action="Edit" asp-route-id="@p.Id"><i class="bi bi-pencil-square"></i> Edit</a>
+                    <a class="btn btn-sm btn-success" asp-action="Edit" asp-route-id="@p.Id"><i class="bi bi-pencil-square"></i> Edit</a>
                     <a class="btn btn-sm btn-danger ms-1" asp-action="Delete" asp-route-id="@p.Id"><i class="bi bi-trash"></i> Delete</a>
                 </td>
             </tr>
