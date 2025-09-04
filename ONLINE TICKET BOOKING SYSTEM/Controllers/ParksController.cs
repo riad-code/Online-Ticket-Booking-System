@@ -66,7 +66,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             _db.ParkItems.Add(model);
             await _db.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(AdminIndex));
         }
 
         // Admin Edit
@@ -116,7 +116,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
             }
 
             await _db.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(AdminIndex));
         }
 
         // Admin Delete
@@ -137,7 +137,7 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Controllers
 
             _db.ParkItems.Remove(park);
             await _db.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(AdminIndex));
         }
     }
 }
