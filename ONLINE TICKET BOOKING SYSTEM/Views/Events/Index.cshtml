@@ -96,12 +96,7 @@
             <div class="small-muted">Find concerts, exhibitions, conferences and more.</div>
         </div>
 
-        @if (User.IsInRole("Admin"))
-        {
-            <a asp-controller="Events" asp-action="Create" class="btn btn-brand">
-                <i class="bi bi-plus-circle me-1"></i> Create Event
-            </a>
-        }
+      
     </div>
 
     <div class="filter-bar p-3 mb-4">
