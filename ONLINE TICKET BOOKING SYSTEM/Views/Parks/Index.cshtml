@@ -1,0 +1,205 @@
+﻿@model IEnumerable<ONLINE_TICKET_BOOKING_SYSTEM.Models.Park.ParkItem>
+@{
+    ViewData["Title"] = "Parks";
+    Func<DateTime?, string> fmt = d => d.HasValue ? d.Value.ToLocalTime().ToString("ddd, dd MMM yyyy") : "-";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+    .brand-green {
+        color: #1dbf73
+    }
+
+    .btn-brand {
+        background: #1dbf73;
+        border-color: #1dbf73;
+        color: #fff
+    }
+
+        .btn-brand:hover {
+            filter: brightness(.95);
+            color: #fff
+        }
+
+    .filter-bar {
+        background: #f8fffb;
+        border: 1px solid #e3f5ec;
+        border-radius: .75rem
+    }
+
+    .park-card {
+        border: 1px solid #eef3f1;
+        border-radius: 1rem;
+        overflow: hidden;
+        transition: transform .18s,box-shadow .18s;
+        background: #fff
+    }
+
+        .park-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,.08)
+        }
+
+    .cover {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        background: #f2f2f2
+    }
+
+    .badge-category {
+        background: #eaf9f2;
+        color: #1dbf73
+    }
+
+    .small-muted {
+        color: #6c757d;
+        font-size: .9rem
+    }
+
+    .empty-state {
+        border: 2px dashed #dfeee7;
+        border-radius: 1rem;
+        padding: 2rem;
+        text-align: center;
+        color: #6c757d;
+        background: #fcfffd
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between mb-3 gap-2">
+        <div>
+            <h2 class="mb-0 fw-bold">Discover Parks</h2>
+            <div class="small-muted">Theme parks, water parks, family fun—find and book easily.</div>
+        </div>
+    </div>
+
+    <div class="filter-bar p-3 mb-4">
+        <div class="row g-2">
+            <div class="col-12 col-lg-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input id="q" type="text" class="form-control" placeholder="Search parks, city…" />
+                </div>
+            </div>
+            <div class="col-6 col-lg-3">
+                <select id="city" class="form-select">
+                    <option value="">All Cities</option>
+                    @foreach (var city in (Model ?? Enumerable.Empty<ONLINE_TICKET_BOOKING_SYSTEM.Models.Park.ParkItem>())
+                                        .Select(x => x.City ?? "").Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().OrderBy(x => x))
+                    {
+                        <option value="@city">@city</option>
+                    }
+                </select>
+            </div>
+            <div class="col-6 col-lg-3">
+                <select id="category" class="form-select">
+                    <option value="">All Categories</option>
+                    @foreach (var cat in (Model ?? Enumerable.Empty<ONLINE_TICKET_BOOKING_SYSTEM.Models.Park.ParkItem>())
+                                        .Select(x => x.Category ?? "").Where(x => !string.IsNullOrWhiteSpace(x)).Distinct().OrderBy(x => x))
+                    {
+                        <option value="@cat">@cat</option>
+                    }
+                </select>
+            </div>
+            <div class="col-12 col-lg-2">
+                <select id="sort" class="form-select">
+                    <option value="titleAsc">Sort: Name (A–Z)</option>
+                    <option value="priceAsc">Sort: Price (Low → High)</option>
+                    <option value="priceDesc">Sort: Price (High → Low)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div id="grid" class="row g-3">
+        @foreach (var p in Model ?? Enumerable.Empty<ONLINE_TICKET_BOOKING_SYSTEM.Models.Park.ParkItem>())
+        {
+            var price = p.PriceFrom ?? 0m;
+            var soldOut = (p.AvailableTickets ?? 0) <= 0;
+
+            <div class="col-12 col-sm-6 col-lg-4 col-xl-3 park-item"
+                 data-title="@((p.Title ?? "").ToLowerInvariant())"
+                 data-city="@((p.City ?? "").ToLowerInvariant())"
+                 data-category="@((p.Category ?? "").ToLowerInvariant())"
+                 data-price="@price">
+                <div class="park-card h-100 d-flex flex-column">
+                    <div class="position-relative">
+                        <img class="cover" src="@(string.IsNullOrWhiteSpace(p.CoverImageUrl) ? "/images/placeholders/park-cover.jpg" : p.CoverImageUrl)"
+                             alt="@p.Title" loading="lazy" />
+                        @if (p.IsFeatured)
+                        {
+                            <span class="badge text-dark bg-warning position-absolute top-0 start-0 m-2 px-2 py-1"><i class="bi bi-star-fill me-1"></i> Featured</span>
+                        }
+                        @if (soldOut)
+                        {
+                            <span class="badge bg-danger position-absolute top-0 end-0 m-2 px-2 py-1">Sold Out</span>
+                        }
+                    </div>
+
+                    <div class="p-3 d-flex flex-column flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                            <h5 class="mb-0 fw-semibold" title="@p.Title">@p.Title</h5>
+                            @if (!string.IsNullOrWhiteSpace(p.Category))
+                            {
+                                <span class="badge badge-category">@p.Category</span>
+                            }
+                        </div>
+                        <div class="small-muted mb-2"><i class="bi bi-geo-alt me-1"></i>@(string.IsNullOrWhiteSpace(p.Location) ? p.City : $"{p.Location}, {p.City}")</div>
+                        @if (!string.IsNullOrWhiteSpace(p.OpeningHours))
+                        {
+                            <div class="small-muted mb-3"><i class="bi bi-clock me-1"></i>@p.OpeningHours</div>
+                        }
+
+                        <div class="mt-auto d-flex align-items-center justify-content-between">
+                            <div class="fw-bold brand-green">@((p.Currency ?? "৳")) @price.ToString("0.##") <span class="small-muted fw-normal">from</span></div>
+                            <a asp-controller="Parks" asp-action="Details" asp-route-id="@p.Id" class="btn btn-sm btn-brand @(soldOut ? "disabled" : "")">
+                                @(soldOut ? "Sold Out" : "Book Tickets")
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div id="empty" class="empty-state mt-4 d-none">
+        <i class="bi bi-emoji-frown fs-3 d-block mb-2"></i>
+        No parks found with selected filters.
+        <div class="mt-2"><button id="clearFilters" class="btn btn-outline-success btn-sm">Clear filters</button></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function(){
+            const $g = $('#grid'), $items = $g.find('.park-item'), $empty = $('#empty');
+            const $q=$('#q'),$city=$('#city'),$cat=$('#category'),$sort=$('#sort');
+            function norm(s){ return (s||'').toString().trim().toLowerCase(); }
+            function apply(){
+                const q=norm($q.val()), city=norm($city.val()), cat=norm($cat.val());
+                let arr = $items.toArray().filter(el=>{
+                    const $el=$(el), t=$el.data('title'), c=$el.data('city'), g=$el.data('category');
+                    if(q && !(t.includes(q)||c.includes(q)||g.includes(q))) return false;
+                    if(city && c!==city) return false;
+                    if(cat && g!==cat) return false;
+                    return true;
+                });
+                arr.sort((a,b)=>{
+                    const ta=$(a).data('title')||'', tb=$(b).data('title')||'';
+                    const pa=parseFloat($(a).data('price'))||0, pb=parseFloat($(b).data('price'))||0;
+                    const s=$sort.val(); if(s==='priceAsc') return pa-pb; if(s==='priceDesc') return pb-pa; return ta.localeCompare(tb);
+                });
+                $items.hide(); arr.forEach(el=>$(el).show());
+                $empty.toggleClass('d-none', arr.length>0);
+            }
+            $q.on('input',apply); $city.on('change',apply); $cat.on('change',apply); $sort.on('change',apply);
+            $('#clearFilters').on('click', ()=>{ $q.val(''); $city.val(''); $cat.val(''); apply(); });
+            apply();
+        })();
+    </script>
+}

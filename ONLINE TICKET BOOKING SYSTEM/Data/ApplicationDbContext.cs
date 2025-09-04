@@ -32,6 +32,8 @@ namespace ONLINE_TICKET_BOOKING_SYSTEM.Data
 
         //event
         public DbSet<EventItem> EventItems { get; set; } = default!;
+        //park
+        public DbSet<ONLINE_TICKET_BOOKING_SYSTEM.Models.Park.ParkItem> ParkItems { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
